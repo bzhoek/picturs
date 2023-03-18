@@ -1,0 +1,22 @@
+statements = { statement ~ ((NEWLINE | ";") ~ statement)*  }
+statement = { direction | object_definition | LABEL ~ ":" ~ object_definition | LABEL ~ ":" ~ place }
+direction = { "up" | "down" | "left" | "right" }
+object_definition = { object_class ~ attribute* | "[" ~ statements ~ "]" ~ attribute* }
+object_class = { "arc" | "arrow" | "box" }
+attribute = { location | "fit" | "same"  | "<->" | path_attribute | STRING | numeric_property }
+path_attribute = { "from" ~ position | "then"? ~ "go"? ~ direction ~ expr }
+numeric_property = { "rad" ~ expr }
+location = { "at" ~ position }
+position = { place }
+place = { object ~ "." ~ edgename }
+edgename = { "s" }
+object = { LABEL | nth_object }
+nth_object = { "last" ~ object_class? }
+expr = { number }
+
+LABEL = { UPPERCASE_LETTER ~ (LETTER_NUMBER | "_")* }
+STRING = ${ "\"" ~ char* ~ "\"" }
+char = { !("\"" | "\\") ~ ANY }
+number = { ASCII_DIGIT+ ~ ("%" |"px")? }
+
+WHITESPACE = _{ " " }
