@@ -76,9 +76,9 @@ fn main() {
 fn shapes(pairs: Pairs<Rule>) -> Vec<Shape> {
   pairs.map(|pair|
     pair.into_inner()
-  ).flat_map(|inners| {
+  ).flat_map(|inners|
     inners.map(|inner| object_definition(inner, Shape::default()))
-  }).collect::<Vec<_>>()
+  ).collect::<Vec<_>>()
 }
 
 #[cfg(test)]
@@ -91,5 +91,7 @@ mod tests {
     let pairs = PicParser::parse(Rule::picture, &*string).unwrap();
     let result = shapes(pairs);
     assert_eq!(result.len(), 5);
+    assert_eq!(result.first().unwrap().fit, false);
+    assert_eq!(result.last().unwrap().fit, true);
   }
 }
