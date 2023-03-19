@@ -7,7 +7,7 @@ mod tests {
   use picturs::{dump_rules, parse_nodes, PicParser, Rule, shapes};
 
   #[test]
-  fn it_has_hierarchy() {
+  fn it_dumps_hierarchy() {
     let string = fs::read_to_string("tests/nested.pic").unwrap();
     let pair = PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap();
     dump_rules(1, pair);
@@ -17,16 +17,18 @@ mod tests {
   fn it_parses_attributes() {
     let string = fs::read_to_string("tests/homepage.pic").unwrap();
     let pair = PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap();
-    dump_rules(1, pair.clone());
-    let nodes = parse_nodes(pair);
+    // dump_rules(1, pair.clone());
+    let mut ast = vec![];
+    let nodes = parse_nodes(pair, &mut ast);
     println!("{:?}", nodes);
   }
 
   #[test]
-  fn it_parses() {
+  fn it_parses_containers() {
     let string = fs::read_to_string("tests/nested.pic").unwrap();
     let pair = PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap();
-    let nodes = parse_nodes(pair);
+    let mut ast = vec![];
+    let nodes = parse_nodes(pair, &mut ast);
     println!("{:?}", nodes);
   }
 }

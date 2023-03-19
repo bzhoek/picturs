@@ -50,17 +50,34 @@ impl Default for Shape {
   }
 }
 
-pub fn parse_nodes(pair: Pair<Rule>) -> Vec<Node> {
-  let mut ast = vec![];
-  for pair in pair.into_inner() {
+pub fn parse_nodes<'a>(pair: Pair<'a, Rule>, ast: &'a mut Vec<Node>) -> &'a mut Vec<Node> {
+  let mut pairs = pair.into_inner();
+  while pairs.peek().is_some() {
+    let pair = pairs.next().unwrap();
     match pair.as_rule() {
       Rule::container => {
-        let nodes = parse_nodes(pair);
-        ast.push(Node::Container(nodes))
+        let attr = pairs.next().unwrap();
+        println!("container {:?}", pair);
+        println!("attr {:?}", attr);
+        let mut children: Vec<Node> = vec![];
+        parse_nodes(pair, &mut children);
+        ast.push(Node::Container(children));
+      }
+      Rule::object_class => {
+        let attr = pairs.next().unwrap();
+        println!("object {:?}", pair);
+        println!("attr {:?}", attr);
+        let shape = match pair.as_str() {
+          "arc" => ShapeType::Arc,
+          "arrow" => ShapeType::Arrow,
+          "box" => ShapeType::Box,
+          &_ => !unreachable!()
+        };
+        ast.push(Node::Primitive(shape));
       }
       _ => {
-        println!("a {:?}", pair);
-        ast.push(parse_node(pair));
+        println!("unmatched {:?}", pair);
+        parse_nodes(pair, ast);
       }
     }
   }
