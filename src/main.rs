@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fs;
 
-use pest::iterators::Pair;
+use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
 
@@ -15,26 +15,42 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 pub enum ShapeType {
   Arrow,
   Box,
+  Unset,
 }
 
 #[derive(Debug)]
 struct Shape {
-  class: Option<ShapeType>,
+  class: ShapeType,
   text: Vec<String>,
+  fit: bool,
+}
+
+impl Default for Shape {
+  fn default() -> Self {
+    Shape {
+      class: ShapeType::Unset,
+      text: Vec::new(),
+      fit: false,
+    }
+  }
 }
 
 fn object_definition(pair: Pair<Rule>, mut shape: Shape) -> Shape {
   for pair in pair.into_inner() {
     match pair.as_rule() {
       Rule::object_class => {
-        shape.class = Option::from(match pair.as_str() {
+        shape.class = match pair.as_str() {
           "arrow" => ShapeType::Arrow,
           "box" => ShapeType::Box,
           _ => unreachable!()
-        })
+        }
       }
       Rule::attribute => {
+        println!("{:?}", pair);
         shape = object_definition(pair, shape);
+      }
+      Rule::size_attribute => {
+        shape.fit = pair.as_str().eq("fit");
       }
       Rule::string => {
         shape.text.push(pair.into_inner().as_str().to_string());
@@ -51,19 +67,29 @@ fn main() {
 
   for pair in pairs {
     for inner in pair.into_inner() {
-      let mut shape = Shape { class: None, text: Vec::new() };
-      let shape = object_definition(inner, shape);
+      let shape = object_definition(inner, Shape::default());
       println!("{:?}", shape);
     }
   }
 }
 
+fn shapes(pairs: Pairs<Rule>) -> Vec<Shape> {
+  pairs.map(|pair|
+    pair.into_inner()
+  ).flat_map(|inners| {
+    inners.map(|inner| object_definition(inner, Shape::default()))
+  }).collect::<Vec<_>>()
+}
 
 #[cfg(test)]
 mod tests {
+  use super::*;
+
   #[test]
-  fn it_works() {
-    let result = 2 + 2;
-    assert_eq!(result, 4);
+  fn it_has_five_shapes() {
+    let string = fs::read_to_string("pikchr.pic").unwrap();
+    let pairs = PicParser::parse(Rule::picture, &*string).unwrap();
+    let result = shapes(pairs);
+    assert_eq!(result.len(), 5);
   }
 }
