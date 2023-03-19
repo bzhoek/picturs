@@ -8,7 +8,7 @@ mod tests {
 
   #[test]
   fn it_has_five_shapes() {
-    let string = fs::read_to_string("pikchr.pic").unwrap();
+    let string = fs::read_to_string("tests/homepage.pic").unwrap();
     let pairs = PicParser::parse(Rule::picture, &*string).unwrap();
     let result = shapes(pairs);
     assert_eq!(result.len(), 5);
