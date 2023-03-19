@@ -1,4 +1,5 @@
 use std::error::Error;
+
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 
@@ -10,7 +11,19 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 pub struct PicParser;
 
 #[derive(Debug)]
+pub enum Attribute {
+  Same
+}
+
+#[derive(Debug)]
+pub enum Node {
+  Primitive(ShapeType),
+  Container(Vec<Node>),
+}
+
+#[derive(Debug)]
 pub enum ShapeType {
+  Arc,
   Arrow,
   Box,
   Unset,
@@ -33,6 +46,58 @@ impl Default for Shape {
       path: Vec::new(),
       fit: false,
       same: false,
+    }
+  }
+}
+
+pub fn parse_nodes(pair: Pair<Rule>) -> Vec<Node> {
+  let mut ast = vec![];
+  for pair in pair.into_inner() {
+    match pair.as_rule() {
+      Rule::container => {
+        let nodes = parse_nodes(pair);
+        ast.push(Node::Container(nodes))
+      }
+      _ => {
+        println!("a {:?}", pair);
+        ast.push(parse_node(pair));
+      }
+    }
+  }
+  ast
+}
+
+pub fn parse_node(pair: Pair<Rule>) -> Node {
+  match pair.as_rule() {
+    Rule::statement => parse_node(pair.into_inner().next().unwrap()),
+    Rule::object_class => {
+      let shape = match pair.as_str() {
+        "arc" => ShapeType::Arc,
+        "arrow" => ShapeType::Arrow,
+        "box" => ShapeType::Box,
+        &_ => !unreachable!()
+      };
+      Node::Primitive(shape)
+    }
+    _ => !unreachable!()
+  }
+}
+
+pub fn parse_attrs(pair: Pair<Rule>, attrs: Vec<Attribute>) -> Vec<Attribute> {
+  match pair.as_rule() {
+    Rule::statement => parse_node(pair.into_inner().next().unwrap()),
+    _ => !unreachable!()
+  };
+  attrs
+}
+
+pub fn dump_rules(level: usize, pair: Pair<Rule>) {
+  for pair in pair.into_inner() {
+    match pair.as_rule() {
+      _ => {
+        println!("{:level$} {:?}", level, pair);
+        dump_rules(level + 1, pair);
+      }
     }
   }
 }
@@ -75,4 +140,10 @@ pub fn shapes(pairs: Pairs<Rule>) -> Vec<Shape> {
   ).flat_map(|inners|
     inners.map(|inner| parse_shape(inner, Shape::default()))
   ).collect::<Vec<_>>()
+}
+
+pub fn parse_nested(pair: Pair<Rule>) {
+  match pair.as_rule() {
+    _ => { println!("{:?}", pair) }
+  };
 }

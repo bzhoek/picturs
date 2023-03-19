@@ -1,8 +1,10 @@
 picture = _{ SOI ~ statements ~ EOI }
 statements = _{ statement ~ ((NEWLINE | ";") ~ statement)*  }
-statement = { direction | object_definition | LABEL ~ ":" ~ object_definition | LABEL ~ ":" ~ place }
+statement = { direction | definition | LABEL ~ ":" ~ definition | LABEL ~ ":" ~ place }
 direction = { "up" | "down" | "left" | "right" }
-object_definition = { object_class ~ attribute* | "[" ~ statements ~ "]" ~ attribute* }
+definition = { object_class ~ attributes | container }
+attributes = { attribute* }
+container = { "[" ~  statements ~ "]" ~ attribute* }
 object_class = { "arc" | "arrow" | "box" }
 attribute = { location | size_attribute | "same as" ~ object | same_attribute  | "<->" | path_attribute | string | numeric_property }
 same_attribute = { "same" }
