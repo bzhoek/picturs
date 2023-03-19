@@ -22,7 +22,9 @@ pub enum ShapeType {
 struct Shape {
   class: ShapeType,
   text: Vec<String>,
+  path: Vec<String>,
   fit: bool,
+  same: bool, // same styling for this `class`
 }
 
 impl Default for Shape {
@@ -30,7 +32,9 @@ impl Default for Shape {
     Shape {
       class: ShapeType::Unset,
       text: Vec::new(),
+      path: Vec::new(),
       fit: false,
+      same: false,
     }
   }
 }
@@ -49,8 +53,14 @@ fn object_definition(pair: Pair<Rule>, mut shape: Shape) -> Shape {
         println!("{:?}", pair);
         shape = object_definition(pair, shape);
       }
+      Rule::same_attribute => {
+        shape.same = true;
+      }
       Rule::size_attribute => {
         shape.fit = pair.as_str().eq("fit");
+      }
+      Rule::path_attribute => {
+        shape.path.push(pair.into_inner().as_str().to_string());
       }
       Rule::string => {
         shape.text.push(pair.into_inner().as_str().to_string());
@@ -91,7 +101,12 @@ mod tests {
     let pairs = PicParser::parse(Rule::picture, &*string).unwrap();
     let result = shapes(pairs);
     assert_eq!(result.len(), 5);
-    assert_eq!(result.first().unwrap().fit, false);
-    assert_eq!(result.last().unwrap().fit, true);
+    let first = result.first().unwrap();
+    assert_eq!(first.fit, false);
+    assert_eq!(first.same, false);
+    let last = result.last().unwrap();
+    assert_eq!(last.fit, true);
+    assert_eq!(last.same, true);
+    println!("{:?}", result);
   }
 }
