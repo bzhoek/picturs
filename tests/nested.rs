@@ -4,9 +4,9 @@ mod tests {
 
   use pest::Parser;
 
-  use picturs::{dump_rules, Node, parse_nodes, PicParser, Rule, shapes, ShapeType};
-  use picturs::Node::{Attribute, Container, Primitive, String};
-  use picturs::ShapeType::{Arc, Arrow, Box};
+  use picturs::{dump_rules, parse_nodes, PicParser, Rule};
+  use picturs::Node::{Container, Primitive};
+  use picturs::Shape::{Arc, Arrow, Box};
 
   #[test]
   fn it_dumps_hierarchy() {

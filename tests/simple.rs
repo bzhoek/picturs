@@ -4,9 +4,9 @@ mod tests {
 
   use pest::Parser;
 
-  use picturs::{dump_rules, parse_nodes, PicParser, Rule, shapes};
+  use picturs::{dump_rules, parse_nodes, PicParser, Rule};
   use picturs::Node::{Attribute, Primitive, String};
-  use picturs::ShapeType::{Arrow, Box};
+  use picturs::Shape::{Arrow, Box};
 
   #[test]
   fn it_dumps_homepage() {
