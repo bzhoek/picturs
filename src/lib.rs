@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use pest::iterators::Pair;
+use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 
 #[allow(dead_code)]
@@ -28,15 +28,18 @@ pub enum Shape {
   Unset,
 }
 
+fn parse_next(inner: &mut Pairs<Rule>) -> Vec<Node> {
+  let next = inner.next().unwrap();
+  parse_nodes(next, vec![])
+}
+
 pub fn parse_nodes(pair: Pair<Rule>, mut ast: Vec<Node>) -> Vec<Node> {
   for pair in pair.into_inner() {
     match pair.as_rule() {
       Rule::container => {
         let mut inner = pair.into_inner();
-        let children = inner.next().unwrap();
-        let children = parse_nodes(children, vec![]);
-        let attrs = inner.next().unwrap();
-        let attrs = parse_nodes(attrs, vec![]);
+        let children = parse_next(&mut inner);
+        let attrs = parse_next(&mut inner);
         ast.push(Node::Container(children, attrs));
       }
       Rule::object_definition => {
@@ -48,8 +51,7 @@ pub fn parse_nodes(pair: Pair<Rule>, mut ast: Vec<Node>) -> Vec<Node> {
           "box" => Shape::Box,
           &_ => unreachable!()
         };
-        let attrs = inner.next().unwrap();
-        let attrs = parse_nodes(attrs, vec![]);
+        let attrs = parse_next(&mut inner);
         ast.push(Node::Primitive(shape, attrs));
       }
       Rule::path_attribute => {
