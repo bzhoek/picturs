@@ -15,12 +15,16 @@ pub enum Attribute {
   Same
 }
 
+#[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Node {
-  Primitive(ShapeType),
-  Container(Vec<Node>),
+  Primitive(ShapeType, Vec<Node>),
+  Container(Vec<Node>, Vec<Node>),
+  Attribute(String),
+  String(String),
 }
 
+#[derive(PartialEq)]
 #[derive(Debug)]
 pub enum ShapeType {
   Arc,
@@ -50,62 +54,43 @@ impl Default for Shape {
   }
 }
 
-pub fn parse_nodes<'a>(pair: Pair<'a, Rule>, ast: &'a mut Vec<Node>) -> &'a mut Vec<Node> {
-  let mut pairs = pair.into_inner();
-  while pairs.peek().is_some() {
-    let pair = pairs.next().unwrap();
+pub fn parse_nodes(pair: Pair<Rule>, mut ast: Vec<Node>) -> Vec<Node> {
+  for pair in pair.into_inner() {
     match pair.as_rule() {
       Rule::container => {
-        let attr = pairs.next().unwrap();
-        println!("container {:?}", pair);
-        println!("attr {:?}", attr);
-        let mut children: Vec<Node> = vec![];
-        parse_nodes(pair, &mut children);
-        ast.push(Node::Container(children));
+        let mut inner = pair.into_inner();
+        let children = inner.next().unwrap();
+        let children = parse_nodes(children, vec![]);
+        let attrs = inner.next().unwrap();
+        let attrs = parse_nodes(attrs, vec![]);
+        ast.push(Node::Container(children, attrs));
       }
-      Rule::object_class => {
-        let attr = pairs.next().unwrap();
-        println!("object {:?}", pair);
-        println!("attr {:?}", attr);
-        let shape = match pair.as_str() {
+      Rule::object_definition => {
+        let mut inner = pair.into_inner();
+        let shape = inner.next().unwrap();
+        let shape = match shape.as_str() {
           "arc" => ShapeType::Arc,
           "arrow" => ShapeType::Arrow,
           "box" => ShapeType::Box,
           &_ => !unreachable!()
         };
-        ast.push(Node::Primitive(shape));
+        let attrs = inner.next().unwrap();
+        let attrs = parse_nodes(attrs, vec![]);
+        ast.push(Node::Primitive(shape, attrs));
+      }
+      Rule::path_attribute => {
+        ast.push(Node::Attribute(pair.as_str().to_string()))
+      }
+      Rule::string => {
+        ast.push(Node::String(pair.into_inner().as_str().to_string()))
       }
       _ => {
         println!("unmatched {:?}", pair);
-        parse_nodes(pair, ast);
+        ast = parse_nodes(pair, ast);
       }
     }
   }
   ast
-}
-
-pub fn parse_node(pair: Pair<Rule>) -> Node {
-  match pair.as_rule() {
-    Rule::statement => parse_node(pair.into_inner().next().unwrap()),
-    Rule::object_class => {
-      let shape = match pair.as_str() {
-        "arc" => ShapeType::Arc,
-        "arrow" => ShapeType::Arrow,
-        "box" => ShapeType::Box,
-        &_ => !unreachable!()
-      };
-      Node::Primitive(shape)
-    }
-    _ => !unreachable!()
-  }
-}
-
-pub fn parse_attrs(pair: Pair<Rule>, attrs: Vec<Attribute>) -> Vec<Attribute> {
-  match pair.as_rule() {
-    Rule::statement => parse_node(pair.into_inner().next().unwrap()),
-    _ => !unreachable!()
-  };
-  attrs
 }
 
 pub fn dump_rules(level: usize, pair: Pair<Rule>) {

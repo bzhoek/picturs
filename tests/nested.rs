@@ -4,7 +4,9 @@ mod tests {
 
   use pest::Parser;
 
-  use picturs::{dump_rules, parse_nodes, PicParser, Rule, shapes};
+  use picturs::{dump_rules, Node, parse_nodes, PicParser, Rule, shapes, ShapeType};
+  use picturs::Node::{Attribute, Container, Primitive, String};
+  use picturs::ShapeType::{Arc, Arrow, Box};
 
   #[test]
   fn it_dumps_hierarchy() {
@@ -14,21 +16,15 @@ mod tests {
   }
 
   #[test]
-  fn it_parses_attributes() {
-    let string = fs::read_to_string("tests/homepage.pic").unwrap();
-    let pair = PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap();
-    // dump_rules(1, pair.clone());
-    let mut ast = vec![];
-    let nodes = parse_nodes(pair, &mut ast);
-    println!("{:?}", nodes);
-  }
-
-  #[test]
   fn it_parses_containers() {
     let string = fs::read_to_string("tests/nested.pic").unwrap();
     let pair = PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap();
-    let mut ast = vec![];
-    let nodes = parse_nodes(pair, &mut ast);
-    println!("{:?}", nodes);
+    let nodes = parse_nodes(pair, vec![]);
+
+    assert_eq!(nodes, vec![Container(vec![
+      Primitive(Arc, vec![]),
+      Primitive(Arrow, vec![]),
+      Primitive(Box, vec![]),
+    ], vec![])]);
   }
 }
