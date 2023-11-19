@@ -4,7 +4,7 @@ mod tests {
 
   use pest::Parser;
 
-  use picturs::{dump_rules, parse_nodes, PicParser, Rule};
+  use picturs::{dump_pic, parse_nodes, PicParser, Rule};
   use picturs::Node::{Attribute, Primitive, String};
   use picturs::Shape::{Arrow, Box};
 
@@ -12,7 +12,7 @@ mod tests {
   fn it_dumps_homepage() {
     let string = fs::read_to_string("tests/homepage.pic").unwrap();
     let pair = PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap();
-    dump_rules(1, pair);
+    dump_pic(1, pair);
   }
 
   #[test]

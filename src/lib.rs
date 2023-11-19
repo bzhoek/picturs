@@ -3,6 +3,8 @@ use std::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 
+mod nested;
+
 #[allow(dead_code)]
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -69,13 +71,9 @@ pub fn parse_nodes(pair: Pair<Rule>, mut ast: Vec<Node>) -> Vec<Node> {
   ast
 }
 
-pub fn dump_rules(level: usize, pair: Pair<Rule>) {
+pub fn dump_pic(level: usize, pair: Pair<Rule>) {
   for pair in pair.into_inner() {
-    match pair.as_rule() {
-      _ => {
-        println!("{:level$} {:?}", level, pair);
-        dump_rules(level + 1, pair);
-      }
-    }
+    println!("{:level$} {:?}", level, pair);
+    dump_pic(level + 1, pair);
   }
 }

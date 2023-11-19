@@ -1,0 +1,19 @@
+picture = _{ SOI ~ shapes* ~ EOI }
+shapes = _{ container | shape }
+shape = _{ line | rectangle }
+container = { "box" ~ identified? ~ string? ~ "{" ~ shapes* ~ "}" }
+rectangle = { "box" ~ identified? ~ string? }
+identified = _{ "." ~ id }
+id = { ASCII_ALPHANUMERIC* }
+
+line = { "line" ~ "from" ~ source ~ "to" ~ target }
+source = { edge }
+target = { edge }
+edge = @{ id ~ "." ~ id}
+
+title = { string? }
+string = _{ "\"" ~ inner ~ "\"" }
+inner = @{ char* }
+char = { !("\"" | "\\") ~ ANY }
+
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
