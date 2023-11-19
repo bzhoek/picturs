@@ -9,7 +9,8 @@ id = { ASCII_ALPHANUMERIC* }
 line = { "line" ~ "from" ~ source ~ "to" ~ target }
 source = { edge }
 target = { edge }
-edge = @{ id ~ "." ~ id}
+edge = @{ id ~ "." ~ compass }
+compass = { "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw" | "c" }
 
 title = { string? }
 string = _{ "\"" ~ inner ~ "\"" }

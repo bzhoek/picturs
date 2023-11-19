@@ -6,7 +6,7 @@ use pest_derive::Parser;
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Parser)]
-#[grammar = "nested.pest"] // relative to project `src`
+#[grammar = "nested.pest"]
 pub struct NestedParser;
 
 #[derive(PartialEq)]
