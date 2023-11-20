@@ -27,3 +27,8 @@ balloon
 list
 
 ```
+
+```sh
+cargo add skia-safe --features metal
+```
+
