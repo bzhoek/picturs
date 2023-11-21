@@ -3,10 +3,9 @@ use std::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 
-mod nested;
+pub mod nested;
 
-#[allow(dead_code)]
-type Result<T> = std::result::Result<T, Box<dyn Error>>;
+pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Parser)]
 #[grammar = "pic.pest"] // relative to project `src`

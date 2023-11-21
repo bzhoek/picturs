@@ -1,6 +1,8 @@
+#[allow(dead_code)]
 use std::error::Error;
 
 use pest::iterators::{Pair, Pairs};
+use pest::Parser;
 use pest_derive::Parser;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
@@ -60,31 +62,30 @@ fn find_rule<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
   title
 }
 
-fn dump_nested(level: usize, pairs: Pairs<Rule>) {
+#[allow(dead_code)]
+pub fn dump_nested(level: usize, pairs: Pairs<Rule>) {
   for pair in pairs.into_iter() {
     println!("{:level$} {:?}", level, pair);
     dump_nested(level + 1, pair.into_inner());
   }
 }
 
+pub fn parse_nested(string: &str) -> Result<Vec<Node>> {
+  let top = nested_top(string)?;
+  let ast = traverse_nested(top.clone(), vec![]);
+  Ok(ast)
+}
+
+fn nested_top(string: &str) -> Result<Pairs<Rule>> {
+  Ok(NestedParser::parse(Rule::picture, &*string)?)
+}
+
 #[cfg(test)]
 mod tests {
-  use pest::Parser;
-
-  use crate::nested::{NestedParser, Node, Rule, Shape, traverse_nested};
   use crate::nested::Node::{Container, Primitive};
+  use crate::nested::Shape;
 
   use super::*;
-
-  fn parse_nested(string: &str) -> Result<Vec<Node>> {
-    let top = nested_top(string)?;
-    let ast = traverse_nested(top.clone(), vec![]);
-    Ok(ast)
-  }
-
-  fn nested_top(string: &str) -> Result<Pairs<Rule>> {
-    Ok(NestedParser::parse(Rule::picture, &*string)?)
-  }
 
   #[test]
   fn single_box_untitled() -> Result<()> {
