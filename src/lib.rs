@@ -4,6 +4,7 @@ use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 
 pub mod nested;
+pub mod skia;
 
 pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
