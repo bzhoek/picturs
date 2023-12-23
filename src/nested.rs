@@ -1,4 +1,5 @@
-#[allow(dead_code)]
+#![allow(dead_code)]
+
 use std::error::Error;
 
 use pest::iterators::{Pair, Pairs};
@@ -37,8 +38,7 @@ pub fn traverse_nested<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>) -> Ve
         let id = find_rule(&pair, Rule::id);
         let source = find_rule(&pair, Rule::source).unwrap();
         let target = find_rule(&pair, Rule::target).unwrap();
-        ast.push(Node::Primitive(id,
-          Shape::Line(id, source, target))
+        ast.push(Node::Primitive(id, Shape::Line(id, source, target))
         );
       }
       Rule::rectangle => {
@@ -77,13 +77,15 @@ pub fn parse_nested(string: &str) -> Result<Vec<Node>> {
 }
 
 fn nested_top(string: &str) -> Result<Pairs<Rule>> {
-  Ok(NestedParser::parse(Rule::picture, &*string)?)
+  Ok(NestedParser::parse(Rule::picture, string)?)
 }
 
 #[cfg(test)]
 mod tests {
+  use skia_safe::{Color, PaintStyle, Rect};
   use crate::nested::Node::{Container, Primitive};
   use crate::nested::Shape;
+  use crate::skia::Canvas;
 
   use super::*;
 
@@ -193,7 +195,73 @@ mod tests {
       }
       line from now.n to future.n
       "#;
-    nested_top(string)?;
+    let top = nested_top(string)?;
+    let ast = traverse_nested(top, vec![]);
+    assert_eq!(3, ast.len());
+    dbg!(&ast);
+    let mut canvas = Canvas::new(400, 800);
+    render_nodes(&ast, &mut canvas);
+    canvas.write_png("target/extended.png");
     Ok(())
+  }
+
+  const BLOCK_PADDING: f32 = 8.;
+  const TEXT_PADDING: f32 = 4.;
+
+  fn render_nodes(ast: &Vec<Node>, canvas: &mut Canvas) -> Rect {
+    let cursor = canvas.cursor;
+    let mut rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+    for node in ast.iter() {
+      match node {
+        Primitive(_id, shape) => {
+          let bounds = render_shape(shape, canvas);
+          rect.bottom += bounds.height() + BLOCK_PADDING;
+          rect.right = bounds.right;
+          canvas.cursor.y += bounds.height() + BLOCK_PADDING;
+        }
+        Container(title, nodes) => {
+          let mut bounds = render_nodes(nodes, canvas);
+
+          bounds.top -= BLOCK_PADDING;
+          bounds.left -= BLOCK_PADDING;
+          bounds.right += BLOCK_PADDING;
+
+          if let Some(title) = title {
+            canvas.paint.set_style(PaintStyle::Fill);
+            canvas.paint.set_color(Color::BLACK);
+            let down = canvas.paragraph(title, (bounds.left + TEXT_PADDING, bounds.bottom - TEXT_PADDING), bounds.width() - 2. * TEXT_PADDING);
+            bounds.bottom += down + TEXT_PADDING;
+          }
+
+          canvas.paint.set_style(PaintStyle::Stroke);
+          canvas.paint.set_color(Color::RED);
+          canvas.rectangle(&bounds);
+
+          rect.bottom += bounds.height();
+          rect.right = bounds.right;
+          canvas.cursor.y = bounds.bottom + BLOCK_PADDING;
+        }
+      }
+    }
+    rect
+  }
+
+  fn render_shape(shape: &Shape, canvas: &mut Canvas) -> Rect {
+    let cursor = canvas.cursor;
+    let rect = Rect::from_xywh(cursor.x, cursor.y, 120., 80.);
+    match shape {
+      Shape::Line(_, _, _) => {}
+      Shape::Rectangle(title) => {
+        canvas.paint.set_style(PaintStyle::Stroke);
+        canvas.paint.set_color(Color::BLUE);
+        canvas.rectangle(&rect);
+        if let Some(title) = title {
+          canvas.paint.set_style(PaintStyle::Fill);
+          canvas.paint.set_color(Color::BLACK);
+          canvas.paragraph(title, (rect.left + TEXT_PADDING, rect.top), rect.width() - 2. * TEXT_PADDING);
+        }
+      }
+    }
+    rect
   }
 }

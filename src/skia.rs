@@ -2,12 +2,13 @@ use std::fs::File;
 use std::io::Write;
 use std::mem;
 
-use skia_safe::{Color, Data, EncodedImageFormat, Font, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Surface, surfaces, TextBlob, Typeface};
+use skia_safe::{Color, Data, EncodedImageFormat, Font, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Surface, surfaces, Typeface};
 
 pub struct Canvas {
   pub surface: Surface,
   path: Path,
   pub paint: Paint,
+  pub cursor: Point,
 }
 
 impl Canvas {
@@ -23,6 +24,7 @@ impl Canvas {
       surface,
       path,
       paint,
+      cursor: Point::new(32., 32.),
     }
   }
 
@@ -87,18 +89,12 @@ impl Canvas {
   }
 
   pub fn text(&mut self, text: &str, origin: impl Into<Point>) {
-    let font = Font::from_typeface_with_params(Typeface::default(), 32.0, 1.0, 0.0);
-    let blob = TextBlob::from_str(text, &font).unwrap();
-    println!("{:?}", blob.bounds());
-    let mut paint = Paint::default();
-    paint.set_color(Color::BLACK);
-    paint.set_anti_alias(true);
-
-    self.surface.canvas().draw_str(text, origin, &font, &paint);
+    let font = Font::from_typeface_with_params(Typeface::default(), 17.0, 1.0, 0.0);
+    self.surface.canvas().draw_str(text, origin, &font, &self.paint);
   }
 
   pub fn paragraph(&mut self, text: &str, origin: impl Into<Point>, width: f32) -> scalar {
-    let font = Font::from_typeface_with_params(Typeface::default(), 32.0, 1.0, 0.0);
+    let font = Font::from_typeface_with_params(Typeface::default(), 17.0, 1.0, 0.0);
     let (font_height, _font_metrics) = font.metrics();
     let advance = font_height / 4.;
 

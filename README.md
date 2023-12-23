@@ -4,6 +4,12 @@
 * https://pikchr.org/home/doc/trunk/homepage.md
 * https://pikchr.org/home/doc/trunk/doc/grammar.md
 
+## Nested
+1. ~Render all rectangles~
+2. ~Wrap the text in a rectangle~
+3. Save bounds in AST on parsing first pass
+4. Draw on canvas is second pass
+
 ## pest
  
 * https://docs.rs/pest/latest/pest/
@@ -27,6 +33,8 @@ balloon
 list
 
 ```
+
+
 
 ```sh
 cargo add skia-safe --features metal

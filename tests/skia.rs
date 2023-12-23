@@ -24,7 +24,7 @@ mod tests {
     let str = "the quick brown fox jumps over the lazy dog";
     let height = canvas.paragraph(str, (40, 40), 320.);
     canvas.write_png("target/paragraph.png");
-    assert_eq!(64., height);
+    assert_eq!(34., height);
   }
 
   #[test]

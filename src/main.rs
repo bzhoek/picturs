@@ -14,7 +14,7 @@ struct Args {
 fn main() -> picturs::Result<()> {
   let args = Args::parse();
   let string = fs::read_to_string(args.file).unwrap();
-  parse_nested(&*string)?;
+  parse_nested(&string)?;
   Ok(())
 }
 
