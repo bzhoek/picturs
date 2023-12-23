@@ -7,8 +7,9 @@
 ## Nested
 1. ~Render all rectangles~
 2. ~Wrap the text in a rectangle~
-3. Save bounds in AST on parsing first pass
+3. Save primitive bounds in AST on parsing first pass
 4. Draw on canvas is second pass
+5. Bounds interface definieren zodat niet heel Canvas een dependency wordt
 
 ## pest
  

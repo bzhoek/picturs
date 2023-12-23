@@ -4,11 +4,12 @@ mod tests {
 
   use picturs::skia::Canvas;
 
+  static TQBF: &str = "the quick brown fox jumps over the lazy dog";
+
   #[test]
   fn font_metrics() {
     let font = Font::from_typeface_with_params(Typeface::default(), 28.0, 1.0, 0.0);
-    let str = "the quick brown fox jumps over the lazy dog";
-    for word in str.split_whitespace() {
+    for word in TQBF.split_whitespace() {
       println!("{} {:?}", word, font.measure_str(word, None).0);
     }
   }
@@ -21,8 +22,7 @@ mod tests {
     canvas.rectangle(&Rect::from_xywh(0., 0., 320., 240.));
 
     canvas.paint.set_style(PaintStyle::Fill);
-    let str = "the quick brown fox jumps over the lazy dog";
-    let height = canvas.paragraph(str, (40, 40), 320.);
+    let height = canvas.paragraph(TQBF, (40, 40), 320.);
     canvas.write_png("target/paragraph.png");
     assert_eq!(34., height);
   }
