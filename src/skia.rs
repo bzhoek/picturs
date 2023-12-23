@@ -18,7 +18,6 @@ impl Canvas {
     paint.set_color(Color::BLACK);
     paint.set_anti_alias(true);
     paint.set_stroke_width(1.0);
-    paint.set_path_effect(PathEffect::discrete(10.0, 0.5, None));
     surface.canvas().clear(Color::LIGHT_GRAY);
     Canvas {
       surface,
@@ -30,6 +29,10 @@ impl Canvas {
   #[inline]
   pub fn save(&mut self) {
     self.canvas().save();
+  }
+
+  pub fn path_effect(&mut self) {
+    self.paint.set_path_effect(PathEffect::discrete(10.0, 0.5, None));
   }
 
   pub fn translate(&mut self, dx: f32, dy: f32) {
