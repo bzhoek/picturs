@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::Write;
 use std::mem;
 
 use skia_safe::{Color, Data, EncodedImageFormat, Font, Paint, PaintStyle, Path, PathEffect, Surface, surfaces, TextBlob, Typeface};
@@ -98,6 +100,13 @@ impl Canvas {
     image
       .encode(context.as_mut(), EncodedImageFormat::PNG, None)
       .unwrap()
+  }
+
+  pub fn write_png(&mut self, path: &str) {
+    let mut file = File::create(path).unwrap();
+    let data = self.data();
+    let bytes = data.as_bytes();
+    file.write_all(bytes).unwrap();
   }
 
   fn canvas(&mut self) -> &skia_safe::Canvas {

@@ -47,9 +47,6 @@ mod tests {
     canvas.line_to(690.0, 20.0);
     canvas.line_to(770.0, 90.0);
     canvas.fill();
-    let d = canvas.data();
-    let mut file = File::create("target/test.png").unwrap();
-    let bytes = d.as_bytes();
-    file.write_all(bytes).unwrap();
+    canvas.write_png("target/test.png");
   }
 }
