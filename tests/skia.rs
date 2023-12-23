@@ -1,10 +1,7 @@
 #[cfg(test)]
 mod tests {
-  use std::fs::File;
-  use std::io::Write;
-
-
   use skia_safe::{Font, PaintStyle, Rect, Typeface};
+
   use picturs::skia::Canvas;
 
   #[test]
@@ -14,6 +11,20 @@ mod tests {
     for word in str.split_whitespace() {
       println!("{} {:?}", word, font.measure_str(word, None).0);
     }
+  }
+
+  #[test]
+  fn test_paragraph() {
+    let mut canvas = Canvas::new(1024, 1024);
+
+    canvas.paint.set_style(PaintStyle::Stroke);
+    canvas.rectangle(&Rect::from_xywh(0., 0., 320., 240.));
+
+    canvas.paint.set_style(PaintStyle::Fill);
+    let str = "the quick brown fox jumps over the lazy dog";
+    let height = canvas.paragraph(str, (40, 40), 320.);
+    canvas.write_png("target/paragraph.png");
+    assert_eq!(64., height);
   }
 
   #[test]
@@ -30,7 +41,7 @@ mod tests {
     canvas.quad_to(660.0, 880.0, 1200.0, 360.0);
     canvas.translate(10.0, 10.0);
     canvas.set_line_width(4.0);
-    canvas.text("Hello, world");
+    canvas.text("Hello, world", (32., 320.));
     canvas.stroke();
     canvas.save();
 

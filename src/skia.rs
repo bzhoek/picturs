@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::mem;
 
-use skia_safe::{Color, Data, EncodedImageFormat, Font, Paint, PaintStyle, Path, PathEffect, Surface, surfaces, TextBlob, Typeface};
+use skia_safe::{Color, Data, EncodedImageFormat, Font, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Surface, surfaces, TextBlob, Typeface};
 
 pub struct Canvas {
   pub surface: Surface,
@@ -86,7 +86,7 @@ impl Canvas {
     self.paint.set_stroke_width(width);
   }
 
-  pub fn text(&mut self, text: &str) {
+  pub fn text(&mut self, text: &str, origin: impl Into<Point>) {
     let font = Font::from_typeface_with_params(Typeface::default(), 32.0, 1.0, 0.0);
     let blob = TextBlob::from_str(text, &font).unwrap();
     println!("{:?}", blob.bounds());
@@ -94,7 +94,31 @@ impl Canvas {
     paint.set_color(Color::BLACK);
     paint.set_anti_alias(true);
 
-    self.surface.canvas().draw_str(text, (32.0, 320.0), &font, &paint);
+    self.surface.canvas().draw_str(text, origin, &font, &paint);
+  }
+
+  pub fn paragraph(&mut self, text: &str, origin: impl Into<Point>, width: f32) -> scalar {
+    let font = Font::from_typeface_with_params(Typeface::default(), 32.0, 1.0, 0.0);
+    let (font_height, _font_metrics) = font.metrics();
+    let advance = font_height / 4.;
+
+    let origin = origin.into();
+    let (mut x, mut y) = (0.0, font_height);
+
+    for word in text.split_whitespace() {
+      let (word_width, _word_rect) = font.measure_str(word, None);
+      if x + word_width > width {
+        y += font_height;
+        x = 0.;
+      }
+      self.surface.canvas().draw_str(word, (origin.x + x, origin.y + y), &font, &self.paint);
+      x += word_width + advance;
+    }
+    y
+  }
+
+  pub fn rectangle(&mut self, rect: &Rect) {
+    self.surface.canvas().draw_rect(rect, &self.paint);
   }
 
   pub fn data(&mut self) -> Data {
