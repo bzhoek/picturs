@@ -38,8 +38,11 @@ pub struct Diagram<'a> {
 }
 
 impl<'i> Diagram<'i> {
-  pub fn set_offset(&mut self, offset: impl Into<Point>) {
-    self.offset = offset.into();
+  pub fn offset(offset: impl Into<Point>) -> Self {
+    Self {
+      nodes: vec![],
+      offset: offset.into(),
+    }
   }
 
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
@@ -195,12 +198,12 @@ impl<'i> Diagram<'i> {
       Shape::Rectangle(title, location) => {
         if let Some(location) = location {
           let (_compass, distance, edge) = location;
-          self.find_node(edge.0).map(|node| {
+          if let Some(node) = self.find_node(edge.0) {
             match node {
               Primitive(_, other, _) => adjust(other, distance),
               Container(_, other, _) => adjust(other, distance)
             };
-          });
+          };
         }
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(Color::BLUE);
@@ -229,7 +232,7 @@ fn rule_to_location<'a>(pair: &Pair<'a, Rule>, rule: Rule)
     ))
 }
 
-fn rule_to_distance<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<Distance> {
+fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Distance> {
   find_rule(pair, rule)
     .map(|p| {
       let length = find_rule(&p, Rule::length)
@@ -250,7 +253,8 @@ fn rule_to_edge<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<(&'a str, &'a s
 }
 
 fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
-  find_rule(pair, rule).map(|p| p.as_str())
+  find_rule(pair, rule)
+    .map(|p| p.as_str())
 }
 
 fn find_rule<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<Pair<'a, Rule>> {
@@ -266,7 +270,6 @@ pub fn dump_nested(level: usize, pairs: Pairs<Rule>) {
   }
 }
 
-
 #[cfg(test)]
 mod tests {
   use std::fs;
@@ -280,15 +283,15 @@ mod tests {
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
-  fn container_size() -> Rect {
+  fn container_rect() -> Rect {
     Rect::from_xywh(0., 0., 136., 56.)
   }
 
-  fn no_size() -> Rect {
+  fn zero_rect() -> Rect {
     Rect::from_xywh(0., 0., 0., 0.)
   }
 
-  fn rectangle_size() -> Rect {
+  fn rectangle_rect() -> Rect {
     Rect::from_xywh(0., 0., 120., 40.)
   }
 
@@ -299,111 +302,104 @@ mod tests {
   }
 
   #[test]
-  fn single_box_untitled() -> Result<()> {
+  fn single_box_untitled() {
     let string = r#"box"#;
     let diagram = parse_string(string);
+
     assert_eq!(vec![
-      Primitive(None, rectangle_size(), Shape::Rectangle(None, None)),
+      Primitive(None, rectangle_rect(), Shape::Rectangle(None, None)),
     ], diagram.nodes);
-    Ok(())
   }
 
   #[test]
-  fn single_box_id() -> Result<()> {
+  fn single_box_id() {
     let string = r#"box.first "title""#;
     let diagram = parse_string(string);
+
     assert_eq!(vec![
-      Primitive(Some("first"), rectangle_size(), Shape::Rectangle(Some("title"), None)),
+      Primitive(Some("first"), rectangle_rect(), Shape::Rectangle(Some("title"), None)),
     ], diagram.nodes);
-    Ok(())
   }
 
   #[test]
-  fn single_box_with_title() -> Result<()> {
+  fn single_box_with_title() {
     let string = r#"box "title""#;
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Primitive(None, rectangle_size(), Shape::Rectangle(Some("title"), None)),
+      Primitive(None, rectangle_rect(), Shape::Rectangle(Some("title"), None)),
     ], diagram.nodes);
-    Ok(())
   }
 
   #[test]
-  fn double_box() -> Result<()> {
+  fn double_box() {
     let string = "box
                          box";
     let diagram = parse_string(string);
 
-    let rect2 = Rect::from_xywh(0., 48., 120., 40.);
+    let second_rect = Rect::from_xywh(0., 48., 120., 40.);
     assert_eq!(vec![
-      Primitive(None, rectangle_size(), Shape::Rectangle(None, None)),
-      Primitive(None, rect2, Shape::Rectangle(None, None)),
+      Primitive(None, rectangle_rect(), Shape::Rectangle(None, None)),
+      Primitive(None, second_rect, Shape::Rectangle(None, None)),
     ], diagram.nodes);
-    Ok(())
   }
 
   #[test]
-  fn nested_box_untitled() -> Result<()> {
+  fn nested_box_untitled() {
     let string = "box { box }";
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Container(None, container_size(), vec![
-        Primitive(None, rectangle_size(), Shape::Rectangle(None, None))
+      Container(None, container_rect(), vec![
+        Primitive(None, rectangle_rect(), Shape::Rectangle(None, None))
       ])
     ], diagram.nodes);
-    Ok(())
   }
 
   #[test]
-  fn nested_box_id() -> Result<()> {
+  fn nested_box_id() {
     let string = "box.parent { box }";
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Container(None, container_size(), vec![
-        Primitive(None, rectangle_size(), Shape::Rectangle(None, None))
+      Container(None, container_rect(), vec![
+        Primitive(None, rectangle_rect(), Shape::Rectangle(None, None))
       ])
     ], diagram.nodes);
-    Ok(())
   }
 
   #[test]
-  fn nested_box_with_title() -> Result<()> {
+  fn nested_box_with_title() {
     let string = r#"box "parent" { box "child" }"#;
     let diagram = parse_string(string);
-    let rect = Rect::from_xywh(0., 0., 136., 77.);
+    let container_rect = Rect::from_xywh(0., 0., 136., 77.);
 
     assert_eq!(vec![
-      Container(Some("parent"), rect, vec![
-        Primitive(None, rectangle_size(), Shape::Rectangle(Some("child"), None))
+      Container(Some("parent"), container_rect, vec![
+        Primitive(None, rectangle_rect(), Shape::Rectangle(Some("child"), None))
       ])
     ], diagram.nodes);
-    Ok(())
   }
 
   #[test]
-  fn line_from_a_to_b() -> Result<()> {
+  fn line_from_a_to_b() {
     let string = r#"line from now.n to future.n"#;
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Primitive(None, no_size(), Shape::Line(None, "now.n", "future.n")),
+      Primitive(None, zero_rect(), Shape::Line(None, "now.n", "future.n")),
     ], diagram.nodes);
-    Ok(())
   }
 
   #[test]
-  fn box_with_wrapping_title() -> Result<()> {
+  fn box_with_wrapping_title() {
     let string = format!(r#"box "{}""#, TQBF);
     let diagram = parse_string(&string);
-    let paragraph_size = Rect::from_xywh(0., 0., 120., 76.);
+    let paragraph_rect = Rect::from_xywh(0., 0., 120., 76.);
 
     assert_eq!(vec![
-      Primitive(None, paragraph_size, Shape::Rectangle(Some(TQBF), None)),
+      Primitive(None, paragraph_rect, Shape::Rectangle(Some(TQBF), None)),
     ], diagram.nodes);
-    Ok(())
   }
 
   #[test]
@@ -419,8 +415,7 @@ mod tests {
       }
       line from now.n to future.n
       "#;
-    let mut diagram = Diagram::default();
-    diagram.set_offset((32., 32.));
+    let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
     dbg!(&diagram.nodes);
     assert_visual(diagram, "target/extended")?;
@@ -433,8 +428,7 @@ mod tests {
       r#"box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" @nw 2cm from left.ne
       "#;
-    let mut diagram = Diagram::default();
-    diagram.set_offset((32., 32.));
+    let mut diagram = Diagram::offset((32., 32.));
     let top = diagram.parse_string(string);
     dump_nested(0, top);
     assert_eq!(2, diagram.nodes.len());
@@ -456,7 +450,7 @@ mod tests {
     let last_file = format!("{}-last.png", prefix);
     diagram.render(400, 800, &*last_file);
     if !Path::new(&ref_file).exists() {
-      std::fs::rename(last_file, ref_file)?;
+      fs::rename(last_file, ref_file)?;
     } else {
       let diff_file = format!("{}-diff.png", prefix);
       let output = Command::new("compare")
