@@ -14,7 +14,7 @@ struct Args {
 fn main() -> picturs::Result<()> {
   let args = Args::parse();
   let string = fs::read_to_string(args.file).unwrap();
-  let mut diagram = Diagram::new();
+  let mut diagram = Diagram::default();
   diagram.parse_string(&string);
   Ok(())
 }

@@ -24,7 +24,7 @@ impl Canvas {
       surface,
       path,
       paint,
-      cursor: Point::new(32., 32.),
+      cursor: Point::new(0., 0.),
     }
   }
 

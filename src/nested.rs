@@ -5,7 +5,7 @@ use std::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
-use skia_safe::{Color, PaintStyle, Rect, Size};
+use skia_safe::{Color, PaintStyle, Point, Rect, Size};
 
 use crate::nested::Node::{Container, Primitive};
 use crate::skia::Canvas;
@@ -19,8 +19,8 @@ pub struct NestedParser;
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Node<'a> {
-  Primitive(Option<&'a str>, Size, Shape<'a>),
-  Container(Option<&'a str>, Size, Vec<Node<'a>>),
+  Primitive(Option<&'a str>, Rect, Shape<'a>),
+  Container(Option<&'a str>, Rect, Vec<Node<'a>>),
 }
 
 #[derive(PartialEq)]
@@ -33,36 +33,45 @@ pub enum Shape<'a> {
 #[derive(Default)]
 pub struct Diagram<'a> {
   nodes: Vec<Node<'a>>,
+  offset: Point,
 }
 
 impl<'i> Diagram<'i> {
+  pub fn set_offset(&mut self, offset: impl Into<Point>) {
+    self.offset = offset.into();
+  }
 
   pub fn parse_string(&mut self, string: &'i str) {
     let top = NestedParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(400, 800);
+    canvas.cursor = self.offset;
     let (ast, _bounds) = self.pairs_to_nodes(top.clone(), vec![], &mut canvas);
     self.nodes = ast;
   }
 
   pub fn pairs_to_nodes<'a>(&self, pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas)
-                            -> (Vec<Node<'a>>, Size) {
-    let mut bounds = Size::new(0., 0.);
+                            -> (Vec<Node<'a>>, Rect) {
+    let cursor = canvas.cursor;
+    let mut outer_rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
 
     for pair in pairs.into_iter() {
       match pair.as_rule() {
         Rule::container => {
           let title = rule_to_string(&pair, Rule::inner);
-          let (nodes, mut size) = self.pairs_to_nodes(pair.into_inner(), vec![], canvas);
-          size.height += 2. * BLOCK_PADDING;
-          bounds.height += size.height;
-          ast.push(Container(title, size, nodes));
+          let (nodes, mut rect) = self.pairs_to_nodes(pair.into_inner(), vec![], canvas);
+          rect.bottom += 2. * BLOCK_PADDING;
+          ast.push(Container(title, rect, nodes));
+
+          outer_rect.right = outer_rect.right.max(rect.right);
+          outer_rect.bottom = rect.bottom;
+          canvas.cursor.y = rect.bottom;
         }
         Rule::line => {
           let id = rule_to_string(&pair, Rule::id);
           let source = rule_to_string(&pair, Rule::source).unwrap();
           let target = rule_to_string(&pair, Rule::target).unwrap();
-          let size = Size::new(0., 0.);
-          ast.push(Primitive(id, size, Shape::Line(id, source, target))
+          let rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+          ast.push(Primitive(id, rect, Shape::Line(id, source, target))
           );
         }
         Rule::rectangle => {
@@ -75,21 +84,20 @@ impl<'i> Diagram<'i> {
           };
 
           let size = Size::new(120., height.max(40.));
-          let cursor = canvas.cursor;
-
           let rect = Rect::from_xywh(cursor.x, cursor.y, size.width, size.height);
 
-          bounds.height += size.height;
-          bounds.width = bounds.width.max(size.width);
-          ast.push(Primitive(id, size, Shape::Rectangle(title, location)));
+          ast.push(Primitive(id, rect, Shape::Rectangle(title, location)));
+          outer_rect.right = outer_rect.right.max(rect.right);
+          outer_rect.bottom = rect.bottom;
+          canvas.cursor.y = rect.bottom;
         }
         _ => {
           println!("unmatched {:?}", pair);
-          (ast, bounds) = self.pairs_to_nodes(pair.into_inner(), ast, canvas);
+          (ast, outer_rect) = self.pairs_to_nodes(pair.into_inner(), ast, canvas);
         }
       }
     }
-    (ast, bounds)
+    (ast, outer_rect)
   }
 
   fn find_node<'a>(&'a self, id: &str) -> Option<&Node<'a>> {
@@ -118,20 +126,21 @@ impl<'i> Diagram<'i> {
 
   pub fn render(&self, width: i32, height: i32, filepath: &str) {
     let mut canvas = Canvas::new(width, height);
+    canvas.cursor = self.offset;
     let _bounds = self.render_nodes(&self.nodes, &mut canvas);
     canvas.write_png(filepath);
   }
 
   fn render_nodes(&self, nodes: &[Node], canvas: &mut Canvas) -> Rect {
     let cursor = canvas.cursor;
-    let mut rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+    let mut outer_rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
     for node in nodes.iter() {
       match node {
         Primitive(_id, size, shape) => {
           let bounds = self.render_shape(shape, size, canvas);
-          rect.bottom += size.height + BLOCK_PADDING;
-          rect.right = bounds.right;
-          canvas.cursor.y += size.height + BLOCK_PADDING;
+          outer_rect.bottom += size.height() + BLOCK_PADDING;
+          outer_rect.right = bounds.right;
+          canvas.cursor.y += size.height() + BLOCK_PADDING;
         }
         Container(title, _, nodes) => {
           let mut bounds = self.render_nodes(nodes, canvas);
@@ -151,18 +160,18 @@ impl<'i> Diagram<'i> {
           canvas.paint.set_color(Color::RED);
           canvas.rectangle(&bounds);
 
-          rect.bottom += bounds.height();
-          rect.right = bounds.right;
+          outer_rect.bottom += bounds.height();
+          outer_rect.right = bounds.right;
           canvas.cursor.y = bounds.bottom + BLOCK_PADDING;
         }
       }
     }
-    rect
+    outer_rect
   }
 
-  fn render_shape(&self, shape: &Shape, size: &Size, canvas: &mut Canvas) -> Rect {
+  fn render_shape(&self, shape: &Shape, size: &Rect, canvas: &mut Canvas) -> Rect {
     let cursor = canvas.cursor;
-    let rect = Rect::from_xywh(cursor.x, cursor.y, size.width, size.height);
+    let rect = Rect::from_xywh(cursor.x, cursor.y, size.width(), size.height());
     match shape {
       Shape::Line(_, _, _) => {}
       Shape::Rectangle(title, location) => {
@@ -232,6 +241,18 @@ mod tests {
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
+  fn container_size() -> Rect {
+    Rect::from_xywh(0., 56., 120., 40.)
+  }
+
+  fn no_size() -> Rect {
+    Rect::from_xywh(0., 0., 0., 0.)
+  }
+
+  fn rectangle_size() -> Rect {
+    Rect::from_xywh(0., 0., 120., 40.)
+  }
+
   fn parse_string(string: &str) -> Diagram {
     let mut diagram = Diagram::default();
     diagram.parse_string(string);
@@ -274,11 +295,10 @@ mod tests {
     let string = "box
                          box";
     let diagram = parse_string(string);
-    let size = Size::new(120., 40.);
 
     assert_eq!(vec![
-      Primitive(None, size, Shape::Rectangle(None, None)),
-      Primitive(None, size, Shape::Rectangle(None, None)),
+      Primitive(None, rectangle_size(), Shape::Rectangle(None, None)),
+      Primitive(None, rectangle_size(), Shape::Rectangle(None, None)),
     ], diagram.nodes);
     Ok(())
   }
@@ -294,18 +314,6 @@ mod tests {
       ])
     ], diagram.nodes);
     Ok(())
-  }
-
-  fn container_size() -> Size {
-    Size::new(120., 56.)
-  }
-
-  fn no_size() -> Size {
-    Size::new(0., 0.)
-  }
-
-  fn rectangle_size() -> Size {
-    Size::new(120., 40.)
   }
 
   #[test]
@@ -349,7 +357,7 @@ mod tests {
   fn box_with_wrapping_title() -> Result<()> {
     let string = format!(r#"box "{}""#, TQBF);
     let diagram = parse_string(&string);
-    let paragraph_size = Size::new(120., 76.);
+    let paragraph_size = Rect::from_xywh(0., 0., 120., 76.);
 
     assert_eq!(vec![
       Primitive(None, paragraph_size, Shape::Rectangle(Some(TQBF), None)),
@@ -372,6 +380,8 @@ mod tests {
       "#;
     let mut diagram = Diagram::default();
     diagram.parse_string(string);
+    diagram.set_offset((32., 32.));
+    dbg!(&diagram.nodes);
     diagram.render(400, 800, "target/extended.png");
     Ok(())
   }
@@ -385,6 +395,7 @@ mod tests {
       "#;
     let mut diagram = Diagram::default();
     diagram.parse_string(string);
+    diagram.set_offset((32., 32.));
     assert_eq!(2, diagram.nodes.len());
     dbg!(&diagram.nodes);
     let left = diagram.find_node("left").unwrap();
@@ -392,7 +403,7 @@ mod tests {
       Primitive(_, rect, _) => { rect }
       Container(_, rect, _) => { rect }
     };
-    assert_eq!(59., rect.height);
+    assert_eq!(59., rect.height());
 
     diagram.render(400, 800, "target/side_by_side.png");
     Ok(())
