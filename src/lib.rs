@@ -2,6 +2,7 @@ use std::error::Error;
 
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
+use skia_safe::{Rect, Vector};
 
 pub mod nested;
 pub mod skia;
@@ -75,5 +76,39 @@ pub fn dump_pic(level: usize, pair: Pair<Rule>) {
   for pair in pair.into_inner() {
     println!("{:level$} {:?}", level, pair);
     dump_pic(level + 1, pair);
+  }
+}
+
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub struct Distance {
+  length: f32,
+  unit: String,
+}
+
+impl Distance {
+  fn new(length: f32, unit: String) -> Self {
+    Self { length, unit }
+  }
+
+  fn pixels(&self) -> f32 {
+    self.length * 38.
+  }
+}
+
+
+pub trait Move {
+  fn shift(&self, d: impl Into<Vector>) -> Self;
+}
+
+impl Move for Rect {
+  fn shift(&self, d: impl Into<Vector>) -> Self {
+    let d = d.into();
+    Self::new(
+      self.top + d.y,
+      self.left + d.x,
+      self.right + d.x,
+      self.bottom + d.y,
+    )
   }
 }

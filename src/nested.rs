@@ -6,6 +6,7 @@ use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
 use skia_safe::{Color, PaintStyle, Point, Rect};
+use crate::Distance;
 
 use crate::nested::Node::{Container, Primitive};
 use crate::skia::Canvas;
@@ -23,11 +24,11 @@ pub enum Node<'a> {
   Container(Option<&'a str>, Rect, Vec<Node<'a>>),
 }
 
-#[derive(PartialEq)]
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum Shape<'a> {
   Line(Option<&'a str>, &'a str, &'a str),
-  Rectangle(Option<&'a str>, Option<(&'a str, &'a str, (&'a str, &'a str))>),
+  Rectangle(Option<&'a str>, Option<(&'a str, Distance, (&'a str, &'a str))>),
 }
 
 #[derive(Default)]
@@ -41,12 +42,13 @@ impl<'i> Diagram<'i> {
     self.offset = offset.into();
   }
 
-  pub fn parse_string(&mut self, string: &'i str) {
+  pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
     let top = NestedParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(400, 800);
     canvas.cursor = self.offset;
     let (ast, _bounds) = self.pairs_to_nodes(top.clone(), vec![], &mut canvas);
     self.nodes = ast;
+    top
   }
 
   pub fn pairs_to_nodes<'a>(&self, pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas)
@@ -181,10 +183,10 @@ impl<'i> Diagram<'i> {
   fn render_shape(&self, shape: &Shape, rect: &Rect, canvas: &mut Canvas) -> Rect {
     let mut adjusted = *rect;
 
-    let mut adjust = |other: &Rect| {
+    let mut adjust = |other: &Rect, distance: &Distance| {
       adjusted.top = other.top;
       adjusted.bottom = adjusted.top + rect.height();
-      adjusted.left = other.right + 32.;
+      adjusted.left = other.right + distance.pixels();
       adjusted.right = adjusted.left + rect.width()
     };
 
@@ -192,11 +194,11 @@ impl<'i> Diagram<'i> {
       Shape::Line(_, _, _) => {}
       Shape::Rectangle(title, location) => {
         if let Some(location) = location {
-          let (compass, distance, edge) = location;
+          let (_compass, distance, edge) = location;
           self.find_node(edge.0).map(|node| {
             match node {
-              Primitive(_, other, _) => adjust(other),
-              Container(_, other, _) => adjust(other)
+              Primitive(_, other, _) => adjust(other, distance),
+              Container(_, other, _) => adjust(other, distance)
             };
           });
         }
@@ -217,13 +219,26 @@ impl<'i> Diagram<'i> {
 const BLOCK_PADDING: f32 = 8.;
 const TEXT_PADDING: f32 = 4.;
 
-fn rule_to_location<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<(&'a str, &'a str, (&'a str, &'a str))> {
+fn rule_to_location<'a>(pair: &Pair<'a, Rule>, rule: Rule)
+                        -> Option<(&'a str, Distance, (&'a str, &'a str))> {
   find_rule(pair, rule)
     .map(|p| (
       rule_to_string(&p, Rule::compass).unwrap(),
-      rule_to_string(&p, Rule::distance).unwrap(),
+      rule_to_distance(&p, Rule::distance).unwrap(),
       rule_to_edge(&p, Rule::edge).unwrap(),
     ))
+}
+
+fn rule_to_distance<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<Distance> {
+  find_rule(pair, rule)
+    .map(|p| {
+      let length = find_rule(&p, Rule::length)
+        .and_then(|p| p.as_str().parse::<usize>().ok())
+        .unwrap();
+      let unit = rule_to_string(&p, Rule::unit)
+        .unwrap();
+      Distance::new(length as f32, unit.to_owned())
+    })
 }
 
 fn rule_to_edge<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<(&'a str, &'a str)> {
@@ -416,11 +431,12 @@ mod tests {
   fn side_by_side() -> Result<()> {
     let string =
       r#"box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" @nw 1cm from left.ne
+      box.right "While this goes to the right hand side" @nw 2cm from left.ne
       "#;
     let mut diagram = Diagram::default();
     diagram.set_offset((32., 32.));
-    diagram.parse_string(string);
+    let top = diagram.parse_string(string);
+    dump_nested(0, top);
     assert_eq!(2, diagram.nodes.len());
     dbg!(&diagram.nodes);
     let left = diagram.find_node("left").unwrap();
@@ -430,12 +446,6 @@ mod tests {
     };
     let rect = Rect::from_ltrb(32., 32., 152., 91.);
     assert_eq!(&rect, left_rect);
-
-    let right = diagram.find_node("right").unwrap();
-    // match right {
-    //   Primitive(_, rect, _) => { *rect.top = left_rect.top }
-    //   Container(_, rect, _) => { *rect.top = left_rect.top }
-    // };
 
     assert_visual(diagram, "target/side_by_side")?;
     Ok(())
