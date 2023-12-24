@@ -6,8 +6,8 @@ use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
 use skia_safe::{Color, PaintStyle, Point, Rect};
-use crate::Distance;
 
+use crate::Distance;
 use crate::nested::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -20,8 +20,8 @@ pub struct NestedParser;
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Node<'a> {
-  Primitive(Option<&'a str>, Rect, Shape<'a>),
-  Container(Option<&'a str>, Rect, Vec<Node<'a>>),
+  Primitive(Option<&'a str>, Rect, Rect, Shape<'a>),
+  Container(Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
 }
 
 #[derive(Debug)]
@@ -49,44 +49,48 @@ impl<'i> Diagram<'i> {
     let top = NestedParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(400, 800);
     canvas.cursor = self.offset;
-    let (ast, _bounds) = self.pairs_to_nodes(top.clone(), vec![], &mut canvas);
+    let mut inside = Rect::from_xywh(0., 0., 400., 800.);
+    inside.offset(self.offset);
+    let (ast, _bounds) = self.pairs_to_nodes(top.clone(), vec![], &mut canvas, &self.offset);
     self.nodes = ast;
     top
   }
 
-  pub fn pairs_to_nodes<'a>(&self, pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas)
+  pub fn pairs_to_nodes<'a>(&self, pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point)
                             -> (Vec<Node<'a>>, Rect) {
-    let cursor = canvas.cursor;
-    let mut outer_rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+    let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
 
     for pair in pairs.into_iter() {
       match pair.as_rule() {
         Rule::container => {
           let title = rule_to_string(&pair, Rule::inner);
-          let (nodes, mut rect) = self.pairs_to_nodes(pair.into_inner(), vec![], canvas);
-
-          rect.bottom += 2. * BLOCK_PADDING;
-          rect.right += 2. * BLOCK_PADDING;
+          let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 0., 0.);
+          let mut inset = Point::new(used.left, used.bottom);
+          inset.offset((BLOCK_PADDING, BLOCK_PADDING));
+          let (nodes, inner)
+            = self.pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset);
+          used.bottom = inner.bottom + BLOCK_PADDING;
+          used.right = inner.right + 2. * BLOCK_PADDING;
 
           if let Some(title) = title {
-            let inset = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
-            let origin = (inset.left, inset.bottom);
-            let down = canvas.paragraph(title, origin, inset.width());
-            rect.bottom += down + TEXT_PADDING;
+            let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
+            let down = canvas.paragraph(title, (0., 0.), text_inset.width());
+            used.bottom = inner.bottom + down + TEXT_PADDING;
           }
 
-          ast.push(Container(title, rect, nodes));
+          let mut rect = used;
+          rect.bottom += BLOCK_PADDING;
+          ast.push(Container(title, rect, used, nodes));
 
-          outer_rect.right = outer_rect.right.max(rect.right);
-          outer_rect.bottom = rect.bottom;
-          canvas.cursor.y = rect.bottom;
+          bounds.right = bounds.right.max(rect.right);
+          bounds.bottom = rect.bottom;
         }
         Rule::line => {
           let id = rule_to_string(&pair, Rule::id);
           let source = rule_to_string(&pair, Rule::source).unwrap();
           let target = rule_to_string(&pair, Rule::target).unwrap();
-          let rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-          ast.push(Primitive(id, rect, Shape::Line(id, source, target))
+          let rect = Rect::from_xywh(bounds.left, bounds.bottom, 0., 0.);
+          ast.push(Primitive(id, rect, rect, Shape::Line(id, source, target))
           );
         }
         Rule::rectangle => {
@@ -94,25 +98,27 @@ impl<'i> Diagram<'i> {
           let id = rule_to_string(&pair, Rule::id);
           let location = rule_to_location(&pair, Rule::location);
           let height = match title {
-            Some(title) => canvas.paragraph(title, (TEXT_PADDING, 0.), 120. - 2. * TEXT_PADDING) + BLOCK_PADDING,
+            Some(title) => canvas.paragraph(title, (0., 0.), 120. - 2. * TEXT_PADDING),
             None => 40.,
           };
 
-          let cursor = canvas.cursor;
-          let rect = Rect::from_xywh(cursor.x, cursor.y, 120., height.max(40.));
+          let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 120., height.max(40.));
+          used.bottom += BLOCK_PADDING;
+          let mut rect = used;
+          rect.bottom += BLOCK_PADDING;
+          ast.push(Primitive(id, rect, used, Shape::Rectangle(title, location)));
 
-          ast.push(Primitive(id, rect, Shape::Rectangle(title, location)));
-          outer_rect.right = outer_rect.right.max(rect.right);
-          outer_rect.bottom = rect.bottom;
-          canvas.cursor.y = rect.bottom + BLOCK_PADDING
+          bounds.right = bounds.right.max(rect.right);
+          bounds.bottom = rect.bottom
         }
         _ => {
           println!("unmatched {:?}", pair);
-          (ast, outer_rect) = self.pairs_to_nodes(pair.into_inner(), ast, canvas);
+          let inset = Point::new(bounds.left, bounds.bottom);
+          (ast, bounds) = self.pairs_to_nodes(pair.into_inner(), ast, canvas, &inset);
         }
       }
     }
-    (ast, outer_rect)
+    (ast, bounds)
   }
 
   fn find_node<'a>(&'a self, id: &str) -> Option<&Node<'a>> {
@@ -122,14 +128,14 @@ impl<'i> Diagram<'i> {
   fn search_nodes<'a>(&'a self, nodes: &'a [Node], node_id: &str) -> Option<&Node<'a>> {
     for node in nodes.iter() {
       match node {
-        Primitive(id, _, _) => {
+        Primitive(id, _, _, _) => {
           if let Some(id) = id {
             if id == &node_id {
               return Some(node);
             }
           }
         }
-        Container(_, _, nodes) => {
+        Container(_, _, _, nodes) => {
           if let Some(node) = self.search_nodes(nodes, node_id) {
             return Some(node);
           };
@@ -142,58 +148,43 @@ impl<'i> Diagram<'i> {
   pub fn render(&self, width: i32, height: i32, filepath: &str) {
     let mut canvas = Canvas::new(width, height);
     canvas.cursor = self.offset;
-    let _bounds = self.render_nodes(&self.nodes, &mut canvas);
+    self.render_nodes(&self.nodes, &mut canvas);
     canvas.write_png(filepath);
   }
 
-  fn render_nodes(&self, nodes: &[Node], canvas: &mut Canvas) -> Rect {
-    let cursor = canvas.cursor;
-    let mut outer_rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+  fn render_nodes(&self, nodes: &[Node], canvas: &mut Canvas) {
     for node in nodes.iter() {
       match node {
-        Container(title, _rect, nodes) => {
-          let mut rect = self.render_nodes(nodes, canvas);
-
-          rect.top -= BLOCK_PADDING;
-          rect.left -= BLOCK_PADDING;
-          rect.right += BLOCK_PADDING;
+        Container(title, _rect, used, nodes) => {
+          self.render_nodes(nodes, canvas);
 
           if let Some(title) = title {
             canvas.paint.set_style(PaintStyle::Fill);
             canvas.paint.set_color(Color::BLACK);
-            let inset = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
-            let origin = (inset.left, inset.bottom);
-            let down = canvas.paragraph(title, origin, inset.width());
-            rect.bottom += down + TEXT_PADDING;
+            let inset = used.with_inset((TEXT_PADDING, TEXT_PADDING));
+            let origin = (inset.left, inset.bottom - 16.);
+            canvas.paragraph(title, origin, inset.width());
           }
 
           canvas.paint.set_style(PaintStyle::Stroke);
           canvas.paint.set_color(Color::RED);
-          canvas.rectangle(&rect);
-
-          outer_rect.right = rect.right;
-          outer_rect.bottom = rect.bottom;
-          canvas.cursor.y = rect.bottom + BLOCK_PADDING;
+          canvas.rectangle(used);
         }
-        Primitive(_id, rect, shape) => {
-          self.render_shape(shape, rect, canvas);
-          outer_rect.right = rect.right;
-          outer_rect.bottom = rect.bottom + BLOCK_PADDING;
-          canvas.cursor.y = outer_rect.bottom
+        Primitive(_id, rect, used, shape) => {
+          self.render_shape(shape, rect, used, canvas);
         }
       }
     }
-    outer_rect
   }
 
-  fn render_shape(&self, shape: &Shape, rect: &Rect, canvas: &mut Canvas) -> Rect {
-    let mut adjusted = *rect;
+  fn render_shape(&self, shape: &Shape, rect: &Rect, used: &Rect, canvas: &mut Canvas) -> Rect {
+    let mut moved = *used;
 
     let mut adjust = |other: &Rect, distance: &Distance| {
-      adjusted.top = other.top;
-      adjusted.bottom = adjusted.top + rect.height();
-      adjusted.left = other.right + distance.pixels();
-      adjusted.right = adjusted.left + rect.width()
+      moved.top = other.top;
+      moved.bottom = moved.top + rect.height();
+      moved.left = other.right + distance.pixels();
+      moved.right = moved.left + rect.width()
     };
 
     match shape {
@@ -203,26 +194,26 @@ impl<'i> Diagram<'i> {
           let (_compass, distance, edge) = location;
           if let Some(node) = self.find_node(edge.0) {
             match node {
-              Primitive(_, other, _) => adjust(other, distance),
-              Container(_, other, _) => adjust(other, distance)
+              Primitive(_, other, _, _) => adjust(other, distance),
+              Container(_, other, _, _) => adjust(other, distance)
             };
           };
         }
 
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(Color::BLUE);
-        canvas.rectangle(&adjusted);
+        canvas.rectangle(&moved);
 
         if let Some(title) = title {
           canvas.paint.set_style(PaintStyle::Fill);
           canvas.paint.set_color(Color::BLACK);
-          let inset = adjusted.with_inset((TEXT_PADDING, TEXT_PADDING));
-          let origin = (inset.left, adjusted.top);
+          let inset = moved.with_inset((TEXT_PADDING, TEXT_PADDING));
+          let origin = (inset.left, moved.top);
           canvas.paragraph(title, origin, inset.width());
         }
       }
     }
-    adjusted
+    moved
   }
 }
 
@@ -283,6 +274,8 @@ mod tests {
   use std::path::Path;
   use std::process::Command;
 
+  use Shape::Rectangle;
+
   use crate::nested::Node::{Container, Primitive};
   use crate::nested::Shape;
 
@@ -314,7 +307,10 @@ mod tests {
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Primitive(None, rectangle_rect(), Shape::Rectangle(None, None)),
+      Primitive(None,
+                Rect::from_xywh(0., 0., 120., 56.),
+                Rect::from_xywh(0., 0., 120., 48.),
+                Rectangle(None, None)),
     ], diagram.nodes);
   }
 
@@ -324,7 +320,10 @@ mod tests {
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Primitive(Some("first"), rectangle_rect(), Shape::Rectangle(Some("title"), None)),
+      Primitive(Some("first"),
+                Rect::from_xywh(0., 0., 120., 56.),
+                Rect::from_xywh(0., 0., 120., 48.),
+                Rectangle(Some("title"), None)),
     ], diagram.nodes);
   }
 
@@ -334,7 +333,10 @@ mod tests {
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Primitive(None, rectangle_rect(), Shape::Rectangle(Some("title"), None)),
+      Primitive(None,
+                Rect::from_xywh(0., 0., 120., 56.),
+                Rect::from_xywh(0., 0., 120., 48.),
+                Rectangle(Some("title"), None)),
     ], diagram.nodes);
   }
 
@@ -344,10 +346,15 @@ mod tests {
                          box";
     let diagram = parse_string(string);
 
-    let second_rect = Rect::from_xywh(0., 48., 120., 40.);
     assert_eq!(vec![
-      Primitive(None, rectangle_rect(), Shape::Rectangle(None, None)),
-      Primitive(None, second_rect, Shape::Rectangle(None, None)),
+      Primitive(None,
+                Rect::from_xywh(0., 0., 120., 56.),
+                Rect::from_xywh(0., 0., 120., 48.),
+                Rectangle(None, None)),
+      Primitive(None,
+                Rect::from_xywh(0., 56., 120., 56.),
+                Rect::from_xywh(0., 56., 120., 48.),
+                Rectangle(None, None)),
     ], diagram.nodes);
   }
 
@@ -357,9 +364,15 @@ mod tests {
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Container(None, container_rect(), vec![
-        Primitive(None, rectangle_rect(), Shape::Rectangle(None, None))
-      ])
+      Container(None,
+                Rect::from_xywh(0., 0., 144., 80.),
+                Rect::from_xywh(0., 0., 144., 72.),
+                vec![
+                  Primitive(None,
+                            Rect::from_xywh(8., 8., 120., 56.),
+                            Rect::from_xywh(8., 8., 120., 48.),
+                            Rectangle(None, None))
+                ])
     ], diagram.nodes);
   }
 
@@ -369,9 +382,15 @@ mod tests {
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Container(None, container_rect(), vec![
-        Primitive(None, rectangle_rect(), Shape::Rectangle(None, None))
-      ])
+      Container(None,
+                Rect::from_xywh(0., 0., 144., 80.),
+                Rect::from_xywh(0., 0., 144., 72.),
+                vec![
+                  Primitive(None,
+                            Rect::from_xywh(8., 8., 120., 56.),
+                            Rect::from_xywh(8., 8., 120., 48.),
+                            Rectangle(None, None))
+                ])
     ], diagram.nodes);
   }
 
@@ -382,9 +401,15 @@ mod tests {
     let container_rect = Rect::from_xywh(0., 0., 136., 77.);
 
     assert_eq!(vec![
-      Container(Some("parent"), container_rect, vec![
-        Primitive(None, rectangle_rect(), Shape::Rectangle(Some("child"), None))
-      ])
+      Container(Some("parent"),
+                Rect::from_xywh(0., 0., 144., 93.),
+                Rect::from_xywh(0., 0., 144., 85.),
+                vec![
+                  Primitive(None,
+                            Rect::from_xywh(8., 8., 120., 56.),
+                            Rect::from_xywh(8., 8., 120., 48.),
+                            Rectangle(Some("child"), None))
+                ])
     ], diagram.nodes);
   }
 
@@ -394,7 +419,10 @@ mod tests {
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Primitive(None, zero_rect(), Shape::Line(None, "now.n", "future.n")),
+      Primitive(None,
+                zero_rect(),
+                zero_rect(),
+                Shape::Line(None, "now.n", "future.n")),
     ], diagram.nodes);
   }
 
@@ -402,10 +430,14 @@ mod tests {
   fn box_with_wrapping_title() {
     let string = format!(r#"box "{}""#, TQBF);
     let diagram = parse_string(&string);
-    let paragraph_rect = Rect::from_xywh(0., 0., 120., 76.);
+    let paragraph1_rect = Rect::from_xywh(0., 0., 120., 84.);
+    let paragraph2_rect = Rect::from_xywh(0., 0., 120., 76.);
 
     assert_eq!(vec![
-      Primitive(None, paragraph_rect, Shape::Rectangle(Some(TQBF), None)),
+      Primitive(None,
+                paragraph1_rect,
+                paragraph2_rect,
+                Rectangle(Some(TQBF), None)),
     ], diagram.nodes);
   }
 
@@ -442,10 +474,10 @@ mod tests {
     dbg!(&diagram.nodes);
     let left = diagram.find_node("left").unwrap();
     let left_rect = match left {
-      Primitive(_, rect, _) => { rect }
-      Container(_, rect, _) => { rect }
+      Primitive(_, rect, _, _) => { rect }
+      Container(_, rect, _, _) => { rect }
     };
-    let rect = Rect::from_ltrb(32., 32., 152., 91.);
+    let rect = Rect { left: 32., top: 32., right: 152., bottom: 99. };
     assert_eq!(&rect, left_rect);
 
     assert_visual(diagram, "target/side_by_side")?;
