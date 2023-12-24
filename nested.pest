@@ -2,15 +2,18 @@ picture = _{ SOI ~ shapes* ~ EOI }
 shapes = _{ container | shape }
 shape = _{ line | rectangle }
 container = { "box" ~ identified? ~ string? ~ "{" ~ shapes* ~ "}" }
-rectangle = { "box" ~ identified? ~ string? }
+rectangle = { "box" ~ identified? ~ string? ~ location? }
 identified = _{ "." ~ id }
 id = { ASCII_ALPHANUMERIC* }
 
+location = { "@" ~ compass ~ distance ~ "from" ~ edge }
+distance = { ASCII_DIGIT* ~ unit }
+unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
 line = { "line" ~ "from" ~ source ~ "to" ~ target }
 source = { edge }
 target = { edge }
-edge = @{ id ~ "." ~ compass }
-compass = { "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw" | "c" }
+edge = { id ~ "." ~ compass }
+compass = { "nw"  | "ne" | "n" | "e" | "se" | "s" | "sw" | "w" |  "c" }
 
 title = { string? }
 string = _{ "\"" ~ inner ~ "\"" }

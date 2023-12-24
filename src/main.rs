@@ -2,8 +2,7 @@ use std::fs;
 
 use clap::Parser;
 
-use picturs::nested::parse_nested;
-use picturs::skia::Canvas;
+use picturs::nested::Diagram;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -15,8 +14,8 @@ struct Args {
 fn main() -> picturs::Result<()> {
   let args = Args::parse();
   let string = fs::read_to_string(args.file).unwrap();
-  let mut canvas = Canvas::new(400, 800);
-  parse_nested(&string, &mut canvas)?;
+  let mut diagram = Diagram::new();
+  diagram.parse_string(&string);
   Ok(())
 }
 
