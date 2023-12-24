@@ -64,13 +64,14 @@ impl<'i> Diagram<'i> {
         Rule::container => {
           let title = rule_to_string(&pair, Rule::inner);
           let (nodes, mut rect) = self.pairs_to_nodes(pair.into_inner(), vec![], canvas);
-          canvas.cursor.y -= BLOCK_PADDING;
 
           rect.bottom += 2. * BLOCK_PADDING;
           rect.right += 2. * BLOCK_PADDING;
 
           if let Some(title) = title {
-            let down = canvas.paragraph(title, (rect.left + TEXT_PADDING, rect.bottom - TEXT_PADDING), rect.width() - 2. * TEXT_PADDING);
+            let inset = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
+            let origin = (inset.left, inset.bottom);
+            let down = canvas.paragraph(title, origin, inset.width());
             rect.bottom += down + TEXT_PADDING;
           }
 
@@ -151,31 +152,33 @@ impl<'i> Diagram<'i> {
     for node in nodes.iter() {
       match node {
         Container(title, _rect, nodes) => {
-          let mut bounds = self.render_nodes(nodes, canvas);
+          let mut rect = self.render_nodes(nodes, canvas);
 
-          bounds.top -= BLOCK_PADDING;
-          bounds.left -= BLOCK_PADDING;
-          bounds.right += BLOCK_PADDING;
+          rect.top -= BLOCK_PADDING;
+          rect.left -= BLOCK_PADDING;
+          rect.right += BLOCK_PADDING;
 
           if let Some(title) = title {
             canvas.paint.set_style(PaintStyle::Fill);
             canvas.paint.set_color(Color::BLACK);
-            let down = canvas.paragraph(title, (bounds.left + TEXT_PADDING, bounds.bottom - TEXT_PADDING), bounds.width() - 2. * TEXT_PADDING);
-            bounds.bottom += down + TEXT_PADDING;
+            let inset = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
+            let origin = (inset.left, inset.bottom);
+            let down = canvas.paragraph(title, origin, inset.width());
+            rect.bottom += down + TEXT_PADDING;
           }
 
           canvas.paint.set_style(PaintStyle::Stroke);
           canvas.paint.set_color(Color::RED);
-          canvas.rectangle(&bounds);
+          canvas.rectangle(&rect);
 
-          outer_rect.right = bounds.right;
-          outer_rect.bottom += bounds.height();
-          canvas.cursor.y = bounds.bottom + BLOCK_PADDING;
+          outer_rect.right = rect.right;
+          outer_rect.bottom = rect.bottom;
+          canvas.cursor.y = rect.bottom + BLOCK_PADDING;
         }
         Primitive(_id, rect, shape) => {
           self.render_shape(shape, rect, canvas);
           outer_rect.right = rect.right;
-          outer_rect.bottom += rect.height() + BLOCK_PADDING;
+          outer_rect.bottom = rect.bottom + BLOCK_PADDING;
           canvas.cursor.y = outer_rect.bottom
         }
       }
@@ -205,13 +208,17 @@ impl<'i> Diagram<'i> {
             };
           };
         }
+
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(Color::BLUE);
         canvas.rectangle(&adjusted);
+
         if let Some(title) = title {
           canvas.paint.set_style(PaintStyle::Fill);
           canvas.paint.set_color(Color::BLACK);
-          canvas.paragraph(title, (adjusted.left + TEXT_PADDING, adjusted.top), adjusted.width() - 2. * TEXT_PADDING);
+          let inset = adjusted.with_inset((TEXT_PADDING, TEXT_PADDING));
+          let origin = (inset.left, adjusted.top);
+          canvas.paragraph(title, origin, inset.width());
         }
       }
     }
