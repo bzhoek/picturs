@@ -5,7 +5,7 @@ use std::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
-use skia_safe::{Color, PaintStyle, Point, Rect, Size};
+use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::nested::Node::{Container, Primitive};
 use crate::skia::Canvas;
@@ -59,7 +59,16 @@ impl<'i> Diagram<'i> {
         Rule::container => {
           let title = rule_to_string(&pair, Rule::inner);
           let (nodes, mut rect) = self.pairs_to_nodes(pair.into_inner(), vec![], canvas);
+          canvas.cursor.y -= BLOCK_PADDING;
+
           rect.bottom += 2. * BLOCK_PADDING;
+          rect.right += 2. * BLOCK_PADDING;
+
+          if let Some(title) = title {
+            let down = canvas.paragraph(title, (rect.left + TEXT_PADDING, rect.bottom - TEXT_PADDING), rect.width() - 2. * TEXT_PADDING);
+            rect.bottom += down + TEXT_PADDING;
+          }
+
           ast.push(Container(title, rect, nodes));
 
           outer_rect.right = outer_rect.right.max(rect.right);
@@ -83,13 +92,13 @@ impl<'i> Diagram<'i> {
             None => 40.,
           };
 
-          let size = Size::new(120., height.max(40.));
-          let rect = Rect::from_xywh(cursor.x, cursor.y, size.width, size.height);
+          let cursor = canvas.cursor;
+          let rect = Rect::from_xywh(cursor.x, cursor.y, 120., height.max(40.));
 
           ast.push(Primitive(id, rect, Shape::Rectangle(title, location)));
           outer_rect.right = outer_rect.right.max(rect.right);
           outer_rect.bottom = rect.bottom;
-          canvas.cursor.y = rect.bottom;
+          canvas.cursor.y = rect.bottom + BLOCK_PADDING
         }
         _ => {
           println!("unmatched {:?}", pair);
@@ -136,13 +145,7 @@ impl<'i> Diagram<'i> {
     let mut outer_rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
     for node in nodes.iter() {
       match node {
-        Primitive(_id, size, shape) => {
-          let bounds = self.render_shape(shape, size, canvas);
-          outer_rect.bottom += size.height() + BLOCK_PADDING;
-          outer_rect.right = bounds.right;
-          canvas.cursor.y += size.height() + BLOCK_PADDING;
-        }
-        Container(title, _, nodes) => {
+        Container(title, _rect, nodes) => {
           let mut bounds = self.render_nodes(nodes, canvas);
 
           bounds.top -= BLOCK_PADDING;
@@ -160,37 +163,54 @@ impl<'i> Diagram<'i> {
           canvas.paint.set_color(Color::RED);
           canvas.rectangle(&bounds);
 
-          outer_rect.bottom += bounds.height();
           outer_rect.right = bounds.right;
+          outer_rect.bottom += bounds.height();
           canvas.cursor.y = bounds.bottom + BLOCK_PADDING;
+        }
+        Primitive(_id, rect, shape) => {
+          self.render_shape(shape, rect, canvas);
+          outer_rect.right = rect.right;
+          outer_rect.bottom += rect.height() + BLOCK_PADDING;
+          canvas.cursor.y = outer_rect.bottom
         }
       }
     }
     outer_rect
   }
 
-  fn render_shape(&self, shape: &Shape, size: &Rect, canvas: &mut Canvas) -> Rect {
-    let cursor = canvas.cursor;
-    let rect = Rect::from_xywh(cursor.x, cursor.y, size.width(), size.height());
+  fn render_shape(&self, shape: &Shape, rect: &Rect, canvas: &mut Canvas) -> Rect {
+    let mut adjusted = *rect;
+
+    let mut adjust = |other: &Rect| {
+      adjusted.top = other.top;
+      adjusted.bottom = adjusted.top + rect.height();
+      adjusted.left = other.right + 32.;
+      adjusted.right = adjusted.left + rect.width()
+    };
+
     match shape {
       Shape::Line(_, _, _) => {}
       Shape::Rectangle(title, location) => {
-        if let Some(_location) = location {
-          // let (id, compass, edge) = location;
-          // let (x, y) = canvas.find_edge(id, compass, edge);
-          // canvas.cursor = (x, y);
+        if let Some(location) = location {
+          let (compass, distance, edge) = location;
+          self.find_node(edge.0).map(|node| {
+            match node {
+              Primitive(_, other, _) => adjust(other),
+              Container(_, other, _) => adjust(other)
+            };
+          });
         }
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(Color::BLUE);
-        canvas.rectangle(&rect);
+        canvas.rectangle(&adjusted);
         if let Some(title) = title {
           canvas.paint.set_style(PaintStyle::Fill);
           canvas.paint.set_color(Color::BLACK);
-          canvas.paragraph(title, (rect.left + TEXT_PADDING, rect.top), rect.width() - 2. * TEXT_PADDING);
+          canvas.paragraph(title, (adjusted.left + TEXT_PADDING, adjusted.top), adjusted.width() - 2. * TEXT_PADDING);
         }
       }
     }
-    rect
+    adjusted
   }
 }
 
@@ -234,6 +254,10 @@ pub fn dump_nested(level: usize, pairs: Pairs<Rule>) {
 
 #[cfg(test)]
 mod tests {
+  use std::fs;
+  use std::path::Path;
+  use std::process::Command;
+
   use crate::nested::Node::{Container, Primitive};
   use crate::nested::Shape;
 
@@ -242,7 +266,7 @@ mod tests {
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
   fn container_size() -> Rect {
-    Rect::from_xywh(0., 56., 120., 40.)
+    Rect::from_xywh(0., 0., 136., 56.)
   }
 
   fn no_size() -> Rect {
@@ -296,9 +320,10 @@ mod tests {
                          box";
     let diagram = parse_string(string);
 
+    let rect2 = Rect::from_xywh(0., 48., 120., 40.);
     assert_eq!(vec![
       Primitive(None, rectangle_size(), Shape::Rectangle(None, None)),
-      Primitive(None, rectangle_size(), Shape::Rectangle(None, None)),
+      Primitive(None, rect2, Shape::Rectangle(None, None)),
     ], diagram.nodes);
     Ok(())
   }
@@ -333,9 +358,10 @@ mod tests {
   fn nested_box_with_title() -> Result<()> {
     let string = r#"box "parent" { box "child" }"#;
     let diagram = parse_string(string);
+    let rect = Rect::from_xywh(0., 0., 136., 77.);
 
     assert_eq!(vec![
-      Container(Some("parent"), container_size(), vec![
+      Container(Some("parent"), rect, vec![
         Primitive(None, rectangle_size(), Shape::Rectangle(Some("child"), None))
       ])
     ], diagram.nodes);
@@ -379,13 +405,12 @@ mod tests {
       line from now.n to future.n
       "#;
     let mut diagram = Diagram::default();
-    diagram.parse_string(string);
     diagram.set_offset((32., 32.));
+    diagram.parse_string(string);
     dbg!(&diagram.nodes);
-    diagram.render(400, 800, "target/extended.png");
+    assert_visual(diagram, "target/extended")?;
     Ok(())
   }
-
 
   #[test]
   fn side_by_side() -> Result<()> {
@@ -394,18 +419,47 @@ mod tests {
       box.right "While this goes to the right hand side" @nw 1cm from left.ne
       "#;
     let mut diagram = Diagram::default();
-    diagram.parse_string(string);
     diagram.set_offset((32., 32.));
+    diagram.parse_string(string);
     assert_eq!(2, diagram.nodes.len());
     dbg!(&diagram.nodes);
     let left = diagram.find_node("left").unwrap();
-    let rect = match left {
+    let left_rect = match left {
       Primitive(_, rect, _) => { rect }
       Container(_, rect, _) => { rect }
     };
-    assert_eq!(59., rect.height());
+    let rect = Rect::from_ltrb(32., 32., 152., 91.);
+    assert_eq!(&rect, left_rect);
 
-    diagram.render(400, 800, "target/side_by_side.png");
+    let right = diagram.find_node("right").unwrap();
+    // match right {
+    //   Primitive(_, rect, _) => { *rect.top = left_rect.top }
+    //   Container(_, rect, _) => { *rect.top = left_rect.top }
+    // };
+
+    assert_visual(diagram, "target/side_by_side")?;
+    Ok(())
+  }
+
+  fn assert_visual(diagram: Diagram, prefix: &str) -> Result<()> {
+    let ref_file = format!("{}.png", prefix);
+    let last_file = format!("{}-last.png", prefix);
+    diagram.render(400, 800, &*last_file);
+    if !Path::new(&ref_file).exists() {
+      std::fs::rename(last_file, ref_file)?;
+    } else {
+      let diff_file = format!("{}-diff.png", prefix);
+      let output = Command::new("compare")
+        .arg("-metric")
+        .arg("rmse")
+        .arg(&last_file)
+        .arg(ref_file)
+        .arg(&diff_file)
+        .output()?;
+      assert!(output.status.success());
+      fs::remove_file(last_file)?;
+      fs::remove_file(diff_file)?;
+    }
     Ok(())
   }
 }
