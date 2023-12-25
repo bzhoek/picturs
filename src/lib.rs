@@ -1,13 +1,9 @@
-use std::error::Error;
-
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Rect, Vector};
 
 pub mod nested;
 pub mod skia;
-
-pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Parser)]
 #[grammar = "pic.pest"] // relative to project `src`
