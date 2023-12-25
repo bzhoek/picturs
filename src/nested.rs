@@ -198,31 +198,30 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  pub fn layout_node(&self, node: &Node) {
-    let primitive = match node {
+  pub fn layout_node(&self, node: &Node) -> Option<&Rect> {
+    match node {
       Primitive(_id, _rect, used, shape) => {
         Some((used, shape))
       }
       _ => None
-    };
-
-    if let Some((used, shape)) = primitive {
-      let other_used: Option<Rect> = match shape {
-        Shape::Line(_, _, _) => None,
-        Shape::Rectangle(_title, location) => {
-          if let Some(location) = location {
-            let (_mycompass, _distance, (id, _compass)) = location;
-            if let Some(node) = self.find_node(id) {
-              match node {
-                Primitive(_, _, used, _) => Some(used),
-                _ => None
-              };
-            };
-          }
-          None
+    }.and_then(|(used, shape)| {
+      match shape {
+        Shape::Rectangle(_title, Some(location)) => {
+          let (_mycompass, _distance, (other, _compass)) = location;
+          self.used_rect(other)
         }
-      };
-    };
+        _ => None,
+      }
+    })
+  }
+
+  pub fn used_rect(&self, id: &str) -> Option<&Rect> {
+    self.find_node(id).map(|node| {
+      match node {
+        Primitive(_, _, used, _) => used,
+        _ => panic!("not a primitive")
+      }
+    })
   }
 
   fn render_shape(&self, shape: &Shape, rect: &Rect, used: &Rect, canvas: &mut Canvas) -> Rect {

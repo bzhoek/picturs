@@ -181,9 +181,16 @@ mod tests {
       }
       _ => None
     };
+
     let expected = Rect { left: 32., top: 99., right: 152., bottom: 166. };
     assert_eq!(Some(&expected), used.as_ref());
-    diagram.layout_node(right);
+
+    let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
+    let other = diagram.used_rect("left");
+    assert_eq!(Some(&expected), other);
+
+    let other = diagram.layout_node(right);
+    assert_eq!(Some(&expected), other);
   }
 
   #[test]
