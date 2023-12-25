@@ -198,6 +198,33 @@ impl<'i> Diagram<'i> {
     }
   }
 
+  pub fn layout_node(&self, node: &Node) {
+    let primitive = match node {
+      Primitive(_id, _rect, used, shape) => {
+        Some((used, shape))
+      }
+      _ => None
+    };
+
+    if let Some((used, shape)) = primitive {
+      let other_used: Option<Rect> = match shape {
+        Shape::Line(_, _, _) => None,
+        Shape::Rectangle(_title, location) => {
+          if let Some(location) = location {
+            let (_mycompass, _distance, (id, _compass)) = location;
+            if let Some(node) = self.find_node(id) {
+              match node {
+                Primitive(_, _, used, _) => Some(used),
+                _ => None
+              };
+            };
+          }
+          None
+        }
+      };
+    };
+  }
+
   fn render_shape(&self, shape: &Shape, rect: &Rect, used: &Rect, canvas: &mut Canvas) -> Rect {
     let mut moved = *used;
 
@@ -216,7 +243,7 @@ impl<'i> Diagram<'i> {
           if let Some(node) = self.find_node(edge.0) {
             match node {
               Primitive(_, other, _, _) => adjust(other, distance),
-              Container(_, other, _, _) => adjust(other, distance)
+              _ => {}
             };
           };
         }

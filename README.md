@@ -7,9 +7,14 @@
 ## Nested
 1. ~Render all rectangles~
 2. ~Wrap the text in a rectangle~
-3. Save primitive bounds in AST on parsing first pass
-4. Draw on canvas is second pass
+3. ~Save primitive bounds in AST on parsing first pass~
+4. ~Onderscheid tussen `rect` en `used`, met eventueel een transform bij het renderen~
+5. Positioneren apart doen zodat het beter te testen is
+6. Edge struct die links en rechts kan onderscheiden, misschien met graden of klok
+4. Positioneren met `@nw 1cm from left.ne`
 5. Bounds interface definieren zodat niet heel Canvas een dependency wordt
+
+`@nw 1cm right 2cm down from left.ne`
 
 ## pest
  
@@ -20,6 +25,9 @@
 https://blog.logrocket.com/understanding-rust-option-results-enums/
 
 ```
+box.left "This goes to the left hand side"
+box.right "While this goes to the right hand side" @nw 2cm right 2cm up from left.ne
+
 box.now "Now" {
   box.step3 "What do we need to start doing now"
 }
