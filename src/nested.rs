@@ -31,6 +31,27 @@ pub enum Shape<'a> {
   Rectangle(Option<&'a str>, Option<(&'a str, Distance, (&'a str, &'a str))>),
 }
 
+pub struct Compass {
+  x: f32,
+  y: f32,
+}
+
+impl Compass {
+  fn convert(string: &str) -> Self {
+    match string.to_lowercase().as_str() {
+      "n" => Self { x: 0., y: -0.5 },
+      "ne" => Self { x: 0.5, y: -0.5 },
+      "e" => Self { x: 0.5, y: 0. },
+      "se" => Self { x: 0.5, y: 0.5 },
+      "s" => Self { x: 0., y: 0.5 },
+      "sw" => Self { x: -0.5, y: 0.5 },
+      "w" => Self { x: -0.5, y: 0. },
+      "nw" => Self { x: -0.5, y: -0.5 },
+      _ => Self { x: 0., y: 0. }
+    }
+  }
+}
+
 #[derive(Default)]
 pub struct Diagram<'a> {
   nodes: Vec<Node<'a>>,
@@ -504,5 +525,22 @@ mod tests {
       fs::remove_file(diff_file)?;
     }
     Ok(())
+  }
+
+  #[test]
+  fn upper_left() {
+    let rect = Rect::from_xywh(40., 40., 100., 200.);
+
+    let compass = Compass::convert("nw");
+    let mut center = rect.center();
+    assert_eq!(Point::new(90., 140.), center);
+
+    center.offset((compass.x * rect.width(), compass.y * rect.height()));
+    assert_eq!(Point::new(40., 40.), center);
+
+    let compass = Compass::convert("se");
+    let mut center = rect.center();
+    center.offset((compass.x * rect.width(), compass.y * rect.height()));
+    assert_eq!(Point::new(140., 240.), center);
   }
 }
