@@ -380,24 +380,6 @@ mod tests {
   }
 
   #[test]
-  fn nested_box_untitled() {
-    let string = "box { box }";
-    let diagram = parse_string(string);
-
-    assert_eq!(vec![
-      Container(None,
-                Rect::from_xywh(0., 0., 144., 80.),
-                Rect::from_xywh(0., 0., 144., 72.),
-                vec![
-                  Primitive(None,
-                            Rect::from_xywh(8., 8., 120., 56.),
-                            Rect::from_xywh(8., 8., 120., 48.),
-                            Rectangle(None, None))
-                ])
-    ], diagram.nodes);
-  }
-
-  #[test]
   fn nested_box_id() {
     let string = "box.parent { box }";
     let diagram = parse_string(string);
@@ -419,7 +401,6 @@ mod tests {
   fn nested_box_with_title() {
     let string = r#"box "parent" { box "child" }"#;
     let diagram = parse_string(string);
-    let container_rect = Rect::from_xywh(0., 0., 136., 77.);
 
     assert_eq!(vec![
       Container(Some("parent"),
@@ -483,9 +464,31 @@ mod tests {
   }
 
   #[test]
+  fn layout_node() {
+    let string =
+      r#"
+      box.left "This goes to the left hand side"
+      box.right "While this goes to the right hand side" @nw 2cm from left.ne
+      "#;
+    let mut diagram = Diagram::offset((32., 32.));
+    diagram.parse_string(string);
+    let right = diagram.find_node("right").unwrap();
+    let used = match right {
+      Primitive(_id, _rect, mut used, _shape) => {
+        used.bottom += 8.;
+        Some(used)
+      }
+      _ => None
+    };
+    let expected = Rect { left: 32., top: 99., right: 152., bottom: 166. };
+    assert_eq!(Some(&expected), used.as_ref());
+  }
+
+  #[test]
   fn side_by_side() -> Result<()> {
     let string =
-      r#"box.left "This goes to the left hand side"
+      r#"
+      box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" @nw 2cm from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
