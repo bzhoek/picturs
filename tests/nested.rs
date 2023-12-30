@@ -7,6 +7,7 @@ mod tests {
 
   use anyhow::Result;
   use skia_safe::{Point, Rect, Vector};
+  use picturs::Distance;
 
   use picturs::nested::{Compass, Diagram, Node, Shape};
   use picturs::nested::Node::{Container, Primitive};
@@ -177,30 +178,14 @@ mod tests {
 
     let right = diagram.used_rect("right").unwrap();
     let expected = Rect::from_xywh(32., 99., 120., 59.);
-    ;
     assert_eq!(&expected, right);
     // left.bottom += 8.;
 
-    let right: &Node = diagram.find_node("right").unwrap();
-    let used = match right {
-      Primitive(_id, _rect, mut used, _shape) => {
-        used.bottom += 8.;
-        Some(used)
-      }
-      _ => None
-    };
-
-    let expected = Rect::from_xywh(32., 99., 120., 67.);
-    ;
-    assert_eq!(Some(&expected), used.as_ref());
-    // let used = diagram.used_rect("right").unwrap();
-    // assert_eq!(&expected, used);
+    let used = diagram.used_rect("right").unwrap();
+    assert_eq!(&expected, used);
 
     let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
     let other = diagram.used_rect("left");
-    assert_eq!(Some(&expected), other);
-
-    let other = diagram.layout_node(right);
     assert_eq!(Some(&expected), other);
   }
 
@@ -277,14 +262,43 @@ mod tests {
     let _top = diagram.parse_string(string);
     dbg!(&diagram.nodes);
     // dump_nested(0, top);
-    let point = Point::new(32., 32.);
+    let _point = Point::new(32., 32.);
     let offset = Vector::new(-1., 0.);
     let result = offset.mul(3.);
     assert_eq!(Point::new(-3., 0.), result);
   }
 
   #[test]
-  fn test_modification() {
+  fn node_mut() {
+    let string =
+      r#"
+      box.left "This goes to the left hand side"
+      box.right "While this goes to the right hand side" @nw 2cm right from left.ne
+      "#;
+    let mut diagram = Diagram::offset((32., 32.));
+    diagram.parse_string(string);
+
+    let rect = diagram.used_rect("right").unwrap();
+    let expected = Rect::from_xywh(32., 99., 120., 59.);
+    assert_eq!(&expected, rect);
+
+    let distances = vec![
+      Distance::new(2., "cm".to_string(), Vector::new(1., 0.)),
+      Distance::new(1., "cm".to_string(), Vector::new(0., 1.)),
+    ];
+    diagram.node_mut("right", distances);
+    let rect = diagram.used_rect("right").unwrap();
+    let expected = Rect::from_xywh(108., 137., 120., 59.);
+    assert_eq!(&expected, rect);
+  }
+
+  #[derive(Debug)]
+  struct Primitives<'a> {
+    primitives: Vec<Node<'a>>,
+  }
+
+  #[test]
+  fn test_primitives_mut() {
     let mut primitive = Primitive(None,
                                   Rect::from_xywh(0., 0., 120., 56.),
                                   Rect::from_xywh(0., 0., 120., 48.),
@@ -299,17 +313,46 @@ mod tests {
     dbg!(&primitive);
 
     let mut primitives = vec![primitive];
-    let first = primitives.first_mut();
-    let rect = match primitives.first_mut().unwrap() {
-      Primitive(_, ref mut rect, _, _) => {
-        rect.bottom += 8.;
-        Some(rect)
-      }
-      _ => None
-    };
+    let rect = find_rect(&mut primitives);
     if let Some(rect) = rect {
       rect.bottom += 16.
     }
-    dbg!(primitives);
+    dbg!(&primitives);
+
+    let mut primitives = Primitives { primitives };
+    let rect = primitives.find_primitive();
+    if let Some(rect) = rect {
+      rect.bottom += 16.
+    }
+    dbg!(&primitives);
+  }
+
+  impl Primitives<'_> {
+    fn find_primitive(&mut self) -> Option<&mut Rect> {
+      let first = self.primitives.first_mut();
+      let rect = match first.unwrap() {
+        Primitive(_, ref mut rect, _, _) => {
+          rect.bottom += 8.;
+          Some(rect)
+        }
+        _ => None
+      };
+      rect
+    }
+  }
+
+  fn find_rect<'a>(nodes: &'a mut Vec<Node>) -> Option<&'a mut Rect> {
+    for node in nodes.iter_mut() {
+      match node {
+        Primitive(_, ref mut rect, _, _) => {
+          rect.bottom += 8.;
+          return Some(rect);
+        }
+        Container(_, _, _, nodes) => {
+          find_rect(nodes);
+        }
+      }
+    }
+    None
   }
 }

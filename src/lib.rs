@@ -1,6 +1,7 @@
+use std::ops::Mul;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
-use skia_safe::{Rect, Vector};
+use skia_safe::{Point, Rect, Vector};
 
 pub mod nested;
 pub mod skia;
@@ -84,12 +85,16 @@ pub struct Distance {
 }
 
 impl Distance {
-  fn new(length: f32, unit: String, direction: Vector) -> Self {
+  pub fn new(length: f32, unit: String, direction: Vector) -> Self {
     Self { length, unit, direction }
   }
 
   fn pixels(&self) -> f32 {
     self.length * 38.
+  }
+
+  fn offset(&self) -> Point {
+    self.direction.mul(self.pixels())
   }
 }
 

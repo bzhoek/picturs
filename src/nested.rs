@@ -144,7 +144,7 @@ impl<'i> Diagram<'i> {
     self.search_nodes(&self.nodes, id)
   }
 
-  fn search_nodes<'a>(&'a self, nodes: &'a [Node], node_id: &str) -> Option<&Node<'a>> {
+  fn search_nodes<'a>(&'a self, nodes: &'a Vec<Node>, node_id: &str) -> Option<&Node<'a>> {
     nodes.iter().find(|node| {
       match node {
         Primitive(Some(id), _, _, _) => {
@@ -156,6 +156,36 @@ impl<'i> Diagram<'i> {
         _ => false
       }
     })
+  }
+
+  pub fn node_mut(&mut self, id: &str, distances: Vec<Distance>) {
+    match Diagram::find_nodes(&mut self.nodes, id).unwrap() {
+      Primitive(_, _, ref mut rect, _) => {
+        for distance in distances.iter() {
+          rect.offset(distance.offset());
+        }
+      }
+      Container(_, _, _, _) => {}
+    }
+  }
+
+  fn find_nodes<'a: 'i>(nodes: &'i mut Vec<Node<'a>>, node_id: &str) -> Option<&'i mut Node<'a>> {
+    for node in nodes.iter_mut() {
+      match node {
+        Primitive(Some(id), _, _, _) => {
+          if id == &node_id {
+            return Some(node);
+          }
+        }
+        Container(_, _, _, nodes) => {
+          if let Some(node) = Diagram::find_nodes(nodes, node_id) {
+            return Some(node);
+          }
+        }
+        _ => {}
+      }
+    }
+    None
   }
 
   pub fn render(&self, width: i32, height: i32, filepath: &str) {
