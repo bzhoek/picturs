@@ -28,7 +28,7 @@ pub enum Node<'a> {
 #[derive(PartialEq)]
 pub enum Shape<'a> {
   Line(Option<&'a str>, &'a str, &'a str),
-  Rectangle(Option<&'a str>, Option<(&'a str, Distance, (&'a str, &'a str))>),
+  Rectangle(Option<&'a str>, Option<(&'a str, Vec<Distance>, (&'a str, &'a str))>),
 }
 
 pub struct Compass {
@@ -149,11 +149,9 @@ impl<'i> Diagram<'i> {
   fn search_nodes<'a>(&'a self, nodes: &'a [Node], node_id: &str) -> Option<&Node<'a>> {
     for node in nodes.iter() {
       match node {
-        Primitive(id, _, _, _) => {
-          if let Some(id) = id {
-            if id == &node_id {
-              return Some(node);
-            }
+        Primitive(Some(id), _, _, _) => {
+          if id == &node_id {
+            return Some(node);
           }
         }
         Container(_, _, _, nodes) => {
@@ -161,6 +159,7 @@ impl<'i> Diagram<'i> {
             return Some(node);
           };
         }
+        _ => {}
       }
     }
     None
@@ -204,7 +203,7 @@ impl<'i> Diagram<'i> {
         Some((used, shape))
       }
       _ => None
-    }.and_then(|(used, shape)| {
+    }.and_then(|(_used, shape)| {
       match shape {
         Shape::Rectangle(_title, Some(location)) => {
           let (_mycompass, _distance, (other, _compass)) = location;
@@ -241,7 +240,7 @@ impl<'i> Diagram<'i> {
           let (_compass, distance, edge) = location;
           if let Some(node) = self.find_node(edge.0) {
             match node {
-              Primitive(_, other, _, _) => adjust(other, distance),
+              Primitive(_, other, _, _) => adjust(other, distance.first().unwrap()),
               _ => {}
             };
           };
@@ -268,33 +267,52 @@ const BLOCK_PADDING: f32 = 8.;
 const TEXT_PADDING: f32 = 4.;
 
 fn rule_to_location<'a>(pair: &Pair<'a, Rule>, rule: Rule)
-                        -> Option<(&'a str, Distance, (&'a str, &'a str))> {
-  find_rule(pair, rule)
-    .map(|p| (
-      rule_to_string(&p, Rule::compass).unwrap(),
-      rule_to_distance(&p, Rule::distance).unwrap(),
-      rule_to_edge(&p, Rule::edge).unwrap(),
-    ))
-}
-
-fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Distance> {
+                        -> Option<(&'a str, Vec<Distance>, (&'a str, &'a str))> {
   find_rule(pair, rule)
     .map(|p| {
-      let length = find_rule(&p, Rule::length)
-        .and_then(|p| p.as_str().parse::<usize>().ok())
-        .unwrap();
-      let unit = rule_to_string(&p, Rule::unit)
-        .unwrap();
-      Distance::new(length as f32, unit.to_owned())
+      let mut compass: Option<&str> = None;
+      let mut directions: Vec<Distance> = vec![];
+      let mut edge: Option<(&str, &str)> = None;
+
+      for rule in p.into_inner() {
+        match rule.as_rule() {
+          Rule::compass => { compass = Some(rule.as_str()); }
+          Rule::distance => {
+            let distance = pair_to_distance(rule);
+            directions.push(distance);
+          }
+          Rule::edge => { edge = Some(pair_to_edge(rule)); }
+          _ => {}
+        }
+      };
+      (compass.unwrap(), directions, edge.unwrap())
     })
 }
 
+fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Distance> {
+  find_rule(pair, rule).map(pair_to_distance)
+}
+
+fn pair_to_distance(pair: Pair<Rule>) -> Distance {
+  let length = find_rule(&pair, Rule::length)
+    .and_then(|p| p.as_str().parse::<usize>().ok())
+    .unwrap();
+  let unit = rule_to_string(&pair, Rule::unit)
+    .unwrap();
+  let direction = rule_to_string(&pair, Rule::direction)
+    .unwrap();
+  Distance::new(length as f32, unit.to_owned(), direction.to_owned())
+}
+
 fn rule_to_edge<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<(&'a str, &'a str)> {
-  find_rule(pair, rule)
-    .map(|p| (
-      rule_to_string(&p, Rule::id).unwrap(),
-      rule_to_string(&p, Rule::compass).unwrap(),
-    ))
+  find_rule(pair, rule).map(pair_to_edge)
+}
+
+fn pair_to_edge(pair: Pair<Rule>) -> (&str, &str) {
+  (
+    rule_to_string(&pair, Rule::id).unwrap(),
+    rule_to_string(&pair, Rule::compass).unwrap(),
+  )
 }
 
 fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {

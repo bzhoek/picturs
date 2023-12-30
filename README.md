@@ -15,6 +15,7 @@
 5. Bounds interface definieren zodat niet heel Canvas een dependency wordt
 
 `@nw 1cm right 2cm down from left.ne`
+`@nw=left.ne 1cr 2cd`
 
 ## pest
  

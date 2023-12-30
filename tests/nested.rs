@@ -7,7 +7,7 @@ mod tests {
   use anyhow::Result;
   use skia_safe::{Point, Rect};
 
-  use picturs::nested::{Compass, Diagram, dump_nested, Shape};
+  use picturs::nested::{Compass, Diagram, Shape};
   use picturs::nested::Node::{Container, Primitive};
   use picturs::nested::Shape::Rectangle;
 
@@ -169,10 +169,11 @@ mod tests {
     let string =
       r#"
       box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" @nw 2cm from left.ne
+      box.right "While this goes to the right hand side" @nw 2cm right from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
+
     let right = diagram.find_node("right").unwrap();
     let used = match right {
       Primitive(_id, _rect, mut used, _shape) => {
@@ -198,11 +199,10 @@ mod tests {
     let string =
       r#"
       box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" @nw 2cm from left.ne
+      box.right "While this goes to the right hand side" @nw 2cm right from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
-    let top = diagram.parse_string(string);
-    dump_nested(0, top);
+    diagram.parse_string(string);
     assert_eq!(2, diagram.nodes.len());
     dbg!(&diagram.nodes);
     let left = diagram.find_node("left").unwrap();
@@ -254,5 +254,18 @@ mod tests {
     let mut center = rect.center();
     center.offset((compass.x * rect.width(), compass.y * rect.height()));
     assert_eq!(Point::new(140., 240.), center);
+  }
+
+  #[test]
+  fn parse_multiple_directions() {
+    let string =
+      r#"
+      box.left "Left"
+      box "Right" @nw 1cm right 2cm down from left.ne
+      "#;
+    let mut diagram = Diagram::offset((32., 32.));
+    let _top = diagram.parse_string(string);
+    dbg!(&diagram.nodes);
+    // dump_nested(0, top);
   }
 }

@@ -6,10 +6,11 @@ rectangle = { "box" ~ identified? ~ string? ~ location? }
 identified = _{ "." ~ id }
 id = { ASCII_ALPHANUMERIC* }
 
-location = { "@" ~ compass ~ distance ~ "from" ~ edge }
-distance = { length ~ unit }
+location = { "@" ~ compass ~ distance* ~ "from" ~ edge }
+distance = { length ~ unit ~ direction }
 length = { ASCII_DIGIT* }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
+direction = { "up" | "down" | "left" | "right" }
 
 line = { "line" ~ "from" ~ source ~ "to" ~ target }
 source = { edge }
