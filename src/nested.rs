@@ -37,7 +37,7 @@ pub struct Compass {
 }
 
 impl Compass {
-  pub fn convert(string: &str) -> Self {
+  pub fn new(string: &str) -> Self {
     match string.to_lowercase().as_str() {
       "n" => Self { x: 0., y: -0.5 },
       "ne" => Self { x: 0.5, y: -0.5 },
@@ -49,6 +49,12 @@ impl Compass {
       "nw" => Self { x: -0.5, y: -0.5 },
       _ => Self { x: 0., y: 0. }
     }
+  }
+
+  pub fn to_point(&self, rect: &Rect) -> Point {
+    let mut point = rect.center();
+    point.offset((self.x * rect.width(), self.y * rect.height()));
+    point
   }
 }
 

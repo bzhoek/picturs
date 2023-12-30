@@ -238,17 +238,16 @@ mod tests {
   fn upper_left() {
     let rect = Rect::from_xywh(40., 40., 100., 200.);
 
-    let compass = Compass::convert("nw");
-    let mut center = rect.center();
+    let compass = Compass::new("nw");
+    let center = rect.center();
     assert_eq!(Point::new(90., 140.), center);
 
-    center.offset((compass.x * rect.width(), compass.y * rect.height()));
-    assert_eq!(Point::new(40., 40.), center);
+    let nw = compass.to_point(&rect);
+    assert_eq!(Point::new(40., 40.), nw);
 
-    let compass = Compass::convert("se");
-    let mut center = rect.center();
-    center.offset((compass.x * rect.width(), compass.y * rect.height()));
-    assert_eq!(Point::new(140., 240.), center);
+    let compass = Compass::new("se");
+    let se = compass.to_point(&rect);
+    assert_eq!(Point::new(140., 240.), se);
   }
 
   #[test]
@@ -288,7 +287,6 @@ mod tests {
     ];
     diagram.node_mut("right", distances);
     let rect = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(108., 137., 120., 59.);
     assert_eq!(&expected, rect);
   }
 
