@@ -8,7 +8,7 @@ mod tests {
   use anyhow::Result;
   use skia_safe::{Point, Rect, Vector};
 
-  use picturs::nested::{Compass, Diagram, Shape};
+  use picturs::nested::{Compass, Diagram, Node, Shape};
   use picturs::nested::Node::{Container, Primitive};
   use picturs::nested::Shape::Rectangle;
 
@@ -175,7 +175,13 @@ mod tests {
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
 
-    let right = diagram.find_node("right").unwrap();
+    let right = diagram.used_rect("right").unwrap();
+    let expected = Rect::from_xywh(32., 99., 120., 59.);
+    ;
+    assert_eq!(&expected, right);
+    // left.bottom += 8.;
+
+    let right: &Node = diagram.find_node("right").unwrap();
     let used = match right {
       Primitive(_id, _rect, mut used, _shape) => {
         used.bottom += 8.;
@@ -184,8 +190,11 @@ mod tests {
       _ => None
     };
 
-    let expected = Rect { left: 32., top: 99., right: 152., bottom: 166. };
+    let expected = Rect::from_xywh(32., 99., 120., 67.);
+    ;
     assert_eq!(Some(&expected), used.as_ref());
+    // let used = diagram.used_rect("right").unwrap();
+    // assert_eq!(&expected, used);
 
     let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
     let other = diagram.used_rect("left");
@@ -272,5 +281,35 @@ mod tests {
     let offset = Vector::new(-1., 0.);
     let result = offset.mul(3.);
     assert_eq!(Point::new(-3., 0.), result);
+  }
+
+  #[test]
+  fn test_modification() {
+    let mut primitive = Primitive(None,
+                                  Rect::from_xywh(0., 0., 120., 56.),
+                                  Rect::from_xywh(0., 0., 120., 48.),
+                                  Rectangle(None, None));
+    dbg!(&primitive);
+    match primitive {
+      Primitive(_, ref mut rect, _, _) => {
+        rect.bottom += 8.;
+      }
+      _ => {}
+    }
+    dbg!(&primitive);
+
+    let mut primitives = vec![primitive];
+    let first = primitives.first_mut();
+    let rect = match primitives.first_mut().unwrap() {
+      Primitive(_, ref mut rect, _, _) => {
+        rect.bottom += 8.;
+        Some(rect)
+      }
+      _ => None
+    };
+    if let Some(rect) = rect {
+      rect.bottom += 16.
+    }
+    dbg!(primitives);
   }
 }
