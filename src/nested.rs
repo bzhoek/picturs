@@ -5,7 +5,7 @@ use std::error::Error;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
-use skia_safe::{Color, PaintStyle, Point, Rect};
+use skia_safe::{Color, PaintStyle, Point, Rect, Vector};
 
 use crate::Distance;
 use crate::nested::Node::{Container, Primitive};
@@ -70,8 +70,6 @@ impl<'i> Diagram<'i> {
     let top = NestedParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(400, 800);
     canvas.cursor = self.offset;
-    let mut inside = Rect::from_xywh(0., 0., 400., 800.);
-    inside.offset(self.offset);
     let (ast, _bounds) = self.pairs_to_nodes(top.clone(), vec![], &mut canvas, &self.offset);
     self.nodes = ast;
     top
@@ -299,9 +297,13 @@ fn pair_to_distance(pair: Pair<Rule>) -> Distance {
     .unwrap();
   let unit = rule_to_string(&pair, Rule::unit)
     .unwrap();
-  let direction = rule_to_string(&pair, Rule::direction)
-    .unwrap();
-  Distance::new(length as f32, unit.to_owned(), direction.to_owned())
+  let direction = match rule_to_string(&pair, Rule::direction).unwrap() {
+    "left" => Vector::new(-1., 0.),
+    "right" => Vector::new(1., 0.),
+    "up" => Vector::new(0., -1.),
+    _ => Vector::new(0., 1.),
+  };
+  Distance::new(length as f32, unit.to_owned(), direction)
 }
 
 fn rule_to_edge<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<(&'a str, &'a str)> {

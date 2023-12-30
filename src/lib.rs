@@ -80,11 +80,11 @@ pub fn dump_pic(level: usize, pair: Pair<Rule>) {
 pub struct Distance {
   length: f32,
   unit: String,
-  direction: String,
+  direction: Vector,
 }
 
 impl Distance {
-  fn new(length: f32, unit: String, direction: String) -> Self {
+  fn new(length: f32, unit: String, direction: Vector) -> Self {
     Self { length, unit, direction }
   }
 

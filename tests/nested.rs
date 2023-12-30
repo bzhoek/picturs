@@ -1,11 +1,12 @@
 #[cfg(test)]
 mod tests {
   use std::fs;
+  use std::ops::Mul;
   use std::path::Path;
   use std::process::Command;
 
   use anyhow::Result;
-  use skia_safe::{Point, Rect};
+  use skia_safe::{Point, Rect, Vector};
 
   use picturs::nested::{Compass, Diagram, Shape};
   use picturs::nested::Node::{Container, Primitive};
@@ -267,5 +268,9 @@ mod tests {
     let _top = diagram.parse_string(string);
     dbg!(&diagram.nodes);
     // dump_nested(0, top);
+    let point = Point::new(32., 32.);
+    let offset = Vector::new(-1., 0.);
+    let result = offset.mul(3.);
+    assert_eq!(Point::new(-3., 0.), result);
   }
 }
