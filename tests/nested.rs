@@ -7,7 +7,7 @@ mod tests {
 
   use anyhow::Result;
   use skia_safe::{Point, Rect, Vector};
-  use picturs::Distance;
+  use picturs::{Distance, Edge};
 
   use picturs::nested::{Compass, Diagram, Node, Shape};
   use picturs::nested::Node::{Container, Primitive};
@@ -242,11 +242,11 @@ mod tests {
     let center = rect.center();
     assert_eq!(Point::new(90., 140.), center);
 
-    let nw = compass.to_point(&rect);
+    let nw = compass.to_edge(&rect);
     assert_eq!(Point::new(40., 40.), nw);
 
     let compass = Compass::new("se");
-    let se = compass.to_point(&rect);
+    let se = compass.to_edge(&rect);
     assert_eq!(Point::new(140., 240.), se);
   }
 
@@ -285,8 +285,19 @@ mod tests {
       Distance::new(2., "cm".to_string(), Vector::new(1., 0.)),
       Distance::new(1., "cm".to_string(), Vector::new(0., 1.)),
     ];
+
+    let left = diagram.used_rect("left").unwrap();
+    let expected = Rect::from_xywh(32., 32., 120., 59.);
+    assert_eq!(&expected, left);
+
+    let edge = Edge::new("left", "ne"); // 32 + 120 + (2 * 38) = 228
+    let shifted = diagram.offset_from(&edge, &distances).unwrap();
+    let expected = Rect::from_xywh(228., 70., 120., 59.);
+    assert_eq!(expected, shifted);
+
     diagram.node_mut("right", distances);
     let rect = diagram.used_rect("right").unwrap();
+    let expected = Rect::from_xywh(108., 137., 120., 59.);
     assert_eq!(&expected, rect);
   }
 

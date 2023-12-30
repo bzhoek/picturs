@@ -2,6 +2,7 @@ use std::ops::Mul;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Point, Rect, Vector};
+use crate::nested::Compass;
 
 pub mod nested;
 pub mod skia;
@@ -98,6 +99,19 @@ impl Distance {
   }
 }
 
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub struct Edge {
+  id: String,
+  compass: Compass,
+}
+
+impl Edge {
+  pub fn new(id: &str, compass: &str) -> Self {
+    let compass = Compass::new(compass);
+    Self { id: id.to_string(), compass }
+  }
+}
 
 pub trait Move {
   fn shift(&self, d: impl Into<Vector>) -> Self;

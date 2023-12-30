@@ -7,7 +7,7 @@ use pest::Parser;
 use pest_derive::Parser;
 use skia_safe::{Color, PaintStyle, Point, Rect, Vector};
 
-use crate::Distance;
+use crate::{Distance, Edge};
 use crate::nested::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -28,9 +28,11 @@ pub enum Node<'a> {
 #[derive(PartialEq)]
 pub enum Shape<'a> {
   Line(Option<&'a str>, &'a str, &'a str),
-  Rectangle(Option<&'a str>, Option<(&'a str, Vec<Distance>, (&'a str, &'a str))>),
+  Rectangle(Option<&'a str>, Option<(&'a str, Vec<Distance>, Edge)>),
 }
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 pub struct Compass {
   pub x: f32,
   pub y: f32,
@@ -51,7 +53,7 @@ impl Compass {
     }
   }
 
-  pub fn to_point(&self, rect: &Rect) -> Point {
+  pub fn to_edge(&self, rect: &Rect) -> Point {
     let mut point = rect.center();
     point.offset((self.x * rect.width(), self.y * rect.height()));
     point
@@ -175,6 +177,22 @@ impl<'i> Diagram<'i> {
     }
   }
 
+  pub fn offset_from(&self, edge: &Edge, distances: &Vec<Distance>) -> Option<Rect> {
+    self.find_node(&edge.id).map(|node| {
+      match node {
+        Primitive(_, _, used, _) => {
+          let point = edge.compass.to_edge(used);
+          let mut rect = Rect::from_xywh(point.x, point.y, used.width(), used.height());
+          for distance in distances.iter() {
+            rect.offset(distance.offset());
+          }
+          rect
+        }
+        _ => panic!("not a primitive")
+      }
+    })
+  }
+
   fn find_nodes<'a: 'i>(nodes: &'i mut Vec<Node<'a>>, node_id: &str) -> Option<&'i mut Node<'a>> {
     for node in nodes.iter_mut() {
       match node {
@@ -235,8 +253,8 @@ impl<'i> Diagram<'i> {
     }.and_then(|(_used, shape)| {
       match shape {
         Shape::Rectangle(_title, Some(location)) => {
-          let (_mycompass, _distance, (other, _compass)) = location;
-          self.used_rect(other)
+          let (_mycompass, _distance, edge) = location;
+          self.used_rect(&edge.id)
         }
         _ => None,
       }
@@ -267,7 +285,7 @@ impl<'i> Diagram<'i> {
       Shape::Rectangle(title, location) => {
         if let Some(location) = location {
           let (_compass, distance, edge) = location;
-          if let Some(node) = self.find_node(edge.0) {
+          if let Some(node) = self.find_node(&edge.id) {
             match node {
               Primitive(_, other, _, _) => adjust(other, distance.first().unwrap()),
               _ => {}
@@ -296,12 +314,12 @@ const BLOCK_PADDING: f32 = 8.;
 const TEXT_PADDING: f32 = 4.;
 
 fn rule_to_location<'a>(pair: &Pair<'a, Rule>, rule: Rule)
-                        -> Option<(&'a str, Vec<Distance>, (&'a str, &'a str))> {
+                        -> Option<(&'a str, Vec<Distance>, Edge)> {
   find_rule(pair, rule)
     .map(|p| {
       let mut compass: Option<&str> = None;
       let mut directions: Vec<Distance> = vec![];
-      let mut edge: Option<(&str, &str)> = None;
+      let mut edge: Option<Edge> = None;
 
       for rule in p.into_inner() {
         match rule.as_rule() {
@@ -337,15 +355,14 @@ fn pair_to_distance(pair: Pair<Rule>) -> Distance {
   Distance::new(length as f32, unit.to_owned(), direction)
 }
 
-fn rule_to_edge<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<(&'a str, &'a str)> {
+fn rule_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<Edge> {
   find_rule(pair, rule).map(pair_to_edge)
 }
 
-fn pair_to_edge(pair: Pair<Rule>) -> (&str, &str) {
-  (
-    rule_to_string(&pair, Rule::id).unwrap(),
-    rule_to_string(&pair, Rule::compass).unwrap(),
-  )
+fn pair_to_edge(pair: Pair<Rule>) -> Edge {
+  let id = rule_to_string(&pair, Rule::id).unwrap();
+  let compass = rule_to_string(&pair, Rule::compass).unwrap();
+  Edge::new(id, compass)
 }
 
 fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
