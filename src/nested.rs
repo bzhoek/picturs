@@ -145,22 +145,17 @@ impl<'i> Diagram<'i> {
   }
 
   fn search_nodes<'a>(&'a self, nodes: &'a [Node], node_id: &str) -> Option<&Node<'a>> {
-    for node in nodes.iter() {
+    nodes.iter().find(|node| {
       match node {
         Primitive(Some(id), _, _, _) => {
-          if id == &node_id {
-            return Some(node);
-          }
+          id == &node_id
         }
         Container(_, _, _, nodes) => {
-          if let Some(node) = self.search_nodes(nodes, node_id) {
-            return Some(node);
-          };
+          self.search_nodes(nodes, node_id).is_some()
         }
-        _ => {}
+        _ => false
       }
-    }
-    None
+    })
   }
 
   pub fn render(&self, width: i32, height: i32, filepath: &str) {
