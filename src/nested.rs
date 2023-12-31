@@ -148,7 +148,7 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  pub fn find_node<'a>(&'a self, id: &str) -> Option<&Node<'a>> {
+  fn find_node<'a>(&'a self, id: &str) -> Option<&Node<'a>> {
     self.search_nodes(&self.nodes, id)
   }
 

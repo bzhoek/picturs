@@ -200,13 +200,10 @@ mod tests {
     diagram.parse_string(string);
     assert_eq!(2, diagram.nodes.len());
     dbg!(&diagram.nodes);
-    let left = diagram.find_node("left").unwrap();
-    let left_rect = match left {
-      Primitive(_, rect, _, _) => { rect }
-      Container(_, rect, _, _) => { rect }
-    };
-    let rect = Rect { left: 32., top: 32., right: 152., bottom: 99. };
-    assert_eq!(&rect, left_rect);
+
+    let rect = diagram.used_rect("left").unwrap();
+    let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
+    assert_eq!(&expected, rect);
 
     assert_visual(diagram, "target/side_by_side")?;
     Ok(())
