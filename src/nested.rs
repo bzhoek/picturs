@@ -131,6 +131,13 @@ impl<'i> Diagram<'i> {
 
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 120., height.max(40.));
           used.bottom += BLOCK_PADDING;
+
+          if let Some((_compass, distances, edge)) = &location {
+            Diagram::offset_in(&ast, edge, distances).map(|rect| {
+              used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
+            });
+          }
+
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
           ast.push(Primitive(id, rect, used, Shape::Rectangle(title, location)));
@@ -149,25 +156,56 @@ impl<'i> Diagram<'i> {
   }
 
   fn find_node<'a>(&'a self, id: &str) -> Option<&Node<'a>> {
-    self.search_nodes(&self.nodes, id)
+    Diagram::find_nodes(&self.nodes, id)
   }
 
-  fn search_nodes<'a>(&'a self, nodes: &'a Vec<Node>, node_id: &str) -> Option<&Node<'a>> {
+  pub fn used_rect(&self, id: &str) -> Option<&Rect> {
+    self.find_node(id).map(|node| {
+      match node {
+        Primitive(_, _, used, _) => used,
+        _ => panic!("not a primitive")
+      }
+    })
+  }
+
+  fn find_nodes<'a>(nodes: &'a [Node], node_id: &str) -> Option<&'a Node<'a>> {
     nodes.iter().find(|node| {
       match node {
         Primitive(Some(id), _, _, _) => {
           id == &node_id
         }
         Container(_, _, _, nodes) => {
-          self.search_nodes(nodes, node_id).is_some()
+          Diagram::find_nodes(nodes, node_id).is_some()
         }
         _ => false
       }
     })
   }
 
+  pub fn offset_from(&self, edge: &Edge, distances: &[Distance]) -> Option<Rect> {
+    Diagram::offset_in(&self.nodes, edge, distances)
+  }
+
+  pub fn offset_in(nodes: &[Node], edge: &Edge, distances: &[Distance]) -> Option<Rect> {
+    Diagram::find_nodes(nodes, &edge.id).map(|node| {
+      match node {
+        Primitive(_, _, used, _) => Diagram::offset_from_rect(used, &edge.compass, distances),
+        _ => panic!("not a primitive")
+      }
+    })
+  }
+
+  pub fn offset_from_rect(rect: &Rect, compass: &Compass, distances: &[Distance]) -> Rect {
+    let point = compass.to_edge(rect);
+    let mut rect = Rect::from_xywh(point.x, point.y, rect.width(), rect.height());
+    for distance in distances.iter() {
+      rect.offset(distance.offset());
+    }
+    rect
+  }
+
   pub fn node_mut(&mut self, id: &str, distances: Vec<Distance>) {
-    match Diagram::find_nodes(&mut self.nodes, id).unwrap() {
+    match Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
       Primitive(_, _, ref mut rect, _) => {
         for distance in distances.iter() {
           rect.offset(distance.offset());
@@ -177,23 +215,7 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  pub fn offset_from(&self, edge: &Edge, distances: &Vec<Distance>) -> Option<Rect> {
-    self.find_node(&edge.id).map(|node| {
-      match node {
-        Primitive(_, _, used, _) => {
-          let point = edge.compass.to_edge(used);
-          let mut rect = Rect::from_xywh(point.x, point.y, used.width(), used.height());
-          for distance in distances.iter() {
-            rect.offset(distance.offset());
-          }
-          rect
-        }
-        _ => panic!("not a primitive")
-      }
-    })
-  }
-
-  fn find_nodes<'a: 'i>(nodes: &'i mut Vec<Node<'a>>, node_id: &str) -> Option<&'i mut Node<'a>> {
+  fn find_nodes_mut<'a: 'i>(nodes: &'i mut Vec<Node<'a>>, node_id: &str) -> Option<&'i mut Node<'a>> {
     for node in nodes.iter_mut() {
       match node {
         Primitive(Some(id), _, _, _) => {
@@ -202,7 +224,7 @@ impl<'i> Diagram<'i> {
           }
         }
         Container(_, _, _, nodes) => {
-          if let Some(node) = Diagram::find_nodes(nodes, node_id) {
+          if let Some(node) = Diagram::find_nodes_mut(nodes, node_id) {
             return Some(node);
           }
         }
@@ -237,76 +259,30 @@ impl<'i> Diagram<'i> {
           canvas.paint.set_color(Color::RED);
           canvas.rectangle(used);
         }
-        Primitive(_id, rect, used, shape) => {
-          self.render_shape(shape, rect, used, canvas);
+        Primitive(_id, _, used, shape) => {
+          self.render_shape(shape, used, canvas);
         }
       }
     }
   }
 
-  pub fn layout_node(&self, node: &Node) -> Option<&Rect> {
-    match node {
-      Primitive(_id, _rect, used, shape) => {
-        Some((used, shape))
-      }
-      _ => None
-    }.and_then(|(_used, shape)| {
-      match shape {
-        Shape::Rectangle(_title, Some(location)) => {
-          let (_mycompass, _distance, edge) = location;
-          self.used_rect(&edge.id)
-        }
-        _ => None,
-      }
-    })
-  }
-
-  pub fn used_rect(&self, id: &str) -> Option<&Rect> {
-    self.find_node(id).map(|node| {
-      match node {
-        Primitive(_, _, used, _) => used,
-        _ => panic!("not a primitive")
-      }
-    })
-  }
-
-  fn render_shape(&self, shape: &Shape, rect: &Rect, used: &Rect, canvas: &mut Canvas) -> Rect {
-    let mut moved = *used;
-
-    let mut adjust = |other: &Rect, distance: &Distance| {
-      moved.top = other.top;
-      moved.bottom = moved.top + rect.height();
-      moved.left = other.right + distance.pixels();
-      moved.right = moved.left + rect.width()
-    };
-
+  fn render_shape(&self, shape: &Shape, used: &Rect, canvas: &mut Canvas) {
     match shape {
       Shape::Line(_, _, _) => {}
-      Shape::Rectangle(title, location) => {
-        if let Some(location) = location {
-          let (_compass, distance, edge) = location;
-          if let Some(node) = self.find_node(&edge.id) {
-            match node {
-              Primitive(_, other, _, _) => adjust(other, distance.first().unwrap()),
-              _ => {}
-            };
-          };
-        }
-
+      Shape::Rectangle(title, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(Color::BLUE);
-        canvas.rectangle(&moved);
+        canvas.rectangle(used);
 
         if let Some(title) = title {
           canvas.paint.set_style(PaintStyle::Fill);
           canvas.paint.set_color(Color::BLACK);
-          let inset = moved.with_inset((TEXT_PADDING, TEXT_PADDING));
-          let origin = (inset.left, moved.top);
+          let inset = used.with_inset((TEXT_PADDING, TEXT_PADDING));
+          let origin = (inset.left, used.top);
           canvas.paragraph(title, origin, inset.width());
         }
       }
     }
-    moved
   }
 }
 

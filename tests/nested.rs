@@ -176,17 +176,13 @@ mod tests {
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
 
-    let right = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(32., 99., 120., 59.);
-    assert_eq!(&expected, right);
-    // left.bottom += 8.;
-
-    let used = diagram.used_rect("right").unwrap();
-    assert_eq!(&expected, used);
-
+    let left = diagram.used_rect("left").unwrap();
     let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
-    let other = diagram.used_rect("left");
-    assert_eq!(Some(&expected), other);
+    assert_eq!(&expected, left);
+
+    let right = diagram.used_rect("right").unwrap();
+    let expected = Rect::from_xywh(228., 32., 120., 59.);
+    assert_eq!(&expected, right);
   }
 
   #[test]
@@ -194,12 +190,11 @@ mod tests {
     let string =
       r#"
       box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" @nw 2cm right from left.ne
+      box.right "While this goes to the right hand side" @nw 2cm right 1cm down from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
     assert_eq!(2, diagram.nodes.len());
-    dbg!(&diagram.nodes);
 
     let rect = diagram.used_rect("left").unwrap();
     let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
@@ -275,7 +270,7 @@ mod tests {
     diagram.parse_string(string);
 
     let rect = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(32., 99., 120., 59.);
+    let expected = Rect::from_xywh(228., 32., 120., 59.);
     assert_eq!(&expected, rect);
 
     let distances = vec![
@@ -294,8 +289,20 @@ mod tests {
 
     diagram.node_mut("right", distances);
     let rect = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(108., 137., 120., 59.);
+    let expected = Rect::from_xywh(304., 70., 120., 59.);
     assert_eq!(&expected, rect);
+  }
+
+  #[test]
+  fn offset_from_rect() {
+    let rect = Rect::from_xywh(40., 40., 40., 40.);
+    let distances = vec![
+      Distance::new(2., "cm".to_string(), Vector::new(1., 0.)),
+      Distance::new(1., "cm".to_string(), Vector::new(0., 1.)),
+    ];
+    let result = Diagram::offset_from_rect(&rect, &Compass::new("nw"), &distances);
+    let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };
+    assert_eq!(expected, result);
   }
 
   #[derive(Debug)]
