@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::mem;
 
-use skia_safe::{Color, Data, EncodedImageFormat, Font, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Surface, surfaces, Typeface};
+use skia_safe::{Color, Data, EncodedImageFormat, Font, ISize, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Surface, surfaces, Typeface};
 
 pub struct Canvas {
   pub surface: Surface,
@@ -12,8 +12,8 @@ pub struct Canvas {
 }
 
 impl Canvas {
-  pub fn new(width: i32, height: i32) -> Canvas {
-    let mut surface = surfaces::raster_n32_premul((width, height)).expect("surface");
+  pub fn new(size: impl Into<ISize>) -> Canvas {
+    let mut surface = surfaces::raster_n32_premul(size).expect("surface");
     let path = Path::new();
     let mut paint = Paint::default();
     paint.set_color(Color::BLACK);

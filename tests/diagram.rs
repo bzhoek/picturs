@@ -9,7 +9,7 @@ mod tests {
   use skia_safe::{Point, Rect, Vector};
 
   use picturs::{Distance, Edge, Unit};
-  use picturs::diagram::{Anchor, Diagram, Node, Shape};
+  use picturs::diagram::{A5, Anchor, Diagram, Node, Shape};
   use picturs::diagram::Node::{Container, Primitive};
   use picturs::diagram::Shape::Rectangle;
 
@@ -19,8 +19,14 @@ mod tests {
     Rect::from_xywh(0., 0., 0., 0.)
   }
 
-  fn parse_string(string: &str) -> Diagram {
-    let mut diagram = Diagram::default();
+  fn create_diagram(string: &str) -> Diagram {
+    let mut diagram = Diagram::offset(A5, (0., 0.));
+    diagram.parse_string(string);
+    diagram
+  }
+
+  fn create_diagram_inset(string: &str) -> Diagram {
+    let mut diagram = Diagram::offset(A5, (32., 32.));
     diagram.parse_string(string);
     diagram
   }
@@ -28,7 +34,7 @@ mod tests {
   #[test]
   fn single_box_untitled() {
     let string = r#"box"#;
-    let diagram = parse_string(string);
+    let diagram = create_diagram(string);
 
     assert_eq!(vec![
       Primitive(None,
@@ -41,7 +47,7 @@ mod tests {
   #[test]
   fn single_box_id() {
     let string = r#"box.first "title""#;
-    let diagram = parse_string(string);
+    let diagram = create_diagram(string);
 
     assert_eq!(vec![
       Primitive(Some("first"),
@@ -54,7 +60,7 @@ mod tests {
   #[test]
   fn single_box_with_title() {
     let string = r#"box "title""#;
-    let diagram = parse_string(string);
+    let diagram = create_diagram(string);
 
     assert_eq!(vec![
       Primitive(None,
@@ -68,7 +74,7 @@ mod tests {
   fn double_box() {
     let string = "box
                          box";
-    let diagram = parse_string(string);
+    let diagram = create_diagram(string);
 
     assert_eq!(vec![
       Primitive(None,
@@ -85,7 +91,7 @@ mod tests {
   #[test]
   fn nested_box_id() {
     let string = "box.parent { box }";
-    let diagram = parse_string(string);
+    let diagram = create_diagram(string);
 
     assert_eq!(vec![
       Container(Some("parent"), None,
@@ -103,7 +109,7 @@ mod tests {
   #[test]
   fn nested_box_with_title() {
     let string = r#"box "parent" { box "child" }"#;
-    let diagram = parse_string(string);
+    let diagram = create_diagram(string);
 
     assert_eq!(vec![
       Container(None, Some("parent"),
@@ -121,7 +127,7 @@ mod tests {
   #[test]
   fn line_from_a_to_b() {
     let string = r#"line from now.n to future.n"#;
-    let diagram = parse_string(string);
+    let diagram = create_diagram(string);
 
     assert_eq!(vec![
       Primitive(None,
@@ -134,7 +140,7 @@ mod tests {
   #[test]
   fn box_with_wrapping_title() {
     let string = format!(r#"box "{}""#, TQBF);
-    let diagram = parse_string(&string);
+    let diagram = create_diagram(&string);
     let paragraph1_rect = Rect::from_xywh(0., 0., 120., 84.);
     let paragraph2_rect = Rect::from_xywh(0., 0., 120., 76.);
 
@@ -159,9 +165,9 @@ mod tests {
       }
       line from now.n to future.n
       "#;
-    let mut diagram = Diagram::offset((32., 32.));
-    diagram.parse_string(string);
+    let diagram = create_diagram_inset(string);
     dbg!(&diagram.nodes);
+
     assert_visual(diagram, "target/double_containers")?;
     Ok(())
   }
@@ -179,9 +185,9 @@ mod tests {
       } .nw 1cm right from now.ne
       line from now.n to future.n
       "#;
-    let mut diagram = Diagram::offset((32., 32.));
-    diagram.parse_string(string);
+    let diagram = create_diagram_inset(string);
     dbg!(&diagram.nodes);
+
     assert_visual(diagram, "target/remember_the_future")?;
     Ok(())
   }
@@ -198,8 +204,7 @@ mod tests {
         box.note "IMPORTANT: write in past tense"
       }
       "#;
-    let mut diagram = Diagram::offset((32., 32.));
-    diagram.parse_string(string);
+    let diagram = create_diagram_inset(string);
     assert_visual(diagram, "target/whole_ast")?;
     Ok(())
   }
@@ -211,8 +216,7 @@ mod tests {
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .nw 2cm right from left.ne
       "#;
-    let mut diagram = Diagram::offset((32., 32.));
-    diagram.parse_string(string);
+    let diagram = create_diagram_inset(string);
 
     let left = diagram.used_rect("left").unwrap();
     let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
@@ -230,8 +234,7 @@ mod tests {
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .nw 2cm right 1cm down from left.ne
       "#;
-    let mut diagram = Diagram::offset((32., 32.));
-    diagram.parse_string(string);
+    let diagram = create_diagram_inset(string);
     assert_eq!(2, diagram.nodes.len());
 
     let rect = diagram.used_rect("left").unwrap();
@@ -249,8 +252,7 @@ mod tests {
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .w 2cm right from left.ne
       "#;
-    let mut diagram = Diagram::offset((32., 32.));
-    diagram.parse_string(string);
+    let diagram = create_diagram_inset(string);
     assert_eq!(2, diagram.nodes.len());
 
     let rect = diagram.used_rect("left").unwrap();
@@ -264,7 +266,7 @@ mod tests {
   fn assert_visual(diagram: Diagram, prefix: &str) -> Result<()> {
     let ref_file = format!("{}.png", prefix);
     let last_file = format!("{}-last.png", prefix);
-    diagram.render(400, 800, &*last_file);
+    diagram.render_to_file(&*last_file);
     if !Path::new(&ref_file).exists() {
       fs::rename(last_file, ref_file)?;
     } else {
@@ -331,10 +333,9 @@ mod tests {
       box.left "Left"
       box "Right" .nw 1cm right 2cm down from left.ne
       "#;
-    let mut diagram = Diagram::offset((32., 32.));
-    let _top = diagram.parse_string(string);
+    let diagram = create_diagram_inset(string);
     dbg!(&diagram.nodes);
-    // dump_nested(0, top);
+
     let _point = Point::new(32., 32.);
     let offset = Vector::new(-1., 0.);
     let result = offset.mul(3.);
@@ -348,7 +349,7 @@ mod tests {
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .nw 2cm right from left.ne
       "#;
-    let mut diagram = Diagram::offset((32., 32.));
+    let mut diagram = Diagram::offset(A5, (32., 32.));
     diagram.parse_string(string);
 
     let rect = diagram.used_rect("right").unwrap();

@@ -16,7 +16,7 @@ mod tests {
 
   #[test]
   fn test_paragraph() {
-    let mut canvas = Canvas::new(1024, 1024);
+    let mut canvas = Canvas::new((1024, 1024));
 
     canvas.paint.set_style(PaintStyle::Stroke);
     canvas.rectangle(&Rect::from_xywh(0., 0., 320., 240.));
@@ -29,7 +29,7 @@ mod tests {
 
   #[test]
   fn write_png() {
-    let mut canvas = Canvas::new(1024, 1024);
+    let mut canvas = Canvas::new((1024, 1024));
 
     canvas.set_line_width(2.0);
     let rect = Rect::from_xywh(8.0, 8.0, 1008.0, 1008.0);

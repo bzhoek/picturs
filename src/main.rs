@@ -3,7 +3,7 @@ use std::fs;
 use anyhow::Result;
 use clap::Parser;
 
-use picturs::diagram::Diagram;
+use picturs::diagram::{A5, Diagram};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -15,7 +15,7 @@ struct Args {
 fn main() -> Result<()> {
   let args = Args::parse();
   let string = fs::read_to_string(args.file).unwrap();
-  let mut diagram = Diagram::default();
+  let mut diagram = Diagram::offset(A5, (32., 32.));
   diagram.parse_string(&string);
   Ok(())
 }

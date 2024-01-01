@@ -7,11 +7,13 @@ use std::ops::Add;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
-use skia_safe::{Color, PaintStyle, Point, Rect, Vector};
+use skia_safe::{Color, ISize, PaintStyle, Point, Rect, Vector};
 
 use crate::{Distance, Edge};
 use crate::diagram::Node::{Container, Primitive};
 use crate::skia::Canvas;
+
+pub static A5: (i32, i32) = (798, 562);
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -75,25 +77,26 @@ impl Anchor {
   }
 }
 
-#[derive(Default)]
 pub struct Diagram<'a> {
   pub nodes: Vec<Node<'a>>,
   pub index: HashMap<String, Rect>,
+  size: ISize,
   offset: Point,
 }
 
 impl<'i> Diagram<'i> {
-  pub fn offset(offset: impl Into<Point>) -> Self {
+  pub fn offset(size: impl Into<ISize>, offset: impl Into<Point>) -> Self {
     Self {
       nodes: vec![],
       index: HashMap::new(),
+      size: size.into(),
       offset: offset.into(),
     }
   }
 
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
     let top = NestedParser::parse(Rule::picture, string).unwrap();
-    let mut canvas = Canvas::new(400, 800);
+    let mut canvas = Canvas::new(self.size);
     canvas.cursor = self.offset;
     let (ast, _bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &self.offset, &mut self.index);
     self.nodes = ast;
@@ -189,7 +192,7 @@ impl<'i> Diagram<'i> {
     if let Some((anchor, distances, edge)) = &location {
       if let Some(rect) = Self::offset_index(index, edge, distances) {
         *used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
-        let offset = anchor.topleft_offset(&used);
+        let offset = anchor.topleft_offset(used);
         used.offset(offset);
       }
     }
@@ -247,13 +250,10 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn node_mut(&mut self, id: &str, distances: Vec<Distance>) {
-    match Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
-      Primitive(_, _, ref mut rect, _) => {
-        for distance in distances.iter() {
-          rect.offset(distance.offset());
-        }
+    if let Primitive(_, _, ref mut rect, _) = Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
+      for distance in distances.iter() {
+        rect.offset(distance.offset());
       }
-      _ => {}
     }
   }
 
@@ -276,18 +276,18 @@ impl<'i> Diagram<'i> {
     None
   }
 
-  pub fn render(&self, width: i32, height: i32, filepath: &str) {
-    let mut canvas = Canvas::new(width, height);
+  pub fn render_to_file(&self, filepath: &str) {
+    let mut canvas = Canvas::new(self.size);
     canvas.cursor = self.offset;
-    self.render_nodes(&self.nodes, &mut canvas);
+    self.render_to_canvas(&self.nodes, &mut canvas);
     canvas.write_png(filepath);
   }
 
-  fn render_nodes(&self, nodes: &[Node], canvas: &mut Canvas) {
+  fn render_to_canvas(&self, nodes: &[Node], canvas: &mut Canvas) {
     for node in nodes.iter() {
       match node {
         Container(_id, title, _rect, used, nodes) => {
-          self.render_nodes(nodes, canvas);
+          self.render_to_canvas(nodes, canvas);
 
           if let Some(title) = title {
             canvas.paint.set_style(PaintStyle::Fill);
