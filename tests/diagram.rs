@@ -171,7 +171,7 @@ mod tests {
     let string =
       r#"
       box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" @nw 2cm right from left.ne
+      box.right "While this goes to the right hand side" .nw 2cm right from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
@@ -190,7 +190,7 @@ mod tests {
     let string =
       r#"
       box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" @nw 2cm right 1cm down from left.ne
+      box.right "While this goes to the right hand side" .nw 2cm right 1cm down from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
@@ -209,7 +209,7 @@ mod tests {
     let string =
       r#"
       box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" @w 2cm right from left.ne
+      box.right "While this goes to the right hand side" .w 2cm right from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
@@ -291,7 +291,7 @@ mod tests {
     let string =
       r#"
       box.left "Left"
-      box "Right" @nw 1cm right 2cm down from left.ne
+      box "Right" .nw 1cm right 2cm down from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
     let _top = diagram.parse_string(string);
@@ -308,7 +308,7 @@ mod tests {
     let string =
       r#"
       box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" @nw 2cm right from left.ne
+      box.right "While this goes to the right hand side" .nw 2cm right from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);

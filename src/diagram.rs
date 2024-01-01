@@ -41,7 +41,8 @@ pub struct Compass {
 
 impl Compass {
   pub fn new(string: &str) -> Self {
-    match string.to_lowercase().as_str() {
+    let dot_removed = string.trim_start_matches('.');
+    match dot_removed.to_lowercase().as_str() {
       "n" => Self { x: 0., y: -0.5 },
       "ne" => Self { x: 0.5, y: -0.5 },
       "e" => Self { x: 0.5, y: 0. },

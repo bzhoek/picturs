@@ -9,10 +9,11 @@
 2. ~Wrap the text in a rectangle~
 3. ~Save primitive bounds in AST on parsing first pass~
 4. ~Onderscheid tussen `rect` en `used`, met eventueel een transform bij het renderen~
-5. Positioneren apart doen zodat het beter te testen is
-6. Edge struct die links en rechts kan onderscheiden, misschien met graden of klok
-4. Positioneren met `@nw 1cm from left.ne`
-5. Bounds interface definieren zodat niet heel Canvas een dependency wordt
+5. ~Helper functies in Diagram type~
+6. ~Positioneren met `@nw 1cm from left.ne`~
+7. Positioneren apart zodat hele AST beschikbaar is
+8. Bounds interface definieren zodat niet heel Canvas een dependency wordt
+9. String in Distance vervangen voor enum
 
 `@nw 1cm right 2cm down from left.ne`
 `@nw=left.ne 1cr 2cd`
