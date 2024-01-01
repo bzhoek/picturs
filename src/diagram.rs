@@ -29,17 +29,17 @@ pub enum Node<'a> {
 #[derive(PartialEq)]
 pub enum Shape<'a> {
   Line(Option<&'a str>, &'a str, &'a str),
-  Rectangle(Option<&'a str>, Option<(Compass, Vec<Distance>, Edge)>),
+  Rectangle(Option<&'a str>, Option<(Anchor, Vec<Distance>, Edge)>),
 }
 
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub struct Compass {
+pub struct Anchor {
   pub x: f32,
   pub y: f32,
 }
 
-impl Compass {
+impl Anchor {
   pub fn new(string: &str) -> Self {
     let dot_removed = string.trim_start_matches('.');
     match dot_removed.to_lowercase().as_str() {
@@ -144,10 +144,10 @@ impl<'i> Diagram<'i> {
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 120., height.max(40.));
           used.bottom += BLOCK_PADDING;
 
-          if let Some((compass, distances, edge)) = &location {
+          if let Some((anchor, distances, edge)) = &location {
             if let Some(rect) = Diagram::offset_in(&ast, edge, distances) {
               used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
-              let offset = compass.topleft_offset(&used);
+              let offset = anchor.topleft_offset(&used);
               used.offset(offset);
             }
           }
@@ -203,14 +203,14 @@ impl<'i> Diagram<'i> {
   pub fn offset_in(nodes: &[Node], edge: &Edge, distances: &[Distance]) -> Option<Rect> {
     Diagram::find_nodes(nodes, &edge.id).map(|node| {
       match node {
-        Primitive(_, _, used, _) => Diagram::offset_from_rect(used, &edge.compass, distances),
+        Primitive(_, _, used, _) => Diagram::offset_from_rect(used, &edge.anchor, distances),
         _ => panic!("not a primitive")
       }
     })
   }
 
-  pub fn offset_from_rect(rect: &Rect, compass: &Compass, distances: &[Distance]) -> Rect {
-    let point = compass.to_edge(rect);
+  pub fn offset_from_rect(rect: &Rect, anchor: &Anchor, distances: &[Distance]) -> Rect {
+    let point = anchor.to_edge(rect);
     let mut rect = Rect::from_xywh(point.x, point.y, rect.width(), rect.height());
     for distance in distances.iter() {
       rect.offset(distance.offset());
@@ -299,16 +299,16 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  fn rule_to_location(pair: &Pair<Rule>, rule: Rule) -> Option<(Compass, Vec<Distance>, Edge)> {
+  fn rule_to_location(pair: &Pair<Rule>, rule: Rule) -> Option<(Anchor, Vec<Distance>, Edge)> {
     Diagram::find_rule(pair, rule)
       .map(|p| {
-        let mut compass: Option<Compass> = None;
+        let mut anchor: Option<Anchor> = None;
         let mut directions: Vec<Distance> = vec![];
         let mut edge: Option<Edge> = None;
 
         for rule in p.into_inner() {
           match rule.as_rule() {
-            Rule::compass => { compass = Some(Compass::new(rule.as_str())); }
+            Rule::anchor => { anchor = Some(Anchor::new(rule.as_str())); }
             Rule::distance => {
               let distance = Diagram::pair_to_distance(rule);
               directions.push(distance);
@@ -317,7 +317,7 @@ impl<'i> Diagram<'i> {
             _ => {}
           }
         };
-        (compass.unwrap(), directions, edge.unwrap())
+        (anchor.unwrap(), directions, edge.unwrap())
       })
   }
 
@@ -346,8 +346,8 @@ impl<'i> Diagram<'i> {
 
   fn pair_to_edge(pair: Pair<Rule>) -> Edge {
     let id = Diagram::rule_to_string(&pair, Rule::id).unwrap();
-    let compass = Diagram::rule_to_string(&pair, Rule::compass).unwrap();
-    Edge::new(id, compass)
+    let anchor = Diagram::rule_to_string(&pair, Rule::anchor).unwrap();
+    Edge::new(id, anchor)
   }
 
   fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {

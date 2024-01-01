@@ -2,7 +2,7 @@ use std::ops::Mul;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Point, Rect, Vector};
-use crate::diagram::Compass;
+use crate::diagram::Anchor;
 
 pub mod diagram;
 pub mod skia;
@@ -103,13 +103,13 @@ impl Distance {
 #[derive(PartialEq)]
 pub struct Edge {
   id: String,
-  compass: Compass,
+  anchor: Anchor,
 }
 
 impl Edge {
-  pub fn new(id: &str, compass: &str) -> Self {
-    let compass = Compass::new(compass);
-    Self { id: id.to_string(), compass }
+  pub fn new(id: &str, edge: &str) -> Self {
+    let anchor = Anchor::new(edge);
+    Self { id: id.to_string(), anchor }
   }
 }
 

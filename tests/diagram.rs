@@ -9,7 +9,7 @@ mod tests {
   use skia_safe::{Point, Rect, Vector};
 
   use picturs::{Distance, Edge};
-  use picturs::diagram::{Compass, Diagram, Node, Shape};
+  use picturs::diagram::{Anchor, Diagram, Node, Shape};
   use picturs::diagram::Node::{Container, Primitive};
   use picturs::diagram::Shape::Rectangle;
 
@@ -249,15 +249,15 @@ mod tests {
   fn to_edge() {
     let rect = Rect::from_xywh(40., 40., 100., 200.);
 
-    let compass = Compass::new("nw");
+    let anchor = Anchor::new("nw");
     let center = rect.center();
     assert_eq!(Point::new(90., 140.), center);
 
-    let nw = compass.to_edge(&rect);
+    let nw = anchor.to_edge(&rect);
     assert_eq!(Point::new(40., 40.), nw);
 
-    let compass = Compass::new("se");
-    let se = compass.to_edge(&rect);
+    let anchor = Anchor::new("se");
+    let se = anchor.to_edge(&rect);
     assert_eq!(Point::new(140., 240.), se);
   }
 
@@ -267,22 +267,22 @@ mod tests {
     /*
     het verschil moet van topleft worden afgetrokken
      */
-    let compass = Compass::new("nw");
-    let factors = compass.to_tuple();
+    let anchor = Anchor::new("nw");
+    let factors = anchor.to_tuple();
     assert_eq!((-0.5, -0.5), factors);
-    let nw = compass.topleft_offset(&rect);
+    let nw = anchor.topleft_offset(&rect);
     assert_eq!(Point::new(-0., -0.), nw);
 
-    let compass = Compass::new("ne");
-    let factors = compass.to_tuple();
+    let anchor = Anchor::new("ne");
+    let factors = anchor.to_tuple();
     assert_eq!((0.5, -0.5), factors);
-    let ne = compass.topleft_offset(&rect);
+    let ne = anchor.topleft_offset(&rect);
     assert_eq!(Point::new(-10., -0.), ne);
 
-    let compass = Compass::new("se");
-    let factors = compass.to_tuple();
+    let anchor = Anchor::new("se");
+    let factors = anchor.to_tuple();
     assert_eq!((0.5, 0.5), factors);
-    let se = compass.topleft_offset(&rect);
+    let se = anchor.topleft_offset(&rect);
     assert_eq!(Point::new(-10., -20.), se);
   }
 
@@ -344,7 +344,7 @@ mod tests {
       Distance::new(2., "cm".to_string(), Vector::new(1., 0.)),
       Distance::new(1., "cm".to_string(), Vector::new(0., 1.)),
     ];
-    let result = Diagram::offset_from_rect(&rect, &Compass::new("nw"), &distances);
+    let result = Diagram::offset_from_rect(&rect, &Anchor::new("nw"), &distances);
     let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };
     assert_eq!(expected, result);
   }

@@ -6,7 +6,7 @@ rectangle = { "box" ~ identified? ~ string? ~ location? }
 identified = _{ "." ~ id }
 id = { ASCII_ALPHANUMERIC* }
 
-location = { compass ~ distance* ~ "from" ~ edge }
+location = { anchor ~ distance* ~ "from" ~ edge }
 distance = { length ~ unit ~ direction }
 length = { ASCII_DIGIT* }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
@@ -15,8 +15,8 @@ direction = { "up" | "down" | "left" | "right" }
 line = { "line" ~ "from" ~ source ~ "to" ~ target }
 source = { edge }
 target = { edge }
-edge = { id ~ compass }
-compass = { ".nw"  | ".ne" | ".n" | ".e" | ".se" | ".s" | ".sw" | ".w" |  ".c" }
+edge = { id ~ anchor }
+anchor = { "." ~ ("nw"  | "ne" | "n" | "e" | "se" | "s" | "sw" | "w" |  "c") }
 
 title = { string? }
 string = _{ "\"" ~ inner ~ "\"" }
