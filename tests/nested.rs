@@ -7,8 +7,8 @@ mod tests {
 
   use anyhow::Result;
   use skia_safe::{Point, Rect, Vector};
-  use picturs::{Distance, Edge};
 
+  use picturs::{Distance, Edge};
   use picturs::nested::{Compass, Diagram, Node, Shape};
   use picturs::nested::Node::{Container, Primitive};
   use picturs::nested::Shape::Rectangle;
@@ -227,7 +227,7 @@ mod tests {
   }
 
   #[test]
-  fn upper_left() {
+  fn to_edge() {
     let rect = Rect::from_xywh(40., 40., 100., 200.);
 
     let compass = Compass::new("nw");
@@ -240,6 +240,28 @@ mod tests {
     let compass = Compass::new("se");
     let se = compass.to_edge(&rect);
     assert_eq!(Point::new(140., 240.), se);
+  }
+
+  #[test]
+  fn to_top_left() {
+    let rect = Rect::from_xywh(40., 40., 10., 20.);
+    /*
+    het verschil moet van topleft worden afgetrokken
+     */
+    let compass = Compass::new("nw");
+    assert_eq!((-0.5, -0.5), compass.to_point());
+    let nw = compass.to_topleft(&rect);
+    assert_eq!(Point::new(40., 40.), nw);
+
+    let compass = Compass::new("ne");
+    assert_eq!((0.5, -0.5), compass.to_point());
+    let ne = compass.to_topleft(&rect);
+    assert_eq!(Point::new(30., 40.), ne);
+
+    let compass = Compass::new("se");
+    assert_eq!((0.5, 0.5), compass.to_point());
+    let se = compass.to_topleft(&rect);
+    assert_eq!(Point::new(30., 20.), se);
   }
 
   #[test]

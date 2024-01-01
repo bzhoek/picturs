@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use std::error::Error;
+use std::ops::Add;
 
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
@@ -53,10 +54,20 @@ impl Compass {
     }
   }
 
+  pub fn to_point(&self) -> (f32, f32) {
+    (self.x, self.y)
+  }
+
   pub fn to_edge(&self, rect: &Rect) -> Point {
     let mut point = rect.center();
     point.offset((self.x * rect.width(), self.y * rect.height()));
     point
+  }
+
+  pub fn to_topleft(&self, rect: &Rect) -> Point {
+    let point = Point::new(self.x, self.y);
+    let point = point.add(Vector::new(0.5, 0.5));
+    Point::new(rect.left + (rect.width() * -point.x), rect.top + (rect.height() * -point.y))
   }
 }
 
