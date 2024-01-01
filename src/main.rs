@@ -3,7 +3,7 @@ use std::fs;
 use anyhow::Result;
 use clap::Parser;
 
-use picturs::nested::Diagram;
+use picturs::diagram::Diagram;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

@@ -9,9 +9,9 @@ mod tests {
   use skia_safe::{Point, Rect, Vector};
 
   use picturs::{Distance, Edge};
-  use picturs::nested::{Compass, Diagram, Node, Shape};
-  use picturs::nested::Node::{Container, Primitive};
-  use picturs::nested::Shape::Rectangle;
+  use picturs::diagram::{Compass, Diagram, Node, Shape};
+  use picturs::diagram::Node::{Container, Primitive};
+  use picturs::diagram::Shape::Rectangle;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
@@ -205,12 +205,11 @@ mod tests {
   }
 
   #[test]
-  fn right_below_left() -> Result<()> {
+  fn right_center_left() -> Result<()> {
     let string =
       r#"
       box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" @w
-       2cm right from left.ne
+      box.right "While this goes to the right hand side" @w 2cm right from left.ne
       "#;
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
@@ -220,7 +219,7 @@ mod tests {
     let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
     assert_eq!(&expected, rect);
 
-    assert_visual(diagram, "target/right_below_left")?;
+    assert_visual(diagram, "target/right_center_left")?;
     Ok(())
   }
 

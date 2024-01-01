@@ -2,9 +2,9 @@ use std::ops::Mul;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Point, Rect, Vector};
-use crate::nested::Compass;
+use crate::diagram::Compass;
 
-pub mod nested;
+pub mod diagram;
 pub mod skia;
 
 #[derive(Parser)]

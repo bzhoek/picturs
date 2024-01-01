@@ -9,13 +9,13 @@ use pest_derive::Parser;
 use skia_safe::{Color, PaintStyle, Point, Rect, Vector};
 
 use crate::{Distance, Edge};
-use crate::nested::Node::{Container, Primitive};
+use crate::diagram::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Parser)]
-#[grammar = "nested.pest"]
+#[grammar = "diagram.pest"]
 pub struct NestedParser;
 
 #[derive(PartialEq)]
@@ -89,24 +89,24 @@ impl<'i> Diagram<'i> {
     let top = NestedParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(400, 800);
     canvas.cursor = self.offset;
-    let (ast, _bounds) = self.pairs_to_nodes(top.clone(), vec![], &mut canvas, &self.offset);
+    let (ast, _bounds) = Diagram::pairs_to_nodes(top.clone(), vec![], &mut canvas, &self.offset);
     self.nodes = ast;
     top
   }
 
-  pub fn pairs_to_nodes<'a>(&self, pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point)
+  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point)
                             -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
 
     for pair in pairs.into_iter() {
       match pair.as_rule() {
         Rule::container => {
-          let title = rule_to_string(&pair, Rule::inner);
+          let title = Diagram::rule_to_string(&pair, Rule::inner);
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 0., 0.);
           let mut inset = Point::new(used.left, used.bottom);
           inset.offset((BLOCK_PADDING, BLOCK_PADDING));
           let (nodes, inner)
-            = self.pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset);
+            = Diagram::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset);
           used.bottom = inner.bottom + BLOCK_PADDING;
           used.right = inner.right + 2. * BLOCK_PADDING;
 
@@ -124,17 +124,17 @@ impl<'i> Diagram<'i> {
           bounds.bottom = rect.bottom;
         }
         Rule::line => {
-          let id = rule_to_string(&pair, Rule::id);
-          let source = rule_to_string(&pair, Rule::source).unwrap();
-          let target = rule_to_string(&pair, Rule::target).unwrap();
+          let id = Diagram::rule_to_string(&pair, Rule::id);
+          let source = Diagram::rule_to_string(&pair, Rule::source).unwrap();
+          let target = Diagram::rule_to_string(&pair, Rule::target).unwrap();
           let rect = Rect::from_xywh(bounds.left, bounds.bottom, 0., 0.);
           ast.push(Primitive(id, rect, rect, Shape::Line(id, source, target))
           );
         }
         Rule::rectangle => {
-          let title = rule_to_string(&pair, Rule::inner);
-          let id = rule_to_string(&pair, Rule::id);
-          let location = rule_to_location(&pair, Rule::location);
+          let title = Diagram::rule_to_string(&pair, Rule::inner);
+          let id = Diagram::rule_to_string(&pair, Rule::id);
+          let location = Diagram::rule_to_location(&pair, Rule::location);
           let height = match title {
             Some(title) => canvas.paragraph(title, (0., 0.), 120. - 2. * TEXT_PADDING),
             None => 40.,
@@ -144,11 +144,11 @@ impl<'i> Diagram<'i> {
           used.bottom += BLOCK_PADDING;
 
           if let Some((compass, distances, edge)) = &location {
-            Diagram::offset_in(&ast, edge, distances).map(|rect| {
+            if let Some(rect) = Diagram::offset_in(&ast, edge, distances) {
               used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
               let offset = compass.topleft_offset(&used);
               used.offset(offset);
-            });
+            }
           }
 
           let mut rect = used;
@@ -161,7 +161,7 @@ impl<'i> Diagram<'i> {
         _ => {
           println!("unmatched {:?}", pair);
           let inset = Point::new(bounds.left, bounds.bottom);
-          (ast, bounds) = self.pairs_to_nodes(pair.into_inner(), ast, canvas, &inset);
+          (ast, bounds) = Diagram::pairs_to_nodes(pair.into_inner(), ast, canvas, &inset);
         }
       }
     }
@@ -228,7 +228,7 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  fn find_nodes_mut<'a: 'i>(nodes: &'i mut Vec<Node<'a>>, node_id: &str) -> Option<&'i mut Node<'a>> {
+  fn find_nodes_mut<'a: 'i>(nodes: &'i mut [Node<'a>], node_id: &str) -> Option<&'i mut Node<'a>> {
     for node in nodes.iter_mut() {
       match node {
         Primitive(Some(id), _, _, _) => {
@@ -297,72 +297,71 @@ impl<'i> Diagram<'i> {
       }
     }
   }
+
+  fn rule_to_location(pair: &Pair<Rule>, rule: Rule) -> Option<(Compass, Vec<Distance>, Edge)> {
+    Diagram::find_rule(pair, rule)
+      .map(|p| {
+        let mut compass: Option<Compass> = None;
+        let mut directions: Vec<Distance> = vec![];
+        let mut edge: Option<Edge> = None;
+
+        for rule in p.into_inner() {
+          match rule.as_rule() {
+            Rule::compass => { compass = Some(Compass::new(rule.as_str())); }
+            Rule::distance => {
+              let distance = Diagram::pair_to_distance(rule);
+              directions.push(distance);
+            }
+            Rule::edge => { edge = Some(Diagram::pair_to_edge(rule)); }
+            _ => {}
+          }
+        };
+        (compass.unwrap(), directions, edge.unwrap())
+      })
+  }
+
+  fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Distance> {
+    Diagram::find_rule(pair, rule).map(Diagram::pair_to_distance)
+  }
+
+  fn pair_to_distance(pair: Pair<Rule>) -> Distance {
+    let length = Diagram::find_rule(&pair, Rule::length)
+      .and_then(|p| p.as_str().parse::<usize>().ok())
+      .unwrap();
+    let unit = Diagram::rule_to_string(&pair, Rule::unit)
+      .unwrap();
+    let direction = match Diagram::rule_to_string(&pair, Rule::direction).unwrap() {
+      "left" => Vector::new(-1., 0.),
+      "right" => Vector::new(1., 0.),
+      "up" => Vector::new(0., -1.),
+      _ => Vector::new(0., 1.),
+    };
+    Distance::new(length as f32, unit.to_owned(), direction)
+  }
+
+  fn rule_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<Edge> {
+    Diagram::find_rule(pair, rule).map(Diagram::pair_to_edge)
+  }
+
+  fn pair_to_edge(pair: Pair<Rule>) -> Edge {
+    let id = Diagram::rule_to_string(&pair, Rule::id).unwrap();
+    let compass = Diagram::rule_to_string(&pair, Rule::compass).unwrap();
+    Edge::new(id, compass)
+  }
+
+  fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
+    Diagram::find_rule(pair, rule)
+      .map(|p| p.as_str())
+  }
+
+  fn find_rule<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<Pair<'a, Rule>> {
+    pair.clone().into_inner()
+      .find(|p| p.as_rule() == rule)
+  }
 }
 
 const BLOCK_PADDING: f32 = 8.;
 const TEXT_PADDING: f32 = 4.;
-
-fn rule_to_location<'a>(pair: &Pair<'a, Rule>, rule: Rule)
-                        -> Option<(Compass, Vec<Distance>, Edge)> {
-  find_rule(pair, rule)
-    .map(|p| {
-      let mut compass: Option<Compass> = None;
-      let mut directions: Vec<Distance> = vec![];
-      let mut edge: Option<Edge> = None;
-
-      for rule in p.into_inner() {
-        match rule.as_rule() {
-          Rule::compass => { compass = Some(Compass::new(rule.as_str())); }
-          Rule::distance => {
-            let distance = pair_to_distance(rule);
-            directions.push(distance);
-          }
-          Rule::edge => { edge = Some(pair_to_edge(rule)); }
-          _ => {}
-        }
-      };
-      (compass.unwrap(), directions, edge.unwrap())
-    })
-}
-
-fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Distance> {
-  find_rule(pair, rule).map(pair_to_distance)
-}
-
-fn pair_to_distance(pair: Pair<Rule>) -> Distance {
-  let length = find_rule(&pair, Rule::length)
-    .and_then(|p| p.as_str().parse::<usize>().ok())
-    .unwrap();
-  let unit = rule_to_string(&pair, Rule::unit)
-    .unwrap();
-  let direction = match rule_to_string(&pair, Rule::direction).unwrap() {
-    "left" => Vector::new(-1., 0.),
-    "right" => Vector::new(1., 0.),
-    "up" => Vector::new(0., -1.),
-    _ => Vector::new(0., 1.),
-  };
-  Distance::new(length as f32, unit.to_owned(), direction)
-}
-
-fn rule_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<Edge> {
-  find_rule(pair, rule).map(pair_to_edge)
-}
-
-fn pair_to_edge(pair: Pair<Rule>) -> Edge {
-  let id = rule_to_string(&pair, Rule::id).unwrap();
-  let compass = rule_to_string(&pair, Rule::compass).unwrap();
-  Edge::new(id, compass)
-}
-
-fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
-  find_rule(pair, rule)
-    .map(|p| p.as_str())
-}
-
-fn find_rule<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<Pair<'a, Rule>> {
-  pair.clone().into_inner()
-    .find(|p| p.as_rule() == rule)
-}
 
 #[allow(dead_code)]
 pub fn dump_nested(level: usize, pairs: Pairs<Rule>) {
