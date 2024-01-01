@@ -34,7 +34,7 @@ mod tests {
       Primitive(None,
                 Rect::from_xywh(0., 0., 120., 56.),
                 Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(None)),
+                Rectangle(None, None)),
     ], diagram.nodes);
   }
 
@@ -47,7 +47,7 @@ mod tests {
       Primitive(Some("first"),
                 Rect::from_xywh(0., 0., 120., 56.),
                 Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(Some("title"))),
+                Rectangle(Some("title"), None)),
     ], diagram.nodes);
   }
 
@@ -60,7 +60,7 @@ mod tests {
       Primitive(None,
                 Rect::from_xywh(0., 0., 120., 56.),
                 Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(Some("title"))),
+                Rectangle(Some("title"), None)),
     ], diagram.nodes);
   }
 
@@ -74,11 +74,11 @@ mod tests {
       Primitive(None,
                 Rect::from_xywh(0., 0., 120., 56.),
                 Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(None)),
+                Rectangle(None, None)),
       Primitive(None,
                 Rect::from_xywh(0., 56., 120., 56.),
                 Rect::from_xywh(0., 56., 120., 48.),
-                Rectangle(None)),
+                Rectangle(None, None)),
     ], diagram.nodes);
   }
 
@@ -95,7 +95,7 @@ mod tests {
                   Primitive(None,
                             Rect::from_xywh(8., 8., 120., 56.),
                             Rect::from_xywh(8., 8., 120., 48.),
-                            Rectangle(None))
+                            Rectangle(None, None))
                 ])
     ], diagram.nodes);
   }
@@ -113,7 +113,7 @@ mod tests {
                   Primitive(None,
                             Rect::from_xywh(8., 8., 120., 56.),
                             Rect::from_xywh(8., 8., 120., 48.),
-                            Rectangle(Some("child")))
+                            Rectangle(Some("child"), None))
                 ])
     ], diagram.nodes);
   }
@@ -142,7 +142,7 @@ mod tests {
       Primitive(None,
                 paragraph1_rect,
                 paragraph2_rect,
-                Rectangle(Some(TQBF))),
+                Rectangle(Some(TQBF), None)),
     ], diagram.nodes);
   }
 
@@ -183,6 +183,24 @@ mod tests {
     diagram.parse_string(string);
     dbg!(&diagram.nodes);
     assert_visual(diagram, "target/remember_the_future")?;
+    Ok(())
+  }
+
+  #[test]
+  fn visual_whole_ast() -> Result<()> {
+    let string =
+      r#"box.now "Now" {
+        box.step3 "What do we need to start doing now"
+      }
+      box.future "March" {
+        box.step1 "Imagine it is four months into the future" .nw 1cm right from now.ne
+        box.step2 "What would you like to write about the past period"
+        box.note "IMPORTANT: write in past tense"
+      }
+      "#;
+    let mut diagram = Diagram::offset((32., 32.));
+    diagram.parse_string(string);
+    assert_visual(diagram, "target/whole_ast")?;
     Ok(())
   }
 
@@ -379,7 +397,7 @@ mod tests {
     let mut primitive = Primitive(None,
                                   Rect::from_xywh(0., 0., 120., 56.),
                                   Rect::from_xywh(0., 0., 120., 48.),
-                                  Rectangle(None));
+                                  Rectangle(None, None));
     dbg!(&primitive);
     match primitive {
       Primitive(_, ref mut rect, _, _) => {

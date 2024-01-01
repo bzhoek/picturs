@@ -11,12 +11,12 @@
 4. ~Onderscheid tussen `rect` en `used`, met eventueel een transform bij het renderen~
 5. ~Helper functies in Diagram type~
 6. ~Positioneren met `@nw 1cm from left.ne`~
-7. Positioneren apart zodat hele AST beschikbaar is
-8. Bounds interface definieren zodat niet heel Canvas een dependency wordt
-9. String in Distance vervangen voor enum
+7. ~Unit string in Distance vervangen door enum~
+8. Layout als hele AST beschikbaar is
+9. Bounds interface definieren zodat niet heel Canvas een dependency wordt
 
-`@nw 1cm right 2cm down from left.ne`
-`@nw=left.ne 1cr 2cd`
+`.nw 1cm right 2cm down from left.ne`
+`.nw=left.ne 1cr 2cd`
 
 ## pest
  

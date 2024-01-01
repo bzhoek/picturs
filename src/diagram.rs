@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use std::collections::HashMap;
 use std::error::Error;
 use std::ops::Add;
 
@@ -31,7 +32,7 @@ type Displacement = (Anchor, Vec<Distance>, Edge);
 #[derive(PartialEq)]
 pub enum Shape<'a> {
   Line(Option<&'a str>, &'a str, &'a str),
-  Rectangle(Option<&'a str>),
+  Rectangle(Option<&'a str>, Option<Displacement>),
 }
 
 #[derive(Debug)]
@@ -77,6 +78,7 @@ impl Anchor {
 #[derive(Default)]
 pub struct Diagram<'a> {
   pub nodes: Vec<Node<'a>>,
+  pub index: HashMap<String, Rect>,
   offset: Point,
 }
 
@@ -84,6 +86,7 @@ impl<'i> Diagram<'i> {
   pub fn offset(offset: impl Into<Point>) -> Self {
     Self {
       nodes: vec![],
+      index: HashMap::new(),
       offset: offset.into(),
     }
   }
@@ -92,36 +95,31 @@ impl<'i> Diagram<'i> {
     let top = NestedParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(400, 800);
     canvas.cursor = self.offset;
-    let (ast, _bounds) = Diagram::pairs_to_nodes(top.clone(), vec![], &mut canvas, &self.offset);
+    let (ast, _bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &self.offset, &mut self.index);
     self.nodes = ast;
     top
   }
 
-  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point)
+  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, index: &mut HashMap<String, Rect>)
                             -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
 
     for pair in pairs.into_iter() {
       match pair.as_rule() {
         Rule::container => {
-          let id = Diagram::rule_to_string(&pair, Rule::id);
-          let title = Diagram::rule_to_string(&pair, Rule::inner);
-          let location = Diagram::rule_to_location(&pair, Rule::location);
+          let id = Self::rule_to_string(&pair, Rule::id);
+          let title = Self::rule_to_string(&pair, Rule::inner);
+          let location = Self::rule_to_location(&pair, Rule::location);
 
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 0., 0.);
-
-          if let Some((anchor, distances, edge)) = &location {
-            if let Some(rect) = Diagram::offset_in(&ast, edge, distances) {
-              used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
-              let offset = anchor.topleft_offset(&used);
-              used.offset(offset);
-            }
-          }
+          Self::position_rect(index, &location, &mut used);
 
           let mut inset = Point::new(used.left, used.bottom);
           inset.offset((BLOCK_PADDING, BLOCK_PADDING));
           let (nodes, inner)
-            = Diagram::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset);
+            = Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, index);
+          used.top = inner.top - BLOCK_PADDING;
+          used.left = inner.left - BLOCK_PADDING;
           used.bottom = inner.bottom + BLOCK_PADDING;
           used.right = inner.right + 2. * BLOCK_PADDING;
 
@@ -131,25 +129,30 @@ impl<'i> Diagram<'i> {
             used.bottom = inner.bottom + down + TEXT_PADDING;
           }
 
+          if let Some(id) = id {
+            index.insert(id.into(), used);
+          }
+
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
           ast.push(Container(id, title, rect, used, nodes));
 
+          bounds.left = rect.left;
           bounds.right = bounds.right.max(rect.right);
           bounds.bottom = rect.bottom;
         }
         Rule::line => {
-          let id = Diagram::rule_to_string(&pair, Rule::id);
-          let source = Diagram::rule_to_string(&pair, Rule::source).unwrap();
-          let target = Diagram::rule_to_string(&pair, Rule::target).unwrap();
+          let id = Self::rule_to_string(&pair, Rule::id);
+          let source = Self::rule_to_string(&pair, Rule::source).unwrap();
+          let target = Self::rule_to_string(&pair, Rule::target).unwrap();
           let rect = Rect::from_xywh(bounds.left, bounds.bottom, 0., 0.);
           ast.push(Primitive(id, rect, rect, Shape::Line(id, source, target))
           );
         }
         Rule::rectangle => {
-          let title = Diagram::rule_to_string(&pair, Rule::inner);
-          let id = Diagram::rule_to_string(&pair, Rule::id);
-          let location = Diagram::rule_to_location(&pair, Rule::location);
+          let title = Self::rule_to_string(&pair, Rule::inner);
+          let id = Self::rule_to_string(&pair, Rule::id);
+          let location = Self::rule_to_location(&pair, Rule::location);
           let height = match title {
             Some(title) => canvas.paragraph(title, (0., 0.), 120. - 2. * TEXT_PADDING),
             None => 40.,
@@ -157,34 +160,39 @@ impl<'i> Diagram<'i> {
 
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 120., height.max(40.));
           used.bottom += BLOCK_PADDING;
+          Self::position_rect(index, &location, &mut used);
 
-          if let Some((anchor, distances, edge)) = &location {
-            if let Some(rect) = Diagram::offset_in(&ast, edge, distances) {
-              used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
-              let offset = anchor.topleft_offset(&used);
-              used.offset(offset);
-            }
+          if let Some(id) = id {
+            index.insert(id.into(), used);
           }
 
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
-          ast.push(Primitive(id, rect, used, Shape::Rectangle(title)));
+          ast.push(Primitive(id, rect, used, Shape::Rectangle(title, location)));
 
+          bounds.top = bounds.top.min(rect.top);
+          bounds.left = rect.left;
           bounds.right = bounds.right.max(rect.right);
           bounds.bottom = rect.bottom
         }
         _ => {
           println!("unmatched {:?}", pair);
           // let inset = Point::new(bounds.left, bounds.bottom);
-          // (ast, bounds) = Diagram::pairs_to_nodes(pair.into_inner(), ast, canvas, &inset);
+          // (ast, bounds) = Self::pairs_to_nodes(pair.into_inner(), ast, canvas, &inset);
         }
       }
     }
     (ast, bounds)
   }
 
-  fn find_node<'a>(&'a self, id: &str) -> Option<&Node<'a>> {
-    Diagram::find_nodes(&self.nodes, id)
+  fn position_rect(index: &mut HashMap<String, Rect>, location: &Option<(Anchor, Vec<Distance>, Edge)>, used: &mut Rect) {
+    if let Some((anchor, distances, edge)) = &location {
+      if let Some(rect) = Self::offset_index(index, edge, distances) {
+        *used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
+        let offset = anchor.topleft_offset(&used);
+        used.offset(offset);
+      }
+    }
   }
 
   pub fn used_rect(&self, id: &str) -> Option<&Rect> {
@@ -194,6 +202,10 @@ impl<'i> Diagram<'i> {
         _ => panic!("not a primitive")
       }
     })
+  }
+
+  fn find_node<'a>(&'a self, id: &str) -> Option<&Node<'a>> {
+    Self::find_nodes(&self.nodes, id)
   }
 
   fn find_nodes<'a>(nodes: &'a [Node], node_id: &str) -> Option<&'a Node<'a>> {
@@ -208,7 +220,7 @@ impl<'i> Diagram<'i> {
               return true;
             }
           }
-          Diagram::find_nodes(nodes, node_id).is_some()
+          Self::find_nodes(nodes, node_id).is_some()
         }
         _ => false
       }
@@ -216,15 +228,12 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn offset_from(&self, edge: &Edge, distances: &[Distance]) -> Option<Rect> {
-    Diagram::offset_in(&self.nodes, edge, distances)
+    Self::offset_index(&self.index, edge, distances)
   }
 
-  pub fn offset_in(nodes: &[Node], edge: &Edge, distances: &[Distance]) -> Option<Rect> {
-    Diagram::find_nodes(nodes, &edge.id).map(|node| {
-      match node {
-        Primitive(_, _, used, _) => Diagram::offset_from_rect(used, &edge.anchor, distances),
-        Container(_, _, _, used, _) => Diagram::offset_from_rect(used, &edge.anchor, distances),
-      }
+  fn offset_index(index: &HashMap<String, Rect>, edge: &Edge, distances: &[Distance]) -> Option<Rect> {
+    index.get(&edge.id).map(|rect| {
+      Self::offset_from_rect(rect, &edge.anchor, distances)
     })
   }
 
@@ -257,7 +266,7 @@ impl<'i> Diagram<'i> {
           }
         }
         Container(_, _, _, _, nodes) => {
-          if let Some(node) = Diagram::find_nodes_mut(nodes, node_id) {
+          if let Some(node) = Self::find_nodes_mut(nodes, node_id) {
             return Some(node);
           }
         }
@@ -277,7 +286,7 @@ impl<'i> Diagram<'i> {
   fn render_nodes(&self, nodes: &[Node], canvas: &mut Canvas) {
     for node in nodes.iter() {
       match node {
-        Container(id, title, _rect, used, nodes) => {
+        Container(_id, title, _rect, used, nodes) => {
           self.render_nodes(nodes, canvas);
 
           if let Some(title) = title {
@@ -302,7 +311,7 @@ impl<'i> Diagram<'i> {
   fn render_shape(&self, shape: &Shape, used: &Rect, canvas: &mut Canvas) {
     match shape {
       Shape::Line(_, _, _) => {}
-      Shape::Rectangle(title) => {
+      Shape::Rectangle(title, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(Color::BLUE);
         canvas.rectangle(used);
@@ -319,7 +328,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn rule_to_location(pair: &Pair<Rule>, rule: Rule) -> Option<(Anchor, Vec<Distance>, Edge)> {
-    Diagram::find_rule(pair, rule)
+    Self::find_rule(pair, rule)
       .map(|p| {
         let mut anchor: Option<Anchor> = None;
         let mut directions: Vec<Distance> = vec![];
@@ -329,10 +338,10 @@ impl<'i> Diagram<'i> {
           match rule.as_rule() {
             Rule::anchor => { anchor = Some(Anchor::new(rule.as_str())); }
             Rule::distance => {
-              let distance = Diagram::pair_to_distance(rule);
+              let distance = Self::pair_to_distance(rule);
               directions.push(distance);
             }
-            Rule::edge => { edge = Some(Diagram::pair_to_edge(rule)); }
+            Rule::edge => { edge = Some(Self::pair_to_edge(rule)); }
             _ => {}
           }
         };
@@ -341,16 +350,16 @@ impl<'i> Diagram<'i> {
   }
 
   fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Distance> {
-    Diagram::find_rule(pair, rule).map(Diagram::pair_to_distance)
+    Self::find_rule(pair, rule).map(Self::pair_to_distance)
   }
 
   fn pair_to_distance(pair: Pair<Rule>) -> Distance {
-    let length = Diagram::find_rule(&pair, Rule::length)
+    let length = Self::find_rule(&pair, Rule::length)
       .and_then(|p| p.as_str().parse::<usize>().ok())
       .unwrap();
-    let unit = Diagram::rule_to_string(&pair, Rule::unit)
+    let unit = Self::rule_to_string(&pair, Rule::unit)
       .unwrap();
-    let direction = match Diagram::rule_to_string(&pair, Rule::direction).unwrap() {
+    let direction = match Self::rule_to_string(&pair, Rule::direction).unwrap() {
       "left" => Vector::new(-1., 0.),
       "right" => Vector::new(1., 0.),
       "up" => Vector::new(0., -1.),
@@ -360,17 +369,17 @@ impl<'i> Diagram<'i> {
   }
 
   fn rule_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<Edge> {
-    Diagram::find_rule(pair, rule).map(Diagram::pair_to_edge)
+    Self::find_rule(pair, rule).map(Self::pair_to_edge)
   }
 
   fn pair_to_edge(pair: Pair<Rule>) -> Edge {
-    let id = Diagram::rule_to_string(&pair, Rule::id).unwrap();
-    let anchor = Diagram::rule_to_string(&pair, Rule::anchor).unwrap();
+    let id = Self::rule_to_string(&pair, Rule::id).unwrap();
+    let anchor = Self::rule_to_string(&pair, Rule::anchor).unwrap();
     Edge::new(id, anchor)
   }
 
   fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
-    Diagram::find_rule(pair, rule)
+    Self::find_rule(pair, rule)
       .map(|p| p.as_str())
   }
 
