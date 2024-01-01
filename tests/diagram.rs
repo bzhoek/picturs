@@ -34,7 +34,7 @@ mod tests {
       Primitive(None,
                 Rect::from_xywh(0., 0., 120., 56.),
                 Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(None, None)),
+                Rectangle(None)),
     ], diagram.nodes);
   }
 
@@ -47,7 +47,7 @@ mod tests {
       Primitive(Some("first"),
                 Rect::from_xywh(0., 0., 120., 56.),
                 Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(Some("title"), None)),
+                Rectangle(Some("title"))),
     ], diagram.nodes);
   }
 
@@ -60,7 +60,7 @@ mod tests {
       Primitive(None,
                 Rect::from_xywh(0., 0., 120., 56.),
                 Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(Some("title"), None)),
+                Rectangle(Some("title"))),
     ], diagram.nodes);
   }
 
@@ -74,11 +74,11 @@ mod tests {
       Primitive(None,
                 Rect::from_xywh(0., 0., 120., 56.),
                 Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(None, None)),
+                Rectangle(None)),
       Primitive(None,
                 Rect::from_xywh(0., 56., 120., 56.),
                 Rect::from_xywh(0., 56., 120., 48.),
-                Rectangle(None, None)),
+                Rectangle(None)),
     ], diagram.nodes);
   }
 
@@ -88,14 +88,14 @@ mod tests {
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Container(None,
+      Container(Some("parent"), None,
                 Rect::from_xywh(0., 0., 144., 80.),
                 Rect::from_xywh(0., 0., 144., 72.),
                 vec![
                   Primitive(None,
                             Rect::from_xywh(8., 8., 120., 56.),
                             Rect::from_xywh(8., 8., 120., 48.),
-                            Rectangle(None, None))
+                            Rectangle(None))
                 ])
     ], diagram.nodes);
   }
@@ -106,14 +106,14 @@ mod tests {
     let diagram = parse_string(string);
 
     assert_eq!(vec![
-      Container(Some("parent"),
+      Container(None, Some("parent"),
                 Rect::from_xywh(0., 0., 144., 93.),
                 Rect::from_xywh(0., 0., 144., 85.),
                 vec![
                   Primitive(None,
                             Rect::from_xywh(8., 8., 120., 56.),
                             Rect::from_xywh(8., 8., 120., 48.),
-                            Rectangle(Some("child"), None))
+                            Rectangle(Some("child")))
                 ])
     ], diagram.nodes);
   }
@@ -142,12 +142,12 @@ mod tests {
       Primitive(None,
                 paragraph1_rect,
                 paragraph2_rect,
-                Rectangle(Some(TQBF), None)),
+                Rectangle(Some(TQBF))),
     ], diagram.nodes);
   }
 
   #[test]
-  fn parse_extended_example() -> Result<()> {
+  fn visual_double_containers() -> Result<()> {
     let string =
       r#"box.now "Now" {
         box.step3 "What do we need to start doing now"
@@ -162,7 +162,27 @@ mod tests {
     let mut diagram = Diagram::offset((32., 32.));
     diagram.parse_string(string);
     dbg!(&diagram.nodes);
-    assert_visual(diagram, "target/extended")?;
+    assert_visual(diagram, "target/double_containers")?;
+    Ok(())
+  }
+
+  #[test]
+  fn visual_remember_the_future() -> Result<()> {
+    let string =
+      r#"box.now "Now" {
+        box.step3 "What do we need to start doing now"
+      }
+      box.future "March" {
+        box.step1 "Imagine it is four months into the future"
+        box.step2 "What would you like to write about the past period"
+        box.note "IMPORTANT: write in past tense"
+      } .nw 1cm right from now.ne
+      line from now.n to future.n
+      "#;
+    let mut diagram = Diagram::offset((32., 32.));
+    diagram.parse_string(string);
+    dbg!(&diagram.nodes);
+    assert_visual(diagram, "target/remember_the_future")?;
     Ok(())
   }
 
@@ -186,7 +206,7 @@ mod tests {
   }
 
   #[test]
-  fn side_by_side() -> Result<()> {
+  fn visual_side_by_side() -> Result<()> {
     let string =
       r#"
       box.left "This goes to the left hand side"
@@ -205,7 +225,7 @@ mod tests {
   }
 
   #[test]
-  fn right_center_left() -> Result<()> {
+  fn visual_right_center_left() -> Result<()> {
     let string =
       r#"
       box.left "This goes to the left hand side"
@@ -359,7 +379,7 @@ mod tests {
     let mut primitive = Primitive(None,
                                   Rect::from_xywh(0., 0., 120., 56.),
                                   Rect::from_xywh(0., 0., 120., 48.),
-                                  Rectangle(None, None));
+                                  Rectangle(None));
     dbg!(&primitive);
     match primitive {
       Primitive(_, ref mut rect, _, _) => {
@@ -405,7 +425,7 @@ mod tests {
           rect.bottom += 8.;
           return Some(rect);
         }
-        Container(_, _, _, nodes) => {
+        Container(_, _, _, _, nodes) => {
           find_rect(nodes);
         }
       }

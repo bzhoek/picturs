@@ -21,15 +21,17 @@ pub struct NestedParser;
 #[derive(PartialEq)]
 #[derive(Debug)]
 pub enum Node<'a> {
+  Container(Option<&'a str>, Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
   Primitive(Option<&'a str>, Rect, Rect, Shape<'a>),
-  Container(Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
 }
+
+type Displacement = (Anchor, Vec<Distance>, Edge);
 
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum Shape<'a> {
   Line(Option<&'a str>, &'a str, &'a str),
-  Rectangle(Option<&'a str>, Option<(Anchor, Vec<Distance>, Edge)>),
+  Rectangle(Option<&'a str>),
 }
 
 #[derive(Debug)]
@@ -102,8 +104,20 @@ impl<'i> Diagram<'i> {
     for pair in pairs.into_iter() {
       match pair.as_rule() {
         Rule::container => {
+          let id = Diagram::rule_to_string(&pair, Rule::id);
           let title = Diagram::rule_to_string(&pair, Rule::inner);
+          let location = Diagram::rule_to_location(&pair, Rule::location);
+
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 0., 0.);
+
+          if let Some((anchor, distances, edge)) = &location {
+            if let Some(rect) = Diagram::offset_in(&ast, edge, distances) {
+              used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
+              let offset = anchor.topleft_offset(&used);
+              used.offset(offset);
+            }
+          }
+
           let mut inset = Point::new(used.left, used.bottom);
           inset.offset((BLOCK_PADDING, BLOCK_PADDING));
           let (nodes, inner)
@@ -119,7 +133,7 @@ impl<'i> Diagram<'i> {
 
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
-          ast.push(Container(title, rect, used, nodes));
+          ast.push(Container(id, title, rect, used, nodes));
 
           bounds.right = bounds.right.max(rect.right);
           bounds.bottom = rect.bottom;
@@ -154,15 +168,15 @@ impl<'i> Diagram<'i> {
 
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
-          ast.push(Primitive(id, rect, used, Shape::Rectangle(title, location)));
+          ast.push(Primitive(id, rect, used, Shape::Rectangle(title)));
 
           bounds.right = bounds.right.max(rect.right);
           bounds.bottom = rect.bottom
         }
         _ => {
           println!("unmatched {:?}", pair);
-          let inset = Point::new(bounds.left, bounds.bottom);
-          (ast, bounds) = Diagram::pairs_to_nodes(pair.into_inner(), ast, canvas, &inset);
+          // let inset = Point::new(bounds.left, bounds.bottom);
+          // (ast, bounds) = Diagram::pairs_to_nodes(pair.into_inner(), ast, canvas, &inset);
         }
       }
     }
@@ -188,7 +202,12 @@ impl<'i> Diagram<'i> {
         Primitive(Some(id), _, _, _) => {
           id == &node_id
         }
-        Container(_, _, _, nodes) => {
+        Container(id, _, _, _, nodes) => {
+          if let Some(id) = id {
+            if id == &node_id {
+              return true;
+            }
+          }
           Diagram::find_nodes(nodes, node_id).is_some()
         }
         _ => false
@@ -204,7 +223,7 @@ impl<'i> Diagram<'i> {
     Diagram::find_nodes(nodes, &edge.id).map(|node| {
       match node {
         Primitive(_, _, used, _) => Diagram::offset_from_rect(used, &edge.anchor, distances),
-        _ => panic!("not a primitive")
+        Container(_, _, _, used, _) => Diagram::offset_from_rect(used, &edge.anchor, distances),
       }
     })
   }
@@ -225,7 +244,7 @@ impl<'i> Diagram<'i> {
           rect.offset(distance.offset());
         }
       }
-      Container(_, _, _, _) => {}
+      _ => {}
     }
   }
 
@@ -237,7 +256,7 @@ impl<'i> Diagram<'i> {
             return Some(node);
           }
         }
-        Container(_, _, _, nodes) => {
+        Container(_, _, _, _, nodes) => {
           if let Some(node) = Diagram::find_nodes_mut(nodes, node_id) {
             return Some(node);
           }
@@ -258,7 +277,7 @@ impl<'i> Diagram<'i> {
   fn render_nodes(&self, nodes: &[Node], canvas: &mut Canvas) {
     for node in nodes.iter() {
       match node {
-        Container(title, _rect, used, nodes) => {
+        Container(id, title, _rect, used, nodes) => {
           self.render_nodes(nodes, canvas);
 
           if let Some(title) = title {
@@ -283,7 +302,7 @@ impl<'i> Diagram<'i> {
   fn render_shape(&self, shape: &Shape, used: &Rect, canvas: &mut Canvas) {
     match shape {
       Shape::Line(_, _, _) => {}
-      Shape::Rectangle(title, _) => {
+      Shape::Rectangle(title) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(Color::BLUE);
         canvas.rectangle(used);

@@ -1,7 +1,7 @@
 picture = _{ SOI ~ shapes* ~ EOI }
 shapes = _{ container | shape }
 shape = _{ line | rectangle }
-container = { "box" ~ identified? ~ string? ~ "{" ~ shapes* ~ "}" }
+container = { "box" ~ identified? ~ string? ~ "{" ~ shapes* ~ "}" ~ location? }
 rectangle = { "box" ~ identified? ~ string? ~ location? }
 identified = _{ "." ~ id }
 id = { ASCII_ALPHANUMERIC* }
