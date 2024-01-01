@@ -8,10 +8,10 @@ mod tests {
   use anyhow::Result;
   use skia_safe::{Point, Rect, Vector};
 
-  use picturs::{Distance, Edge, Unit};
-  use picturs::diagram::{A5, Anchor, Diagram, Node, Shape};
+  use picturs::diagram::{A5, Diagram, Node, Shape};
   use picturs::diagram::Node::{Container, Primitive};
   use picturs::diagram::Shape::Rectangle;
+  use picturs::types::{Anchor, Distance, Edge, Unit};
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 

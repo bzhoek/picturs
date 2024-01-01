@@ -2,16 +2,15 @@
 
 use std::collections::HashMap;
 use std::error::Error;
-use std::ops::Add;
 
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, PaintStyle, Point, Rect, Vector};
 
-use crate::{Distance, Edge};
 use crate::diagram::Node::{Container, Primitive};
 use crate::skia::Canvas;
+use crate::types::{Anchor, Distance, Edge};
 
 pub static A5: (i32, i32) = (798, 562);
 
@@ -19,7 +18,7 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
 #[derive(Parser)]
 #[grammar = "diagram.pest"]
-pub struct NestedParser;
+pub struct DiagramParser;
 
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -35,46 +34,6 @@ type Displacement = (Anchor, Vec<Distance>, Edge);
 pub enum Shape<'a> {
   Line(Option<&'a str>, &'a str, &'a str),
   Rectangle(Option<&'a str>, Option<Displacement>),
-}
-
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub struct Anchor {
-  pub x: f32,
-  pub y: f32,
-}
-
-impl Anchor {
-  pub fn new(string: &str) -> Self {
-    let dot_removed = string.trim_start_matches('.');
-    match dot_removed.to_lowercase().as_str() {
-      "n" => Self { x: 0., y: -0.5 },
-      "ne" => Self { x: 0.5, y: -0.5 },
-      "e" => Self { x: 0.5, y: 0. },
-      "se" => Self { x: 0.5, y: 0.5 },
-      "s" => Self { x: 0., y: 0.5 },
-      "sw" => Self { x: -0.5, y: 0.5 },
-      "w" => Self { x: -0.5, y: 0. },
-      "nw" => Self { x: -0.5, y: -0.5 },
-      _ => Self { x: 0., y: 0. }
-    }
-  }
-
-  pub fn to_tuple(&self) -> (f32, f32) {
-    (self.x, self.y)
-  }
-
-  pub fn to_edge(&self, rect: &Rect) -> Point {
-    let mut point = rect.center();
-    point.offset((self.x * rect.width(), self.y * rect.height()));
-    point
-  }
-
-  pub fn topleft_offset(&self, rect: &Rect) -> Point {
-    let point = Point::new(self.x, self.y);
-    let point = point.add(Vector::new(0.5, 0.5));
-    Point::new(rect.width() * -point.x, rect.height() * -point.y)
-  }
 }
 
 pub struct Diagram<'a> {
@@ -95,7 +54,7 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
-    let top = NestedParser::parse(Rule::picture, string).unwrap();
+    let top = DiagramParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(self.size);
     canvas.cursor = self.offset;
     let (ast, _bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &self.offset, &mut self.index);

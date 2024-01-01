@@ -12,8 +12,9 @@
 5. ~Helper functies in Diagram type~
 6. ~Positioneren met `@nw 1cm from left.ne`~
 7. ~Unit string in Distance vervangen door enum~
-8. Layout als hele AST beschikbaar is
-9. Bounds interface definieren zodat niet heel Canvas een dependency wordt
+8. ~Hele voorgaande layout beschikbaar~
+9. Lijn trekken van `now` naar `future`
+10. Bounds interface definieren zodat niet heel Canvas een dependency wordt
 
 `.nw 1cm right 2cm down from left.ne`
 `.nw=left.ne 1cr 2cd`

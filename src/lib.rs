@@ -1,11 +1,9 @@
-use std::ops::Mul;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
-use skia_safe::{Point, Rect, Vector};
-use crate::diagram::Anchor;
 
 pub mod diagram;
 pub mod skia;
+pub mod types;
 
 #[derive(Parser)]
 #[grammar = "pic.pest"] // relative to project `src`
@@ -74,75 +72,5 @@ pub fn dump_pic(level: usize, pair: Pair<Rule>) {
   for pair in pair.into_inner() {
     println!("{:level$} {:?}", level, pair);
     dump_pic(level + 1, pair);
-  }
-}
-
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub struct Distance {
-  length: f32,
-  unit: Unit,
-  direction: Vector,
-}
-
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub enum Unit {
-  Cm,
-}
-
-impl From<&str> for Unit {
-  fn from(item: &str) -> Self {
-    match item {
-      "cm" => Unit::Cm,
-      _ => panic!("unknown unit {}", item)
-    }
-  }
-}
-
-
-impl Distance {
-  pub fn new(length: f32, unit: Unit, direction: Vector) -> Self {
-    Self { length, unit, direction }
-  }
-
-  fn pixels(&self) -> f32 {
-    match self.unit {
-      Unit::Cm => self.length * 38.,
-    }
-  }
-
-  fn offset(&self) -> Point {
-    self.direction.mul(self.pixels())
-  }
-}
-
-#[derive(Debug)]
-#[derive(PartialEq)]
-pub struct Edge {
-  id: String,
-  anchor: Anchor,
-}
-
-impl Edge {
-  pub fn new(id: &str, edge: &str) -> Self {
-    let anchor = Anchor::new(edge);
-    Self { id: id.to_string(), anchor }
-  }
-}
-
-pub trait Move {
-  fn shift(&self, d: impl Into<Vector>) -> Self;
-}
-
-impl Move for Rect {
-  fn shift(&self, d: impl Into<Vector>) -> Self {
-    let d = d.into();
-    Self::new(
-      self.top + d.y,
-      self.left + d.x,
-      self.right + d.x,
-      self.bottom + d.y,
-    )
   }
 }
