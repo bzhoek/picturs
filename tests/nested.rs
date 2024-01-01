@@ -204,6 +204,26 @@ mod tests {
     Ok(())
   }
 
+  #[test]
+  fn right_below_left() -> Result<()> {
+    let string =
+      r#"
+      box.left "This goes to the left hand side"
+      box.right "While this goes to the right hand side" @w
+       2cm right from left.ne
+      "#;
+    let mut diagram = Diagram::offset((32., 32.));
+    diagram.parse_string(string);
+    assert_eq!(2, diagram.nodes.len());
+
+    let rect = diagram.used_rect("left").unwrap();
+    let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
+    assert_eq!(&expected, rect);
+
+    assert_visual(diagram, "target/right_below_left")?;
+    Ok(())
+  }
+
   fn assert_visual(diagram: Diagram, prefix: &str) -> Result<()> {
     let ref_file = format!("{}.png", prefix);
     let last_file = format!("{}-last.png", prefix);
@@ -249,19 +269,22 @@ mod tests {
     het verschil moet van topleft worden afgetrokken
      */
     let compass = Compass::new("nw");
-    assert_eq!((-0.5, -0.5), compass.to_point());
-    let nw = compass.to_topleft(&rect);
-    assert_eq!(Point::new(40., 40.), nw);
+    let factors = compass.to_tuple();
+    assert_eq!((-0.5, -0.5), factors);
+    let nw = compass.topleft_offset(&rect);
+    assert_eq!(Point::new(-0., -0.), nw);
 
     let compass = Compass::new("ne");
-    assert_eq!((0.5, -0.5), compass.to_point());
-    let ne = compass.to_topleft(&rect);
-    assert_eq!(Point::new(30., 40.), ne);
+    let factors = compass.to_tuple();
+    assert_eq!((0.5, -0.5), factors);
+    let ne = compass.topleft_offset(&rect);
+    assert_eq!(Point::new(-10., -0.), ne);
 
     let compass = Compass::new("se");
-    assert_eq!((0.5, 0.5), compass.to_point());
-    let se = compass.to_topleft(&rect);
-    assert_eq!(Point::new(30., 20.), se);
+    let factors = compass.to_tuple();
+    assert_eq!((0.5, 0.5), factors);
+    let se = compass.topleft_offset(&rect);
+    assert_eq!(Point::new(-10., -20.), se);
   }
 
   #[test]

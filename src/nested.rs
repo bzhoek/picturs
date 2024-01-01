@@ -29,7 +29,7 @@ pub enum Node<'a> {
 #[derive(PartialEq)]
 pub enum Shape<'a> {
   Line(Option<&'a str>, &'a str, &'a str),
-  Rectangle(Option<&'a str>, Option<(&'a str, Vec<Distance>, Edge)>),
+  Rectangle(Option<&'a str>, Option<(Compass, Vec<Distance>, Edge)>),
 }
 
 #[derive(Debug)]
@@ -54,7 +54,7 @@ impl Compass {
     }
   }
 
-  pub fn to_point(&self) -> (f32, f32) {
+  pub fn to_tuple(&self) -> (f32, f32) {
     (self.x, self.y)
   }
 
@@ -64,10 +64,10 @@ impl Compass {
     point
   }
 
-  pub fn to_topleft(&self, rect: &Rect) -> Point {
+  pub fn topleft_offset(&self, rect: &Rect) -> Point {
     let point = Point::new(self.x, self.y);
     let point = point.add(Vector::new(0.5, 0.5));
-    Point::new(rect.left + (rect.width() * -point.x), rect.top + (rect.height() * -point.y))
+    Point::new(rect.width() * -point.x, rect.height() * -point.y)
   }
 }
 
@@ -143,9 +143,11 @@ impl<'i> Diagram<'i> {
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 120., height.max(40.));
           used.bottom += BLOCK_PADDING;
 
-          if let Some((_compass, distances, edge)) = &location {
+          if let Some((compass, distances, edge)) = &location {
             Diagram::offset_in(&ast, edge, distances).map(|rect| {
               used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
+              let offset = compass.topleft_offset(&used);
+              used.offset(offset);
             });
           }
 
@@ -301,16 +303,16 @@ const BLOCK_PADDING: f32 = 8.;
 const TEXT_PADDING: f32 = 4.;
 
 fn rule_to_location<'a>(pair: &Pair<'a, Rule>, rule: Rule)
-                        -> Option<(&'a str, Vec<Distance>, Edge)> {
+                        -> Option<(Compass, Vec<Distance>, Edge)> {
   find_rule(pair, rule)
     .map(|p| {
-      let mut compass: Option<&str> = None;
+      let mut compass: Option<Compass> = None;
       let mut directions: Vec<Distance> = vec![];
       let mut edge: Option<Edge> = None;
 
       for rule in p.into_inner() {
         match rule.as_rule() {
-          Rule::compass => { compass = Some(rule.as_str()); }
+          Rule::compass => { compass = Some(Compass::new(rule.as_str())); }
           Rule::distance => {
             let distance = pair_to_distance(rule);
             directions.push(distance);
