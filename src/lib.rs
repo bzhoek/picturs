@@ -81,17 +81,35 @@ pub fn dump_pic(level: usize, pair: Pair<Rule>) {
 #[derive(PartialEq)]
 pub struct Distance {
   length: f32,
-  unit: String,
+  unit: Unit,
   direction: Vector,
 }
 
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum Unit {
+  Cm,
+}
+
+impl From<&str> for Unit {
+  fn from(item: &str) -> Self {
+    match item {
+      "cm" => Unit::Cm,
+      _ => panic!("unknown unit {}", item)
+    }
+  }
+}
+
+
 impl Distance {
-  pub fn new(length: f32, unit: String, direction: Vector) -> Self {
+  pub fn new(length: f32, unit: Unit, direction: Vector) -> Self {
     Self { length, unit, direction }
   }
 
   fn pixels(&self) -> f32 {
-    self.length * 38.
+    match self.unit {
+      Unit::Cm => self.length * 38.,
+    }
   }
 
   fn offset(&self) -> Point {

@@ -337,7 +337,7 @@ impl<'i> Diagram<'i> {
       "up" => Vector::new(0., -1.),
       _ => Vector::new(0., 1.),
     };
-    Distance::new(length as f32, unit.to_owned(), direction)
+    Distance::new(length as f32, unit.into(), direction)
   }
 
   fn rule_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<Edge> {
