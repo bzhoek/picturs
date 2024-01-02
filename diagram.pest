@@ -12,7 +12,7 @@ length = { ASCII_DIGIT* }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
 direction = { "up" | "down" | "left" | "right" }
 
-line = { "line" ~ "from" ~ source ~ "to" ~ target }
+line = { "line" ~ "from" ~ source ~ distance? ~ "to" ~ target }
 source = { edge }
 target = { edge }
 edge = { id ~ anchor }

@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 use std::error::Error;
+use std::ops::Add;
 
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
@@ -32,7 +33,7 @@ type Displacement = (Anchor, Vec<Distance>, Edge);
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum Shape<'a> {
-  Line(Option<&'a str>, &'a str, &'a str),
+  Line(Option<&'a str>, Edge, Option<Distance>, Edge),
   Rectangle(Option<&'a str>, Option<Displacement>),
 }
 
@@ -105,10 +106,18 @@ impl<'i> Diagram<'i> {
         }
         Rule::line => {
           let id = Self::rule_to_string(&pair, Rule::id);
-          let source = Self::rule_to_string(&pair, Rule::source).unwrap();
-          let target = Self::rule_to_string(&pair, Rule::target).unwrap();
-          let rect = Rect::from_xywh(bounds.left, bounds.bottom, 0., 0.);
-          ast.push(Primitive(id, rect, rect, Shape::Line(id, source, target))
+
+          let source = Self::location_to_edge(&pair, Rule::source).unwrap();
+          let distance = Self::rule_to_distance(&pair, Rule::distance);
+          let target = Self::location_to_edge(&pair, Rule::target).unwrap();
+
+          let start = Self::point_index(index, &source, &*vec![]);
+          let end = Self::point_index(index, &target, &*vec![]);
+
+          start.zip(end).map(|(start, end)| {
+            let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
+            ast.push(Primitive(id, rect, rect, Shape::Line(id, source, distance, target)));
+          }
           );
         }
         Rule::rectangle => {
@@ -187,6 +196,24 @@ impl<'i> Diagram<'i> {
         _ => false
       }
     })
+  }
+
+  pub fn point_from(&self, edge: &Edge, distances: &[Distance]) -> Option<Point> {
+    Self::point_index(&self.index, edge, distances)
+  }
+
+  fn point_index(index: &HashMap<String, Rect>, edge: &Edge, distances: &[Distance]) -> Option<Point> {
+    index.get(&edge.id).map(|rect| {
+      Self::point_from_rect(rect, &edge.anchor, distances)
+    })
+  }
+
+  pub fn point_from_rect(rect: &Rect, anchor: &Anchor, distances: &[Distance]) -> Point {
+    let point = anchor.to_edge(rect);
+    for distance in distances.iter() {
+      point.add(distance.offset());
+    }
+    point
   }
 
   pub fn offset_from(&self, edge: &Edge, distances: &[Distance]) -> Option<Rect> {
@@ -269,7 +296,25 @@ impl<'i> Diagram<'i> {
 
   fn render_shape(&self, shape: &Shape, used: &Rect, canvas: &mut Canvas) {
     match shape {
-      Shape::Line(_, _, _) => {}
+      Shape::Line(_, _, distance, _) => {
+        canvas.move_to(used.left, used.top);
+        let mut point = Point::new(used.left, used.top);
+        dbg!(distance);
+        if let Some(distance) = distance {
+          point = point.add(distance.offset());
+
+          if distance.direction.x != 0. {
+            canvas.line_to(point.x, point.y);
+            canvas.line_to(point.x, used.bottom);
+          } else {
+            canvas.line_to(point.x, point.y);
+            canvas.line_to(used.right, point.y);
+          }
+        }
+
+        canvas.line_to(used.right, used.bottom);
+        canvas.stroke();
+      }
       Shape::Rectangle(title, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(Color::BLUE);
@@ -325,6 +370,12 @@ impl<'i> Diagram<'i> {
       _ => Vector::new(0., 1.),
     };
     Distance::new(length as f32, unit.into(), direction)
+  }
+
+  fn location_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<Edge> {
+    Self::find_rule(pair, rule)
+      .and_then(|pair| Self::find_rule(&pair, Rule::edge))
+      .map(Self::pair_to_edge)
   }
 
   fn rule_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<Edge> {

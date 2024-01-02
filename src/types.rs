@@ -45,12 +45,16 @@ impl Anchor {
 #[derive(PartialEq)]
 pub enum Unit {
   Cm,
+  Pc,
+  Pt,
 }
 
 impl From<&str> for Unit {
   fn from(item: &str) -> Self {
     match item {
       "cm" => Unit::Cm,
+      "pc" => Unit::Pc,
+      "pt" => Unit::Pt,
       _ => panic!("unknown unit {}", item)
     }
   }
@@ -61,7 +65,7 @@ impl From<&str> for Unit {
 pub struct Distance {
   length: f32,
   unit: Unit,
-  direction: Vector,
+  pub direction: Vector,
 }
 
 impl Distance {
@@ -72,6 +76,8 @@ impl Distance {
   fn pixels(&self) -> f32 {
     match self.unit {
       Unit::Cm => self.length * 38.,
+      Unit::Pc => self.length * 16.,
+      Unit::Pt => self.length * 1.3333,
     }
   }
 

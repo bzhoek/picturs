@@ -125,19 +125,6 @@ mod tests {
   }
 
   #[test]
-  fn line_from_a_to_b() {
-    let string = r#"line from now.n to future.n"#;
-    let diagram = create_diagram(string);
-
-    assert_eq!(vec![
-      Primitive(None,
-                zero_rect(),
-                zero_rect(),
-                Shape::Line(None, "now.n", "future.n")),
-    ], diagram.nodes);
-  }
-
-  #[test]
   fn box_with_wrapping_title() {
     let string = format!(r#"box "{}""#, TQBF);
     let diagram = create_diagram(&string);
@@ -163,10 +150,10 @@ mod tests {
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
       }
-      line from now.n to future.n
+      line from now.e 1cm right to future.e
       "#;
     let diagram = create_diagram_inset(string);
-    dbg!(&diagram.nodes);
+    // dbg!(&diagram.nodes);
 
     assert_visual(diagram, "target/double_containers")?;
     Ok(())
@@ -182,11 +169,12 @@ mod tests {
         box.step1 "Imagine it is four months into the future"
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
-      } .nw 1cm right from now.ne
-      line from now.n to future.n
+      } .nw 8cm right from now.ne
+      line from now.n 1pc up to future.n
+      line from future.s 2pc down to now.s
       "#;
     let diagram = create_diagram_inset(string);
-    dbg!(&diagram.nodes);
+    // dbg!(&diagram.nodes);
 
     assert_visual(diagram, "target/remember_the_future")?;
     Ok(())
