@@ -4,7 +4,7 @@
 * https://pikchr.org/home/doc/trunk/homepage.md
 * https://pikchr.org/home/doc/trunk/doc/grammar.md
 
-## Nested
+## Diagram
 1. ~Render all rectangles~
 2. ~Wrap the text in a rectangle~
 3. ~Save primitive bounds in AST on parsing first pass~
@@ -54,3 +54,6 @@ list
 cargo add skia-safe --features metal
 ```
 
+### Timeline
+
+https://speakerdeck.com/nihonbuson/agile-testinghaxin-siigai-nian-nanoka-pin-zhi-bao-zheng-noli-shi-wota-maetekao-eru-number-scrumniigata?slide=28

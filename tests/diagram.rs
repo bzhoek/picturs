@@ -8,16 +8,12 @@ mod tests {
   use anyhow::Result;
   use skia_safe::{Point, Rect, Vector};
 
-  use picturs::diagram::{A5, Diagram, Node, Shape};
+  use picturs::diagram::{A5, Diagram, Node, Radius};
   use picturs::diagram::Node::{Container, Primitive};
   use picturs::diagram::Shape::Rectangle;
   use picturs::types::{Anchor, Distance, Edge, Unit};
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
-
-  fn zero_rect() -> Rect {
-    Rect::from_xywh(0., 0., 0., 0.)
-  }
 
   fn create_diagram(string: &str) -> Diagram {
     let mut diagram = Diagram::offset(A5, (0., 0.));
@@ -31,6 +27,10 @@ mod tests {
     diagram
   }
 
+  fn rectangle(title: Option<&str>) -> picturs::diagram::Shape {
+    Rectangle(title, Radius::default(), None)
+  }
+
   #[test]
   fn single_box_untitled() {
     let string = r#"box"#;
@@ -38,9 +38,9 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-                Rect::from_xywh(0., 0., 120., 56.),
-                Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(None, None)),
+        Rect::from_xywh(0., 0., 120., 56.),
+        Rect::from_xywh(0., 0., 120., 48.),
+        rectangle(None)),
     ], diagram.nodes);
   }
 
@@ -51,9 +51,9 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(Some("first"),
-                Rect::from_xywh(0., 0., 120., 56.),
-                Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(Some("title"), None)),
+        Rect::from_xywh(0., 0., 120., 56.),
+        Rect::from_xywh(0., 0., 120., 48.),
+        rectangle(Some("title"))),
     ], diagram.nodes);
   }
 
@@ -64,9 +64,9 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-                Rect::from_xywh(0., 0., 120., 56.),
-                Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(Some("title"), None)),
+        Rect::from_xywh(0., 0., 120., 56.),
+        Rect::from_xywh(0., 0., 120., 48.),
+        Rectangle(Some("title"), Radius::default(), None)),
     ], diagram.nodes);
   }
 
@@ -78,13 +78,13 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-                Rect::from_xywh(0., 0., 120., 56.),
-                Rect::from_xywh(0., 0., 120., 48.),
-                Rectangle(None, None)),
+        Rect::from_xywh(0., 0., 120., 56.),
+        Rect::from_xywh(0., 0., 120., 48.),
+        rectangle(None)),
       Primitive(None,
-                Rect::from_xywh(0., 56., 120., 56.),
-                Rect::from_xywh(0., 56., 120., 48.),
-                Rectangle(None, None)),
+        Rect::from_xywh(0., 56., 120., 56.),
+        Rect::from_xywh(0., 56., 120., 48.),
+        rectangle(None)),
     ], diagram.nodes);
   }
 
@@ -94,15 +94,15 @@ mod tests {
     let diagram = create_diagram(string);
 
     assert_eq!(vec![
-      Container(Some("parent"), None,
-                Rect::from_xywh(0., 0., 144., 80.),
-                Rect::from_xywh(0., 0., 144., 72.),
-                vec![
-                  Primitive(None,
-                            Rect::from_xywh(8., 8., 120., 56.),
-                            Rect::from_xywh(8., 8., 120., 48.),
-                            Rectangle(None, None))
-                ])
+      Container(Some("parent"), Radius::default(), None,
+        Rect::from_xywh(0., 0., 144., 80.),
+        Rect::from_xywh(0., 0., 144., 72.),
+        vec![
+          Primitive(None,
+            Rect::from_xywh(8., 8., 120., 56.),
+            Rect::from_xywh(8., 8., 120., 48.),
+            rectangle(None))
+        ])
     ], diagram.nodes);
   }
 
@@ -112,15 +112,15 @@ mod tests {
     let diagram = create_diagram(string);
 
     assert_eq!(vec![
-      Container(None, Some("parent"),
-                Rect::from_xywh(0., 0., 144., 93.),
-                Rect::from_xywh(0., 0., 144., 85.),
-                vec![
-                  Primitive(None,
-                            Rect::from_xywh(8., 8., 120., 56.),
-                            Rect::from_xywh(8., 8., 120., 48.),
-                            Rectangle(Some("child"), None))
-                ])
+      Container(None, Radius::default(), Some("parent"),
+        Rect::from_xywh(0., 0., 144., 93.),
+        Rect::from_xywh(0., 0., 144., 85.),
+        vec![
+          Primitive(None,
+            Rect::from_xywh(8., 8., 120., 56.),
+            Rect::from_xywh(8., 8., 120., 48.),
+            rectangle(Some("child")))
+        ])
     ], diagram.nodes);
   }
 
@@ -133,9 +133,9 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-                paragraph1_rect,
-                paragraph2_rect,
-                Rectangle(Some(TQBF), None)),
+        paragraph1_rect,
+        paragraph2_rect,
+        rectangle(Some(TQBF))),
     ], diagram.nodes);
   }
 
@@ -143,9 +143,9 @@ mod tests {
   fn visual_double_containers() -> Result<()> {
     let string =
       r#"box.now "Now" {
-        box.step3 "What do we need to start doing now"
+        box.step3 rad 4pt "What do we need to start doing now"
       }
-      box.future "March" {
+      box.future rad 4pt "March" {
         box.step1 "Imagine it is four months into the future"
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
@@ -153,7 +153,7 @@ mod tests {
       line from now.e 1cm right to future.e
       "#;
     let diagram = create_diagram_inset(string);
-    // dbg!(&diagram.nodes);
+    dbg!(&diagram.nodes);
 
     assert_visual(diagram, "target/double_containers")?;
     Ok(())
@@ -259,7 +259,7 @@ mod tests {
       fs::rename(last_file, ref_file)?;
     } else {
       let diff_file = format!("{}-diff.png", prefix);
-      let output = Command::new("compare")
+      let output = Command::new("/usr/local/bin/compare")
         .arg("-metric")
         .arg("rmse")
         .arg(&last_file)
@@ -384,9 +384,9 @@ mod tests {
   #[test]
   fn test_primitives_mut() {
     let mut primitive = Primitive(None,
-                                  Rect::from_xywh(0., 0., 120., 56.),
-                                  Rect::from_xywh(0., 0., 120., 48.),
-                                  Rectangle(None, None));
+      Rect::from_xywh(0., 0., 120., 56.),
+      Rect::from_xywh(0., 0., 120., 48.),
+      rectangle(None));
     dbg!(&primitive);
     match primitive {
       Primitive(_, ref mut rect, _, _) => {
@@ -432,7 +432,7 @@ mod tests {
           rect.bottom += 8.;
           return Some(rect);
         }
-        Container(_, _, _, _, nodes) => {
+        Container(_, _, _, _, _, nodes) => {
           find_rect(nodes);
         }
       }

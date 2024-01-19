@@ -113,8 +113,8 @@ impl Canvas {
     y
   }
 
-  pub fn rectangle(&mut self, rect: &Rect) {
-    self.surface.canvas().draw_rect(rect, &self.paint);
+  pub fn rectangle(&mut self, rect: &Rect, radius: f32) {
+    self.surface.canvas().draw_round_rect(rect, radius, radius, &self.paint);
   }
 
   pub fn data(&mut self) -> Data {

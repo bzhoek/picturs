@@ -1,12 +1,16 @@
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
 picture = _{ SOI ~ shapes* ~ EOI }
 shapes = _{ container | shape }
 shape = _{ line | rectangle }
-container = { "box" ~ identified? ~ string? ~ "{" ~ shapes* ~ "}" ~ location? }
-rectangle = { "box" ~ identified? ~ string? ~ location? }
+container = { "box" ~ identified? ~ radius? ~ string? ~ "{" ~ shapes* ~ "}" ~ location? }
+rectangle = { "box" ~ identified? ~ radius? ~ string? ~ location? }
 identified = _{ "." ~ id }
-id = { ASCII_ALPHANUMERIC* }
+id = @{ ASCII_ALPHANUMERIC* }
 
+radius = { "rad" ~ size }
 location = { anchor ~ distance* ~ "from" ~ edge }
+size = _{ length ~ unit }
 distance = { length ~ unit ~ direction }
 length = { ASCII_DIGIT* }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
@@ -22,5 +26,3 @@ title = { string? }
 string = _{ "\"" ~ inner ~ "\"" }
 inner = @{ char* }
 char = { !("\"" | "\\") ~ ANY }
-
-WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
