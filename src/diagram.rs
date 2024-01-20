@@ -23,8 +23,7 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 #[grammar = "diagram.pest"]
 pub struct DiagramParser;
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Node<'a> {
   Container(Option<&'a str>, Radius, Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
   Primitive(Option<&'a str>, Rect, Rect, Shape<'a>),
@@ -32,8 +31,7 @@ pub enum Node<'a> {
 
 type Displacement = (Anchor, Vec<Distance>, Edge);
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Shape<'a> {
   Line(Option<&'a str>, Edge, Option<Distance>, Edge),
   Rectangle(Option<&'a str>, Radius, Option<Displacement>),

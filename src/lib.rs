@@ -9,8 +9,7 @@ pub mod types;
 #[grammar = "pic.pest"] // relative to project `src`
 pub struct PicParser;
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Node {
   Primitive(Shape, Vec<Node>),
   Container(Vec<Node>, Vec<Node>),
@@ -18,8 +17,7 @@ pub enum Node {
   String(String),
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Shape {
   Arc,
   Arrow,

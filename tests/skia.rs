@@ -19,7 +19,7 @@ mod tests {
     let mut canvas = Canvas::new((1024, 1024));
 
     canvas.paint.set_style(PaintStyle::Stroke);
-    canvas.rectangle(&Rect::from_xywh(0., 0., 320., 240.));
+    canvas.rectangle(&Rect::from_xywh(0., 0., 320., 240.), 0.);
 
     canvas.paint.set_style(PaintStyle::Fill);
     let height = canvas.paragraph(TQBF, (40, 40), 320.);

@@ -5,7 +5,7 @@ use clap::Parser;
 
 use picturs::diagram::{A5, Diagram};
 
-#[derive(Parser, Debug)]
+#[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
   #[arg(short, long)]
