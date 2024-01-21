@@ -35,6 +35,7 @@ type Displacement = (Anchor, Vec<Distance>, Edge);
 pub enum Shape<'a> {
   Line(Option<&'a str>, Edge, Option<Distance>, Edge),
   Rectangle(Option<&'a str>, Radius, Option<Displacement>),
+  Text(&'a str, Option<Displacement>),
 }
 
 pub struct Diagram<'a> {
@@ -122,9 +123,9 @@ impl<'i> Diagram<'i> {
           );
         }
         Rule::rectangle => {
-          let title = Self::rule_to_string(&pair, Rule::inner);
           let id = Self::rule_to_string(&pair, Rule::id);
           let radius = Self::rule_to_radius(&pair, Rule::radius);
+          let title = Self::rule_to_string(&pair, Rule::inner);
           let location = Self::rule_to_location(&pair, Rule::location);
           let height = match title {
             Some(title) => canvas.paragraph(title, (0., 0.), 120. - 2. * TEXT_PADDING),
@@ -143,6 +144,29 @@ impl<'i> Diagram<'i> {
           rect.bottom += BLOCK_PADDING;
           ast.push(Primitive(id, rect, used,
             Shape::Rectangle(title, radius, location)));
+
+          bounds.top = bounds.top.min(rect.top);
+          bounds.left = rect.left;
+          bounds.right = bounds.right.max(rect.right);
+          bounds.bottom = rect.bottom
+        }
+        Rule::text => {
+          let id = Self::rule_to_string(&pair, Rule::id);
+          let title = Self::rule_to_string(&pair, Rule::inner).unwrap();
+          let location = Self::rule_to_location(&pair, Rule::location);
+          let height = canvas.paragraph(title, (0., 0.), 120. - 2. * TEXT_PADDING);
+
+          let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 120., height);
+          used.bottom += BLOCK_PADDING;
+
+          Self::position_rect(index, &location, &mut used);
+
+          if let Some(id) = id {
+            index.insert(id.into(), used);
+          }
+
+          let rect = used;
+          ast.push(Primitive(id, rect, used, Shape::Text(title, location)));
 
           bounds.top = bounds.top.min(rect.top);
           bounds.left = rect.left;
@@ -329,6 +353,13 @@ impl<'i> Diagram<'i> {
           let origin = (inset.left, used.top);
           canvas.paragraph(title, origin, inset.width());
         }
+      }
+      Shape::Text(title, _) => {
+        canvas.paint.set_style(PaintStyle::Fill);
+        canvas.paint.set_color(Color::BLACK);
+        let inset = used.with_inset((TEXT_PADDING, TEXT_PADDING));
+        let origin = (inset.left, used.top);
+        canvas.paragraph(title, origin, inset.width());
       }
     }
   }

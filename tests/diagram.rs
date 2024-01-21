@@ -160,6 +160,20 @@ mod tests {
   }
 
   #[test]
+  fn visual_text_shape() -> Result<()> {
+    let string =
+      r#"box {
+        text "Now"
+        box rad 4pt "What do we need to start doing now"
+      }
+      "#;
+    let diagram = create_diagram_inset(string);
+
+    assert_visual(diagram, "target/text_shape")?;
+    Ok(())
+  }
+
+  #[test]
   fn visual_remember_the_future() -> Result<()> {
     let string =
       r#"box.now "Now" {

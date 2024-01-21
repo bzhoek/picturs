@@ -2,9 +2,10 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
 picture = _{ SOI ~ shapes* ~ EOI }
 shapes = _{ container | shape }
-shape = _{ line | rectangle }
+shape = _{ line | rectangle | text }
 container = { "box" ~ identified? ~ radius? ~ string? ~ "{" ~ shapes* ~ "}" ~ location? }
 rectangle = { "box" ~ identified? ~ radius? ~ string? ~ location? }
+text = { "text" ~ identified? ~ string ~ location? }
 identified = _{ "." ~ id }
 id = @{ ASCII_ALPHANUMERIC* }
 
