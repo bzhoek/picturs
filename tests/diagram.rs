@@ -94,7 +94,7 @@ mod tests {
     let diagram = create_diagram(string);
 
     assert_eq!(vec![
-      Container(Some("parent"), Radius::default(), None,
+      Container(Some("parent"), None,
         Rect::from_xywh(0., 0., 144., 80.),
         Rect::from_xywh(0., 0., 144., 72.),
         vec![
@@ -112,7 +112,7 @@ mod tests {
     let diagram = create_diagram(string);
 
     assert_eq!(vec![
-      Container(None, Radius::default(), Some("parent"),
+      Container(None, Some("parent"),
         Rect::from_xywh(0., 0., 144., 93.),
         Rect::from_xywh(0., 0., 144., 85.),
         vec![
@@ -432,7 +432,7 @@ mod tests {
           rect.bottom += 8.;
           return Some(rect);
         }
-        Container(_, _, _, _, _, nodes) => {
+        Container(_, _, _, _, nodes) => {
           find_rect(nodes);
         }
       }

@@ -10,6 +10,7 @@ use pest_derive::Parser;
 use skia_safe::{Color, ISize, PaintStyle, Point, Rect, Vector};
 
 use crate::diagram::Node::{Container, Primitive};
+use crate::diagram::Shape::Rectangle;
 use crate::skia::Canvas;
 use crate::types::{Anchor, Distance, Edge, Length};
 
@@ -25,7 +26,7 @@ pub struct DiagramParser;
 
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
-  Container(Option<&'a str>, Radius, Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
+  Container(Option<&'a str>, Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
   Primitive(Option<&'a str>, Rect, Rect, Shape<'a>),
 }
 
@@ -80,7 +81,7 @@ impl<'i> Diagram<'i> {
 
           let mut inset = Point::new(used.left, used.bottom);
           inset.offset((BLOCK_PADDING, BLOCK_PADDING));
-          let (nodes, inner)
+          let (mut nodes, inner)
             = Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, index);
           used.top = inner.top - BLOCK_PADDING;
           used.left = inner.left - BLOCK_PADDING;
@@ -99,7 +100,8 @@ impl<'i> Diagram<'i> {
 
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
-          ast.push(Container(id, radius, title, rect, used, nodes));
+          nodes.push(Primitive(id, rect, used, Rectangle(title, radius, None)));
+          ast.push(Container(id, title, rect, used, nodes));
 
           bounds.left = rect.left;
           bounds.right = bounds.right.max(rect.right);
@@ -188,7 +190,7 @@ impl<'i> Diagram<'i> {
         Primitive(Some(id), _, _, _) => {
           id == &node_id
         }
-        Container(id, _, _, _, _, nodes) => {
+        Container(id, _, _, _, nodes) => {
           if let Some(id) = id {
             if id == &node_id {
               return true;
@@ -254,7 +256,7 @@ impl<'i> Diagram<'i> {
             return Some(node);
           }
         }
-        Container(_, _, _, _, _, nodes) => {
+        Container(_, _, _, _, nodes) => {
           if let Some(node) = Self::find_nodes_mut(nodes, node_id) {
             return Some(node);
           }
@@ -275,7 +277,7 @@ impl<'i> Diagram<'i> {
   fn render_to_canvas(&self, nodes: &[Node], canvas: &mut Canvas) {
     for node in nodes.iter() {
       match node {
-        Container(_id, radius, title, _rect, used, nodes) => {
+        Container(_id, title, _rect, used, nodes) => {
           self.render_to_canvas(nodes, canvas);
 
           if let Some(title) = title {
@@ -285,10 +287,6 @@ impl<'i> Diagram<'i> {
             let origin = (inset.left, inset.bottom - 16.);
             canvas.paragraph(title, origin, inset.width());
           }
-
-          canvas.paint.set_style(PaintStyle::Stroke);
-          canvas.paint.set_color(Color::RED);
-          canvas.rectangle(used, radius.pixels());
         }
         Primitive(_id, _, used, shape) => {
           self.render_shape(shape, used, canvas);
