@@ -65,7 +65,7 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, index: &mut HashMap<String, Rect>)
-    -> (Vec<Node<'a>>, Rect) {
+                            -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
 
     for pair in pairs.into_iter() {
@@ -143,7 +143,7 @@ impl<'i> Diagram<'i> {
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
           ast.push(Primitive(id, rect, used,
-            Shape::Rectangle(title, radius, location)));
+                             Shape::Rectangle(title, radius, location)));
 
           bounds.top = bounds.top.min(rect.top);
           bounds.left = rect.left;
@@ -292,15 +292,15 @@ impl<'i> Diagram<'i> {
   pub fn render_to_file(&self, filepath: &str) {
     let mut canvas = Canvas::new(self.size);
     canvas.cursor = self.offset;
-    self.render_to_canvas(&self.nodes, &mut canvas);
+    self.render_to_canvas(&mut canvas, &self.nodes);
     canvas.write_png(filepath);
   }
 
-  fn render_to_canvas(&self, nodes: &[Node], canvas: &mut Canvas) {
+  fn render_to_canvas(&self, canvas: &mut Canvas, nodes: &[Node]) {
     for node in nodes.iter() {
       match node {
         Container(_id, radius, title, _rect, used, nodes) => {
-          self.render_to_canvas(nodes, canvas);
+          self.render_to_canvas(canvas, nodes);
 
           if let Some(title) = title {
             canvas.paint.set_style(PaintStyle::Fill);
@@ -315,13 +315,13 @@ impl<'i> Diagram<'i> {
           canvas.rectangle(used, radius.pixels());
         }
         Primitive(_id, _, used, shape) => {
-          self.render_shape(shape, used, canvas);
+          self.render_shape(canvas, used, shape);
         }
       }
     }
   }
 
-  fn render_shape(&self, shape: &Shape, used: &Rect, canvas: &mut Canvas) {
+  fn render_shape(&self, canvas: &mut Canvas, used: &Rect, shape: &Shape) {
     match shape {
       Shape::Line(_, _, distance, _) => {
         canvas.move_to(used.left, used.top);
@@ -347,21 +347,21 @@ impl<'i> Diagram<'i> {
         canvas.rectangle(used, radius.pixels());
 
         if let Some(title) = title {
-          canvas.paint.set_style(PaintStyle::Fill);
-          canvas.paint.set_color(Color::BLACK);
-          let inset = used.with_inset((TEXT_PADDING, TEXT_PADDING));
-          let origin = (inset.left, used.top);
-          canvas.paragraph(title, origin, inset.width());
+          Self::render_paragraph(canvas, used, title);
         }
       }
       Shape::Text(title, _) => {
-        canvas.paint.set_style(PaintStyle::Fill);
-        canvas.paint.set_color(Color::BLACK);
-        let inset = used.with_inset((TEXT_PADDING, TEXT_PADDING));
-        let origin = (inset.left, used.top);
-        canvas.paragraph(title, origin, inset.width());
+        Self::render_paragraph(canvas, used, title);
       }
     }
+  }
+
+  fn render_paragraph(canvas: &mut Canvas, rect: &Rect, title: &&str) {
+    canvas.paint.set_style(PaintStyle::Fill);
+    canvas.paint.set_color(Color::BLACK);
+    let inset = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
+    let origin = (inset.left, rect.top);
+    canvas.paragraph(title, origin, inset.width());
   }
 
   fn rule_to_location(pair: &Pair<Rule>, rule: Rule) -> Option<(Anchor, Vec<Distance>, Edge)> {
