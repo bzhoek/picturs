@@ -26,7 +26,7 @@ pub struct DiagramParser;
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
   Container(Option<&'a str>, Radius, Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
-  Primitive(Option<&'a str>, Rect, Rect, Shape<'a>),
+  Primitive(Option<&'a str>, Rect, Rect, Color, Shape<'a>),
 }
 
 type Displacement = (Anchor, Vec<Distance>, Edge);
@@ -120,7 +120,7 @@ impl<'i> Diagram<'i> {
 
           start.zip(end).map(|(start, end)| {
             let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
-            ast.push(Primitive(id, rect, rect, Shape::Line(id, source, distance, target)));
+            ast.push(Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, source, distance, target)));
           }
           );
         }
@@ -128,6 +128,7 @@ impl<'i> Diagram<'i> {
           let id = Self::rule_to_string(&pair, Rule::id);
           let attributes = Self::find_rule(&pair, Rule::attributes).unwrap();
           let radius = Self::rule_to_radius(&attributes);
+          let color = Self::rule_to_color(&attributes).unwrap_or(Color::BLUE);
           let title = Self::rule_to_string(&attributes, Rule::inner);
           let location = Self::rule_to_location(&attributes, Rule::location);
           let height = match title {
@@ -145,8 +146,7 @@ impl<'i> Diagram<'i> {
 
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
-          ast.push(Primitive(id, rect, used,
-                             Shape::Rectangle(title, radius, location)));
+          ast.push(Primitive(id, rect, used, color, Shape::Rectangle(title, radius, location)));
 
           bounds.top = bounds.top.min(rect.top);
           bounds.left = rect.left;
@@ -169,7 +169,7 @@ impl<'i> Diagram<'i> {
           }
 
           let rect = used;
-          ast.push(Primitive(id, rect, used, Shape::Text(title, location)));
+          ast.push(Primitive(id, rect, used, Color::BLACK, Shape::Text(title, location)));
 
           bounds.top = bounds.top.min(rect.top);
           bounds.left = rect.left;
@@ -199,7 +199,7 @@ impl<'i> Diagram<'i> {
   pub fn used_rect(&self, id: &str) -> Option<&Rect> {
     self.find_node(id).map(|node| {
       match node {
-        Primitive(_, _, used, _) => used,
+        Primitive(_, _, used, _, _) => used,
         _ => panic!("not a primitive")
       }
     })
@@ -212,7 +212,7 @@ impl<'i> Diagram<'i> {
   fn find_nodes<'a>(nodes: &'a [Node], node_id: &str) -> Option<&'a Node<'a>> {
     nodes.iter().find(|node| {
       match node {
-        Primitive(Some(id), _, _, _) => {
+        Primitive(Some(id), _, _, _, _) => {
           id == &node_id
         }
         Container(id, _, _, _, _, nodes) => {
@@ -266,7 +266,7 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn node_mut(&mut self, id: &str, distances: Vec<Distance>) {
-    if let Primitive(_, _, ref mut rect, _) = Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
+    if let Primitive(_, _, ref mut rect, _, _) = Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
       for distance in distances.iter() {
         rect.offset(distance.offset());
       }
@@ -276,7 +276,7 @@ impl<'i> Diagram<'i> {
   fn find_nodes_mut<'a: 'i>(nodes: &'i mut [Node<'a>], node_id: &str) -> Option<&'i mut Node<'a>> {
     for node in nodes.iter_mut() {
       match node {
-        Primitive(Some(id), _, _, _) => {
+        Primitive(Some(id), _, _, _, _) => {
           if id == &node_id {
             return Some(node);
           }
@@ -317,14 +317,14 @@ impl<'i> Diagram<'i> {
           canvas.paint.set_color(Color::RED);
           canvas.rectangle(used, radius.pixels());
         }
-        Primitive(_id, _, used, shape) => {
-          self.render_shape(canvas, used, shape);
+        Primitive(_id, _, used, color, shape) => {
+          self.render_shape(canvas, used, color, shape);
         }
       }
     }
   }
 
-  fn render_shape(&self, canvas: &mut Canvas, used: &Rect, shape: &Shape) {
+  fn render_shape(&self, canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape) {
     match shape {
       Shape::Line(_, _, distance, _) => {
         canvas.move_to(used.left, used.top);
@@ -346,7 +346,7 @@ impl<'i> Diagram<'i> {
       }
       Shape::Rectangle(title, radius, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
-        canvas.paint.set_color(Color::BLUE);
+        canvas.paint.set_color(*color);
         canvas.rectangle(used, radius.pixels());
 
         if let Some(title) = title {
@@ -437,6 +437,22 @@ impl<'i> Diagram<'i> {
     Self::dig_rule(pair, Rule::radius)
       .map(Self::pair_to_radius)
       .unwrap_or(Radius::default())
+  }
+
+  fn rule_to_color(pair: &Pair<Rule>) -> Option<Color> {
+    Self::dig_rule(pair, Rule::color)
+      .and_then(|pair| Self::find_rule(&pair, Rule::id))
+      .map(|p| p.as_str())
+      .map(|color| match color {
+        "yellow" => Color::YELLOW,
+        "red" => Color::RED,
+        "green" => Color::GREEN,
+        "blue" => Color::BLUE,
+        "gray" => Color::GRAY,
+        "cyan" => Color::CYAN,
+        "magenta" => Color::MAGENTA,
+        _ => panic!("unknown color {}", color)
+      })
   }
 
   fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {

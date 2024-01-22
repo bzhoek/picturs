@@ -6,7 +6,7 @@ mod tests {
   use std::process::Command;
 
   use anyhow::Result;
-  use skia_safe::{Point, Rect, Vector};
+  use skia_safe::{Color, Point, Rect, Vector};
 
   use picturs::diagram::{A5, Diagram, Node, Radius};
   use picturs::diagram::Node::{Container, Primitive};
@@ -38,9 +38,10 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        Rect::from_xywh(0., 0., 120., 56.),
-        Rect::from_xywh(0., 0., 120., 48.),
-        rectangle(None)),
+                Rect::from_xywh(0., 0., 120., 56.),
+                Rect::from_xywh(0., 0., 120., 48.),
+                Color::BLUE,
+                rectangle(None)),
     ], diagram.nodes);
   }
 
@@ -51,9 +52,10 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(Some("first"),
-        Rect::from_xywh(0., 0., 120., 56.),
-        Rect::from_xywh(0., 0., 120., 48.),
-        rectangle(Some("title"))),
+                Rect::from_xywh(0., 0., 120., 56.),
+                Rect::from_xywh(0., 0., 120., 48.),
+                Color::BLUE,
+                rectangle(Some("title"))),
     ], diagram.nodes);
   }
 
@@ -64,9 +66,10 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        Rect::from_xywh(0., 0., 120., 56.),
-        Rect::from_xywh(0., 0., 120., 48.),
-        Rectangle(Some("title"), Radius::default(), None)),
+                Rect::from_xywh(0., 0., 120., 56.),
+                Rect::from_xywh(0., 0., 120., 48.),
+                Color::BLUE,
+                Rectangle(Some("title"), Radius::default(), None)),
     ], diagram.nodes);
   }
 
@@ -78,13 +81,15 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        Rect::from_xywh(0., 0., 120., 56.),
-        Rect::from_xywh(0., 0., 120., 48.),
-        rectangle(None)),
+                Rect::from_xywh(0., 0., 120., 56.),
+                Rect::from_xywh(0., 0., 120., 48.),
+                Color::BLUE,
+                rectangle(None)),
       Primitive(None,
-        Rect::from_xywh(0., 56., 120., 56.),
-        Rect::from_xywh(0., 56., 120., 48.),
-        rectangle(None)),
+                Rect::from_xywh(0., 56., 120., 56.),
+                Rect::from_xywh(0., 56., 120., 48.),
+                Color::BLUE,
+                rectangle(None)),
     ], diagram.nodes);
   }
 
@@ -95,14 +100,15 @@ mod tests {
 
     assert_eq!(vec![
       Container(Some("parent"), Radius::default(), None,
-        Rect::from_xywh(0., 0., 144., 80.),
-        Rect::from_xywh(0., 0., 144., 72.),
-        vec![
-          Primitive(None,
-            Rect::from_xywh(8., 8., 120., 56.),
-            Rect::from_xywh(8., 8., 120., 48.),
-            rectangle(None))
-        ])
+                Rect::from_xywh(0., 0., 144., 80.),
+                Rect::from_xywh(0., 0., 144., 72.),
+                vec![
+                  Primitive(None,
+                            Rect::from_xywh(8., 8., 120., 56.),
+                            Rect::from_xywh(8., 8., 120., 48.),
+                            Color::BLUE,
+                            rectangle(None))
+                ])
     ], diagram.nodes);
   }
 
@@ -113,14 +119,15 @@ mod tests {
 
     assert_eq!(vec![
       Container(None, Radius::default(), Some("parent"),
-        Rect::from_xywh(0., 0., 144., 93.),
-        Rect::from_xywh(0., 0., 144., 85.),
-        vec![
-          Primitive(None,
-            Rect::from_xywh(8., 8., 120., 56.),
-            Rect::from_xywh(8., 8., 120., 48.),
-            rectangle(Some("child")))
-        ])
+                Rect::from_xywh(0., 0., 144., 93.),
+                Rect::from_xywh(0., 0., 144., 85.),
+                vec![
+                  Primitive(None,
+                            Rect::from_xywh(8., 8., 120., 56.),
+                            Rect::from_xywh(8., 8., 120., 48.),
+                            Color::BLUE,
+                            rectangle(Some("child")))
+                ])
     ], diagram.nodes);
   }
 
@@ -133,9 +140,10 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        paragraph1_rect,
-        paragraph2_rect,
-        rectangle(Some(TQBF))),
+                paragraph1_rect,
+                paragraph2_rect,
+                Color::BLUE,
+                rectangle(Some(TQBF))),
     ], diagram.nodes);
   }
 
@@ -249,8 +257,8 @@ mod tests {
   fn visual_right_center_left() -> Result<()> {
     let string =
       r#"
-      box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" .w 2cm right from left.ne
+      box.left "This goes to the left hand side" color green
+      box.right "While this goes to the right hand side" color magenta .w 2cm right from left.ne
       "#;
     let diagram = create_diagram_inset(string);
     assert_eq!(2, diagram.nodes.len());
@@ -266,11 +274,14 @@ mod tests {
   fn assert_visual(diagram: Diagram, prefix: &str) -> Result<()> {
     let ref_file = format!("{}.png", prefix);
     let last_file = format!("{}-last.png", prefix);
+    let diff_file = format!("{}-diff.png", prefix);
+
     diagram.render_to_file(&*last_file);
+
     if !Path::new(&ref_file).exists() {
       fs::rename(last_file, ref_file)?;
+      fs::remove_file(diff_file)?;
     } else {
-      let diff_file = format!("{}-diff.png", prefix);
       let output = Command::new("/usr/local/bin/compare")
         .arg("-metric")
         .arg("rmse")
@@ -333,7 +344,8 @@ mod tests {
       box.left "Left"
       box "Right" .nw 1cm right 2cm down from left.ne
       "#;
-    let diagram = create_diagram_inset(string);
+
+    create_diagram_inset(string);
 
     let _point = Point::new(32., 32.);
     let offset = Vector::new(-1., 0.);
@@ -395,12 +407,13 @@ mod tests {
   #[test]
   fn test_primitives_mut() {
     let mut primitive = Primitive(None,
-      Rect::from_xywh(0., 0., 120., 56.),
-      Rect::from_xywh(0., 0., 120., 48.),
-      rectangle(None));
+                                  Rect::from_xywh(0., 0., 120., 56.),
+                                  Rect::from_xywh(0., 0., 120., 48.),
+                                  Color::BLACK,
+                                  rectangle(None));
 
     match primitive {
-      Primitive(_, ref mut rect, _, _) => {
+      Primitive(_, ref mut rect, _, _, _) => {
         rect.bottom += 8.;
       }
       _ => {}
@@ -423,7 +436,7 @@ mod tests {
     fn find_primitive(&mut self) -> Option<&mut Rect> {
       let first = self.primitives.first_mut();
       let rect = match first.unwrap() {
-        Primitive(_, ref mut rect, _, _) => {
+        Primitive(_, ref mut rect, _, _, _) => {
           rect.bottom += 8.;
           Some(rect)
         }
@@ -436,7 +449,7 @@ mod tests {
   fn find_rect<'a>(nodes: &'a mut Vec<Node>) -> Option<&'a mut Rect> {
     for node in nodes.iter_mut() {
       match node {
-        Primitive(_, ref mut rect, _, _) => {
+        Primitive(_, ref mut rect, _, _, _) => {
           rect.bottom += 8.;
           return Some(rect);
         }
