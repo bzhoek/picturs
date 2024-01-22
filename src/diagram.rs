@@ -34,7 +34,7 @@ type Displacement = (Anchor, Vec<Distance>, Edge);
 #[derive(Debug, PartialEq)]
 pub enum Shape<'a> {
   Line(Option<&'a str>, Edge, Option<Distance>, Edge),
-  Rectangle(Option<&'a str>, Radius, Option<Displacement>),
+  Rectangle(Color, Option<&'a str>, Radius, Color, Option<Displacement>),
   Text(&'a str, Option<Displacement>),
 }
 
@@ -128,7 +128,9 @@ impl<'i> Diagram<'i> {
           let id = Self::rule_to_string(&pair, Rule::id);
           let attributes = Self::find_rule(&pair, Rule::attributes).unwrap();
           let radius = Self::rule_to_radius(&attributes);
-          let color = Self::rule_to_color(&attributes).unwrap_or(Color::BLUE);
+          let stroke = Self::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
+          let fill = Self::rule_to_color(&attributes, Rule::fill).unwrap_or(Color::TRANSPARENT);
+          let text_color = Self::rule_to_color(&attributes, Rule::text_color).unwrap_or(Color::BLACK);
           let title = Self::rule_to_string(&attributes, Rule::inner);
           let location = Self::rule_to_location(&attributes, Rule::location);
           let height = match title {
@@ -146,7 +148,7 @@ impl<'i> Diagram<'i> {
 
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
-          ast.push(Primitive(id, rect, used, color, Shape::Rectangle(title, radius, location)));
+          ast.push(Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, title, radius, fill, location)));
 
           bounds.top = bounds.top.min(rect.top);
           bounds.left = rect.left;
@@ -344,12 +346,18 @@ impl<'i> Diagram<'i> {
         canvas.line_to(used.right, used.bottom);
         canvas.stroke();
       }
-      Shape::Rectangle(title, radius, _) => {
+      Shape::Rectangle(text_color, title, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
         canvas.rectangle(used, radius.pixels());
 
+        canvas.paint.set_style(PaintStyle::Fill);
+        canvas.paint.set_color(*fill);
+        canvas.rectangle(used, radius.pixels());
+
         if let Some(title) = title {
+          canvas.paint.set_style(PaintStyle::Fill);
+          canvas.paint.set_color(*text_color);
           Self::render_paragraph(canvas, used, title);
         }
       }
@@ -360,8 +368,6 @@ impl<'i> Diagram<'i> {
   }
 
   fn render_paragraph(canvas: &mut Canvas, rect: &Rect, title: &&str) {
-    canvas.paint.set_style(PaintStyle::Fill);
-    canvas.paint.set_color(Color::BLACK);
     let inset = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
     let origin = (inset.left, rect.top);
     canvas.paragraph(title, origin, inset.width());
@@ -439,11 +445,15 @@ impl<'i> Diagram<'i> {
       .unwrap_or(Radius::default())
   }
 
-  fn rule_to_color(pair: &Pair<Rule>) -> Option<Color> {
-    Self::dig_rule(pair, Rule::color)
+  fn rule_to_color(pair: &Pair<Rule>, rule: Rule) -> Option<Color> {
+    Self::dig_rule(pair, rule)
       .and_then(|pair| Self::find_rule(&pair, Rule::id))
       .map(|p| p.as_str())
       .map(|color| match color {
+        "white" => Color::WHITE,
+        "lgray" => Color::LIGHT_GRAY,
+        "dgray" => Color::DARK_GRAY,
+        "black" => Color::BLACK,
         "yellow" => Color::YELLOW,
         "red" => Color::RED,
         "green" => Color::GREEN,

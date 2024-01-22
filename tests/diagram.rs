@@ -28,7 +28,7 @@ mod tests {
   }
 
   fn rectangle(title: Option<&str>) -> picturs::diagram::Shape {
-    Rectangle(title, Radius::default(), None)
+    Rectangle(Color::BLACK, title, Radius::default(), Color::TRANSPARENT, None)
   }
 
   #[test]
@@ -69,7 +69,7 @@ mod tests {
                 Rect::from_xywh(0., 0., 120., 56.),
                 Rect::from_xywh(0., 0., 120., 48.),
                 Color::BLUE,
-                Rectangle(Some("title"), Radius::default(), None)),
+                rectangle(Some("title"))),
     ], diagram.nodes);
   }
 
@@ -257,8 +257,8 @@ mod tests {
   fn visual_right_center_left() -> Result<()> {
     let string =
       r#"
-      box.left "This goes to the left hand side" color green
-      box.right "While this goes to the right hand side" color magenta .w 2cm right from left.ne
+      box.left "This goes to the left hand side" color green fill white
+      box.right "While this goes to the right hand side" color magenta fill gray text white .w 2cm right from left.ne
       "#;
     let diagram = create_diagram_inset(string);
     assert_eq!(2, diagram.nodes.len());

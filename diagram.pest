@@ -7,9 +7,10 @@ container = { "box" ~ identified? ~ attributes ~ "{" ~ shapes* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
 text = { "text" ~ identified? ~ string ~ location? }
 attributes = { attribute* }
-attribute = { string | color | fill | radius | location }
+attribute = { string | color | fill | radius | location | text_color }
 color = { "color" ~ id }
 fill = { "fill" ~ id }
+text_color = { "text" ~ id }
 identified = _{ "." ~ id }
 id = @{ ASCII_ALPHANUMERIC* }
 
