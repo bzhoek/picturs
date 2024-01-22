@@ -153,7 +153,6 @@ mod tests {
       line from now.e 1cm right to future.e
       "#;
     let diagram = create_diagram_inset(string);
-    dbg!(&diagram.nodes);
 
     assert_visual(diagram, "target/double_containers")?;
     Ok(())
@@ -179,16 +178,15 @@ mod tests {
       r#"box.now "Now" {
         box.step3 "What do we need to start doing now"
       }
-      box.future "March" {
+      box.future "March" .nw 8cm right from now.ne {
         box.step1 "Imagine it is four months into the future"
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
-      } .nw 8cm right from now.ne
+      }
       line from now.n 1pc up to future.n
       line from future.s 2pc down to now.s
       "#;
     let diagram = create_diagram_inset(string);
-    // dbg!(&diagram.nodes);
 
     assert_visual(diagram, "target/remember_the_future")?;
     Ok(())
@@ -336,7 +334,6 @@ mod tests {
       box "Right" .nw 1cm right 2cm down from left.ne
       "#;
     let diagram = create_diagram_inset(string);
-    dbg!(&diagram.nodes);
 
     let _point = Point::new(32., 32.);
     let offset = Vector::new(-1., 0.);
@@ -401,28 +398,25 @@ mod tests {
       Rect::from_xywh(0., 0., 120., 56.),
       Rect::from_xywh(0., 0., 120., 48.),
       rectangle(None));
-    dbg!(&primitive);
+
     match primitive {
       Primitive(_, ref mut rect, _, _) => {
         rect.bottom += 8.;
       }
       _ => {}
     }
-    dbg!(&primitive);
 
     let mut primitives = vec![primitive];
     let rect = find_rect(&mut primitives);
     if let Some(rect) = rect {
       rect.bottom += 16.
     }
-    dbg!(&primitives);
 
     let mut primitives = Primitives { primitives };
     let rect = primitives.find_primitive();
     if let Some(rect) = rect {
       rect.bottom += 16.
     }
-    dbg!(&primitives);
   }
 
   impl Primitives<'_> {

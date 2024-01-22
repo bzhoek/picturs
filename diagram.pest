@@ -3,9 +3,13 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 picture = _{ SOI ~ shapes* ~ EOI }
 shapes = _{ container | shape }
 shape = _{ line | rectangle | text }
-container = { "box" ~ identified? ~ radius? ~ string? ~ "{" ~ shapes* ~ "}" ~ location? }
-rectangle = { "box" ~ identified? ~ radius? ~ string? ~ location? }
+container = { "box" ~ identified? ~ attributes ~ "{" ~ shapes* ~ "}" }
+rectangle = { "box" ~ identified? ~ attributes }
 text = { "text" ~ identified? ~ string ~ location? }
+attributes = { attribute* }
+attribute = { string | color | fill | radius | location }
+color = { "color" ~ id }
+fill = { "fill" ~ id }
 identified = _{ "." ~ id }
 id = @{ ASCII_ALPHANUMERIC* }
 

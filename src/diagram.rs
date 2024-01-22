@@ -38,6 +38,7 @@ pub enum Shape<'a> {
   Text(&'a str, Option<Displacement>),
 }
 
+#[derive(Debug)]
 pub struct Diagram<'a> {
   pub nodes: Vec<Node<'a>>,
   pub index: HashMap<String, Rect>,
@@ -72,9 +73,10 @@ impl<'i> Diagram<'i> {
       match pair.as_rule() {
         Rule::container => {
           let id = Self::rule_to_string(&pair, Rule::id);
-          let radius = Self::rule_to_radius(&pair, Rule::radius);
-          let title = Self::rule_to_string(&pair, Rule::inner);
-          let location = Self::rule_to_location(&pair, Rule::location);
+          let attributes = Self::find_rule(&pair, Rule::attributes).unwrap();
+          let radius = Self::rule_to_radius(&attributes);
+          let title = Self::rule_to_string(&attributes, Rule::inner);
+          let location = Self::rule_to_location(&attributes, Rule::location);
 
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 0., 0.);
           Self::position_rect(index, &location, &mut used);
@@ -124,9 +126,10 @@ impl<'i> Diagram<'i> {
         }
         Rule::rectangle => {
           let id = Self::rule_to_string(&pair, Rule::id);
-          let radius = Self::rule_to_radius(&pair, Rule::radius);
-          let title = Self::rule_to_string(&pair, Rule::inner);
-          let location = Self::rule_to_location(&pair, Rule::location);
+          let attributes = Self::find_rule(&pair, Rule::attributes).unwrap();
+          let radius = Self::rule_to_radius(&attributes);
+          let title = Self::rule_to_string(&attributes, Rule::inner);
+          let location = Self::rule_to_location(&attributes, Rule::location);
           let height = match title {
             Some(title) => canvas.paragraph(title, (0., 0.), 120. - 2. * TEXT_PADDING),
             None => 40.,
@@ -365,7 +368,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn rule_to_location(pair: &Pair<Rule>, rule: Rule) -> Option<(Anchor, Vec<Distance>, Edge)> {
-    Self::find_rule(pair, rule)
+    Self::dig_rule(pair, rule)
       .map(|p| {
         let mut anchor: Option<Anchor> = None;
         let mut directions: Vec<Distance> = vec![];
@@ -388,11 +391,6 @@ impl<'i> Diagram<'i> {
 
   fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Distance> {
     Self::find_rule(pair, rule).map(Self::pair_to_distance)
-  }
-
-  fn rule_to_radius(pair: &Pair<Rule>, rule: Rule) -> Radius {
-    Self::find_rule(pair, rule).map(Self::pair_to_radius)
-      .unwrap_or(Radius::default())
   }
 
   fn pair_to_radius(pair: Pair<Rule>) -> Radius {
@@ -435,14 +433,32 @@ impl<'i> Diagram<'i> {
     Edge::new(id, anchor)
   }
 
+  fn rule_to_radius(pair: &Pair<Rule>) -> Radius {
+    Self::dig_rule(pair, Rule::radius)
+      .map(Self::pair_to_radius)
+      .unwrap_or(Radius::default())
+  }
+
   fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
-    Self::find_rule(pair, rule)
+    Self::dig_rule(pair, rule)
       .map(|p| p.as_str())
   }
 
   fn find_rule<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<Pair<'a, Rule>> {
     pair.clone().into_inner()
       .find(|p| p.as_rule() == rule)
+  }
+
+  fn dig_rule<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<Pair<'a, Rule>> {
+    for pair in pair.clone().into_inner() {
+      if pair.as_rule() == rule {
+        return Some(pair);
+      }
+      if let Some(pair) = Self::dig_rule(&pair, rule) {
+        return Some(pair);
+      }
+    }
+    None
   }
 }
 
