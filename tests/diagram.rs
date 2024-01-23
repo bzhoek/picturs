@@ -153,7 +153,7 @@ mod tests {
       r#"box.now "Now" {
         box.step3 rad 4pt "What do we need to start doing now"
       }
-      box.future rad 4pt "March" {
+      box.future rd 4pt "March" {
         box.step1 "Imagine it is four months into the future"
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"

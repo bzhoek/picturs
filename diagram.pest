@@ -14,7 +14,14 @@ text_color = { "text" ~ id }
 identified = _{ "." ~ id }
 id = @{ ASCII_ALPHANUMERIC* }
 
-radius = { "rad" ~ size }
+// dimensions
+radius = { radius_variants ~ size }
+radius_variants = _{ "rd" | "rad" | "radius" }
+width = { width_variants ~ size }
+width_variants = _{ "wd" | "wid" | "width" }
+height = { height_variants ~ size }
+height_variants = _{ "ht" | "height" }
+
 location = { anchor ~ distance* ~ "from" ~ edge }
 size = _{ length ~ unit }
 distance = { length ~ unit ~ direction }
