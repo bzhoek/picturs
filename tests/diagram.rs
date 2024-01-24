@@ -162,7 +162,7 @@ mod tests {
       "#;
     let diagram = create_diagram_inset(string);
 
-    assert_visual(diagram, "target/double_containers")?;
+    assert_visual(diagram, "target/visual_double_containers")?;
     Ok(())
   }
 
@@ -181,7 +181,7 @@ mod tests {
       "#;
     let diagram = create_diagram_inset(string);
 
-    assert_visual(diagram, "target/effort_to_impact")?;
+    assert_visual(diagram, "target/visual_effort_to_impact")?;
     Ok(())
   }
 
@@ -195,7 +195,7 @@ mod tests {
       "#;
     let diagram = create_diagram_inset(string);
 
-    assert_visual(diagram, "target/text_shape")?;
+    assert_visual(diagram, "target/visual_text_shape")?;
     Ok(())
   }
 
@@ -215,7 +215,7 @@ mod tests {
       "#;
     let diagram = create_diagram_inset(string);
 
-    assert_visual(diagram, "target/remember_the_future")?;
+    assert_visual(diagram, "target/visual_remember_the_future")?;
     Ok(())
   }
 
@@ -232,7 +232,7 @@ mod tests {
       }
       "#;
     let diagram = create_diagram_inset(string);
-    assert_visual(diagram, "target/whole_ast")?;
+    assert_visual(diagram, "target/visual_whole_ast")?;
     Ok(())
   }
 
@@ -268,7 +268,7 @@ mod tests {
     let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
     assert_eq!(&expected, rect);
 
-    assert_visual(diagram, "target/side_by_side")?;
+    assert_visual(diagram, "target/visual_side_by_side")?;
     Ok(())
   }
 
@@ -297,7 +297,7 @@ mod tests {
     let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
     assert_eq!(&expected, rect);
 
-    assert_visual(diagram, "target/right_center_left")?;
+    assert_visual(diagram, "target/visual_right_center_left")?;
     Ok(())
   }
 
@@ -310,7 +310,9 @@ mod tests {
 
     if !Path::new(&ref_file).exists() {
       fs::rename(last_file, ref_file)?;
-      fs::remove_file(diff_file)?;
+      if Path::new(&diff_file).exists() {
+        fs::remove_file(diff_file)?;
+      }
     } else {
       let output = Command::new("/usr/local/bin/compare")
         .arg("-metric")
