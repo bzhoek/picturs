@@ -74,7 +74,7 @@ impl<'i> Diagram<'i> {
         Rule::container => {
           let id = Self::rule_to_string(&pair, Rule::id);
           let attributes = Self::find_rule(&pair, Rule::attributes).unwrap();
-          let radius = Self::rule_to_radius(&attributes);
+          let (width, height, radius) = Self::parse_dimension(&attributes);
           let title = Self::rule_to_string(&attributes, Rule::inner);
           let location = Self::rule_to_location(&attributes, Rule::location);
 
@@ -127,18 +127,22 @@ impl<'i> Diagram<'i> {
         Rule::rectangle => {
           let id = Self::rule_to_string(&pair, Rule::id);
           let attributes = Self::find_rule(&pair, Rule::attributes).unwrap();
-          let radius = Self::rule_to_radius(&attributes);
+          let (width, height, radius) = Self::parse_dimension(&attributes);
+
           let stroke = Self::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
           let fill = Self::rule_to_color(&attributes, Rule::fill).unwrap_or(Color::TRANSPARENT);
           let text_color = Self::rule_to_color(&attributes, Rule::text_color).unwrap_or(Color::BLACK);
           let title = Self::rule_to_string(&attributes, Rule::inner);
           let location = Self::rule_to_location(&attributes, Rule::location);
-          let height = match title {
-            Some(title) => canvas.paragraph(title, (0., 0.), 120. - 2. * TEXT_PADDING),
-            None => 40.,
-          };
 
-          let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 120., height.max(40.));
+          let height = height.unwrap_or_else(|| {
+            match title {
+              Some(title) => canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING),
+              None => 40.,
+            }
+          });
+
+          let mut used = Rect::from_xywh(bounds.left, bounds.bottom, width, height.max(40.));
           used.bottom += BLOCK_PADDING;
           Self::position_rect(index, &location, &mut used);
 
@@ -158,10 +162,12 @@ impl<'i> Diagram<'i> {
         Rule::text => {
           let id = Self::rule_to_string(&pair, Rule::id);
           let title = Self::rule_to_string(&pair, Rule::inner).unwrap();
+          let attributes = Self::find_rule(&pair, Rule::text_attributes).unwrap();
+          let (width, height, _radius) = Self::parse_dimension(&attributes);
           let location = Self::rule_to_location(&pair, Rule::location);
-          let height = canvas.paragraph(title, (0., 0.), 120. - 2. * TEXT_PADDING);
+          let height = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
 
-          let mut used = Rect::from_xywh(bounds.left, bounds.bottom, 120., height);
+          let mut used = Rect::from_xywh(bounds.left, bounds.bottom, width, height);
           used.bottom += BLOCK_PADDING;
 
           Self::position_rect(index, &location, &mut used);
@@ -186,6 +192,14 @@ impl<'i> Diagram<'i> {
       }
     }
     (ast, bounds)
+  }
+
+  fn parse_dimension(attributes: &Pair<Rule>) -> (f32, Option<f32>, Radius) {
+    let width = Self::rule_to_length(&attributes, Rule::width).map(|length| length.pixels()).unwrap_or(120.);
+    let height = Self::rule_to_length(&attributes, Rule::height).map(|length| length.pixels());
+    let radius = Self::rule_to_radius(&attributes);
+
+    (width, height, radius)
   }
 
   fn position_rect(index: &mut HashMap<String, Rect>, location: &Option<(Anchor, Vec<Distance>, Edge)>, used: &mut Rect) {
@@ -444,6 +458,20 @@ impl<'i> Diagram<'i> {
       .map(Self::pair_to_radius)
       .unwrap_or(Radius::default())
   }
+
+  fn rule_to_length(pair: &Pair<Rule>, rule: Rule) -> Option<Length> {
+    Self::dig_rule(pair, rule).map(Self::pair_to_length)
+  }
+
+  fn pair_to_length(pair: Pair<Rule>) -> Length {
+    let length = Self::find_rule(&pair, Rule::length)
+      .and_then(|p| p.as_str().parse::<usize>().ok())
+      .unwrap();
+    let unit = Self::rule_to_string(&pair, Rule::unit)
+      .unwrap();
+    Length::new(length as f32, unit.into())
+  }
+
 
   fn rule_to_color(pair: &Pair<Rule>, rule: Rule) -> Option<Color> {
     Self::dig_rule(pair, rule)

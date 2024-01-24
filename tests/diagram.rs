@@ -273,6 +273,17 @@ mod tests {
   }
 
   #[test]
+  fn visual_width_and_height() -> Result<()> {
+    let string =
+      r#"
+      box wd 4cm ht 4cm "This goes to the left hand side"
+      "#;
+    let diagram = create_diagram_inset(string);
+    assert_visual(diagram, "target/visual_width_and_height")?;
+    Ok(())
+  }
+
+  #[test]
   fn visual_right_center_left() -> Result<()> {
     let string =
       r#"
