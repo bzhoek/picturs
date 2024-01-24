@@ -251,6 +251,9 @@ impl<'i> Diagram<'i> {
   fn point_index(index: &HashMap<String, Rect>, edge: &Edge, distances: &[Distance]) -> Option<Point> {
     index.get(&edge.id).map(|rect| {
       Self::point_from_rect(rect, &edge.anchor, distances)
+    }).or_else(|| {
+      println!("{} not found", edge.id);
+      None
     })
   }
 
@@ -348,7 +351,7 @@ impl<'i> Diagram<'i> {
         if let Some(distance) = distance {
           point = point.add(distance.offset());
 
-          if distance.direction.x != 0. {
+          if distance.is_horizontal() {
             canvas.line_to(point.x, point.y);
             canvas.line_to(point.x, used.bottom);
           } else {

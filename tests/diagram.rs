@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
   use std::fs;
-  use std::ops::Mul;
+  use std::ops::{Mul, Sub};
   use std::path::Path;
   use std::process::Command;
 
@@ -145,6 +145,15 @@ mod tests {
                 Color::BLUE,
                 rectangle(Some(TQBF))),
     ], diagram.nodes);
+  }
+
+  #[test]
+  fn arrow() {
+    let p1 = Point::new(0., 0.);
+    let p2 = Point::new(20., 20.);
+    let direction = p2.sub(p1);
+    let angle = direction.y.atan2(direction.x);
+    assert_eq!(45., angle.to_degrees())
   }
 
   #[test]
@@ -298,6 +307,19 @@ mod tests {
     assert_eq!(&expected, rect);
 
     assert_visual(diagram, "target/visual_right_center_left")?;
+    Ok(())
+  }
+
+  #[test]
+  fn visual_top_down_line() -> Result<()> {
+    let string =
+      r#"
+      box.top    "Top"
+      box.bottom "Bottom" .n 2cm down from top.s
+      line from top.s to bottom.n
+      "#;
+    let diagram = create_diagram_inset(string);
+    assert_visual(diagram, "target/visual_top_down_line")?;
     Ok(())
   }
 

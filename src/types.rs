@@ -83,7 +83,7 @@ impl Length {
 #[derive(Debug, Default, PartialEq)]
 pub struct Distance {
   length: Length,
-  pub direction: Vector,
+  direction: Vector,
 }
 
 impl Distance {
@@ -94,6 +94,14 @@ impl Distance {
 
   pub fn offset(&self) -> Point {
     self.direction.mul(self.length.pixels())
+  }
+
+  pub fn is_horizontal(&self) -> bool {
+    self.direction.x != 0.
+  }
+
+  pub fn is_vertical(&self) -> bool {
+    self.direction.y != 0.
   }
 }
 
