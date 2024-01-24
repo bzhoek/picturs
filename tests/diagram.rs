@@ -11,6 +11,7 @@ mod tests {
   use picturs::diagram::{A5, Diagram, Node, Radius};
   use picturs::diagram::Node::{Container, Primitive};
   use picturs::diagram::Shape::Rectangle;
+  use picturs::init_logging;
   use picturs::types::{Anchor, Distance, Edge, Unit};
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
@@ -22,6 +23,7 @@ mod tests {
   }
 
   fn create_diagram_inset(string: &str) -> Diagram {
+    init_logging();
     let mut diagram = Diagram::offset(A5, (32., 32.));
     diagram.parse_string(string);
     diagram

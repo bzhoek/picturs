@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::ops::Add;
 
+use log::{error, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
@@ -185,7 +186,7 @@ impl<'i> Diagram<'i> {
           bounds.bottom = rect.bottom
         }
         _ => {
-          println!("unmatched {:?}", pair);
+          warn!("unmatched {:?}", pair);
           // let inset = Point::new(bounds.left, bounds.bottom);
           // (ast, bounds) = Self::pairs_to_nodes(pair.into_inner(), ast, canvas, &inset);
         }
@@ -252,7 +253,7 @@ impl<'i> Diagram<'i> {
     index.get(&edge.id).map(|rect| {
       Self::point_from_rect(rect, &edge.anchor, distances)
     }).or_else(|| {
-      println!("{} not found", edge.id);
+      error!("{} edge id not found", edge.id);
       None
     })
   }

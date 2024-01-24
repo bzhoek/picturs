@@ -1,3 +1,6 @@
+use std::sync::{Mutex, OnceLock};
+use env_logger::Env;
+use log::warn;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 
@@ -58,7 +61,7 @@ pub fn parse_nodes(pair: Pair<Rule>, mut ast: Vec<Node>) -> Vec<Node> {
         ast.push(Node::String(pair.into_inner().as_str().to_string()))
       }
       _ => {
-        println!("unmatched {:?}", pair);
+        warn!("unmatched {:?}", pair);
         ast = parse_nodes(pair, ast);
       }
     }
@@ -71,4 +74,9 @@ pub fn dump_pic(level: usize, pair: Pair<Rule>) {
     println!("{:level$} {:?}", level, pair);
     dump_pic(level + 1, pair);
   }
+}
+
+pub fn init_logging() -> &'static Mutex<()> {
+  static LOGGER: OnceLock<Mutex<()>> = OnceLock::new();
+  LOGGER.get_or_init(|| env_logger::Builder::from_env(Env::default().default_filter_or("warn")).init().into())
 }
