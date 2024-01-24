@@ -167,6 +167,25 @@ mod tests {
   }
 
   #[test]
+  fn visual_effort_to_impact() -> Result<()> {
+    let string =
+      r#"
+      box.start "Start"
+      box.step1 "Effort" .n 4cm down from start.s
+      box.step2 "Output" .sw 1cm left 1cm up from step1.ne
+      box.step3 "Outcome" .nw 2cm right from step1.ne
+      box.step4 "Impact" .n 2cm left 1cm down from step3.s
+      line from step1.n to step2.w
+      line from step2.e to step3.n
+      line from step3.s to step4.e
+      "#;
+    let diagram = create_diagram_inset(string);
+
+    assert_visual(diagram, "target/effort_to_impact")?;
+    Ok(())
+  }
+
+  #[test]
   fn visual_text_shape() -> Result<()> {
     let string =
       r#"box {
