@@ -14,13 +14,9 @@ text_color = { "text" ~ id }
 identified = _{ "." ~ id }
 id = @{ ASCII_ALPHANUMERIC* }
 
-// dimensions
-radius = { radius_variants ~ size }
-radius_variants = _{ "rd" | "rad" | "radius" }
-width = { width_variants ~ size }
-width_variants = _{ "wd" | "wid" | "width" }
-height = { height_variants ~ size }
-height_variants = _{ "ht" | "height" }
+radius = { ("rd" | "rad" | "radius") ~ size }
+width = { ("wd" | "wid" | "width") ~ size }
+height = { ("ht" | "height") ~ size }
 
 location = { anchor ~ distance* ~ "from" ~ edge }
 size = _{ length ~ unit }
@@ -33,7 +29,7 @@ line = { "line" ~ "from" ~ source ~ distance? ~ "to" ~ target }
 source = { edge }
 target = { edge }
 edge = { id ~ anchor }
-anchor = { "." ~ ("nw"  | "ne" | "n" | "e" | "se" | "s" | "sw" | "w" |  "c") }
+anchor = { "." ~ ("ne" | "nw" | "n" | "e" | "se" | "sw" | "s" | "w" |  "c") }
 
 title = { string? }
 string = _{ "\"" ~ inner ~ "\"" }
