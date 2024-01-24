@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.76"
-clap = { version = "4.4.8", features = ["derive"] }
+anyhow = "1.0"
+clap = { version = "4.4", features = ["derive"] }
 env_logger = "0.11.0"
-log = "0.4.20"
-pest = "2.7.5"
-pest_derive = "2.7.5"
-skia-safe = { version = "0.68.0", features = ["metal"] }
+log = "0.4"
+pest = "2.7"
+pest_derive = "2.7"
+skia-safe = { version = "0.68", features = ["metal"] }
