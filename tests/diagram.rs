@@ -181,8 +181,8 @@ mod tests {
   fn visual_effort_to_impact() -> Result<()> {
     let string =
       r#"
-      box.start "Start"
-      box.step1 "Effort" .n 4cm down from start.s
+      move 4cm down 4cm right
+      box.step1 "Effort"
       box.step2 "Output" .sw 1cm left 1cm up from step1.ne
       box.step3 "Outcome" .nw 2cm right from step1.ne
       box.step4 "Impact" .n 2cm left 1cm down from step3.s

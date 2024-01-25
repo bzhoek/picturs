@@ -15,11 +15,10 @@
 8. ~Hele voorgaande layout beschikbaar~
 9. ~Lijn trekken van `now` naar `future`~
 10. ~Lijn met pijlpunt~
-11. Start offset opgeven
-10. Bounds interface definieren zodat niet heel Canvas een dependency wordt
-11. `nnw` en uren op de klok, met horizontal en vertical
-12. at voor absolute locatie
-13. dot
+11. ~Move met meerdere offsets~
+12. `nnw` en uren op de klok, met horizontal en vertical
+13. at voor absolute locatie
+14. dot
 
 `.nw 1cm right 2cm down from left.ne`
 `.nw=left.ne 1cr 2cd`

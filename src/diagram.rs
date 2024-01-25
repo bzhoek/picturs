@@ -74,10 +74,16 @@ impl<'i> Diagram<'i> {
 
     for pair in pairs.into_iter() {
       match pair.as_rule() {
+        Rule::move_to => {
+          let distances = Self::rule_to_distances(&pair, Rule::distances);
+          distances.iter().for_each(|distances| {
+            Self::offset_rect(&mut bounds, distances)
+          });
+        }
         Rule::container => {
           let id = Self::rule_to_string(&pair, Rule::id);
           let attributes = Self::find_rule(&pair, Rule::attributes).unwrap();
-          let (width, height, radius) = Self::parse_dimension(&attributes);
+          let (_width, _height, radius) = Self::parse_dimension(&attributes);
           let title = Self::rule_to_string(&attributes, Rule::inner);
           let location = Self::rule_to_location(&attributes, Rule::location);
 
@@ -121,11 +127,10 @@ impl<'i> Diagram<'i> {
           let start = Self::point_index(index, &source, &[]);
           let end = Self::point_index(index, &target, &[]);
 
-          start.zip(end).map(|(start, end)| {
+          if let Some((start, end)) = start.zip(end) {
             let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
             ast.push(Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(id, source, distance, target)));
           }
-          );
         }
         Rule::line => {
           let id = Self::rule_to_string(&pair, Rule::id);
@@ -137,11 +142,10 @@ impl<'i> Diagram<'i> {
           let start = Self::point_index(index, &source, &[]);
           let end = Self::point_index(index, &target, &[]);
 
-          start.zip(end).map(|(start, end)| {
+          if let Some((start, end)) = start.zip(end) {
             let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
             ast.push(Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, source, distance, target)));
           }
-          );
         }
         Rule::rectangle => {
           let id = Self::rule_to_string(&pair, Rule::id);
@@ -182,7 +186,7 @@ impl<'i> Diagram<'i> {
           let id = Self::rule_to_string(&pair, Rule::id);
           let title = Self::rule_to_string(&pair, Rule::inner).unwrap();
           let attributes = Self::find_rule(&pair, Rule::text_attributes).unwrap();
-          let (width, height, _radius) = Self::parse_dimension(&attributes);
+          let (width, _height, _radius) = Self::parse_dimension(&attributes);
           let location = Self::rule_to_location(&pair, Rule::location);
           let height = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
 
@@ -214,9 +218,9 @@ impl<'i> Diagram<'i> {
   }
 
   fn parse_dimension(attributes: &Pair<Rule>) -> (f32, Option<f32>, Radius) {
-    let width = Self::rule_to_length(&attributes, Rule::width).map(|length| length.pixels()).unwrap_or(120.);
-    let height = Self::rule_to_length(&attributes, Rule::height).map(|length| length.pixels());
-    let radius = Self::rule_to_radius(&attributes);
+    let width = Self::rule_to_length(attributes, Rule::width).map(|length| length.pixels()).unwrap_or(120.);
+    let height = Self::rule_to_length(attributes, Rule::height).map(|length| length.pixels());
+    let radius = Self::rule_to_radius(attributes);
 
     (width, height, radius)
   }
@@ -297,10 +301,14 @@ impl<'i> Diagram<'i> {
   pub fn offset_from_rect(rect: &Rect, anchor: &Anchor, distances: &[Distance]) -> Rect {
     let point = anchor.to_edge(rect);
     let mut rect = Rect::from_xywh(point.x, point.y, rect.width(), rect.height());
+    Self::offset_rect(&mut rect, distances);
+    rect
+  }
+
+  fn offset_rect(rect: &mut Rect, distances: &[Distance]) {
     for distance in distances.iter() {
       rect.offset(distance.offset());
     }
-    rect
   }
 
   pub fn node_mut(&mut self, id: &str, distances: Vec<Distance>) {
@@ -470,6 +478,24 @@ impl<'i> Diagram<'i> {
 
   fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Distance> {
     Self::find_rule(pair, rule).map(Self::pair_to_distance)
+  }
+
+  fn rule_to_distances(pair: &Pair<Rule>, rule: Rule) -> Option<Vec<Distance>> {
+    Self::find_rule(pair, rule)
+      .map(|p| {
+        let mut directions: Vec<Distance> = vec![];
+
+        for rule in p.into_inner() {
+          match rule.as_rule() {
+            Rule::distance => {
+              let distance = Self::pair_to_distance(rule);
+              directions.push(distance);
+            }
+            rule => error!("Unexpected rule {:?}", rule)
+          }
+        };
+        directions
+      })
   }
 
   fn pair_to_radius(pair: Pair<Rule>) -> Radius {
