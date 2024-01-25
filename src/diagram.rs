@@ -2,7 +2,8 @@
 
 use std::collections::HashMap;
 use std::error::Error;
-use std::ops::Add;
+use std::f32::consts::PI;
+use std::ops::{Add, Sub};
 
 use log::{error, warn};
 use pest::iterators::{Pair, Pairs};
@@ -34,6 +35,7 @@ type Displacement = (Anchor, Vec<Distance>, Edge);
 
 #[derive(Debug, PartialEq)]
 pub enum Shape<'a> {
+  Arrow(Option<&'a str>, Edge, Option<Distance>, Edge),
   Line(Option<&'a str>, Edge, Option<Distance>, Edge),
   Rectangle(Color, Option<&'a str>, Radius, Color, Option<Displacement>),
   Text(&'a str, Option<Displacement>),
@@ -108,6 +110,22 @@ impl<'i> Diagram<'i> {
           bounds.left = rect.left;
           bounds.right = bounds.right.max(rect.right);
           bounds.bottom = rect.bottom;
+        }
+        Rule::arrow => {
+          let id = Self::rule_to_string(&pair, Rule::id);
+
+          let source = Self::location_to_edge(&pair, Rule::source).unwrap();
+          let distance = Self::rule_to_distance(&pair, Rule::distance);
+          let target = Self::location_to_edge(&pair, Rule::target).unwrap();
+
+          let start = Self::point_index(index, &source, &[]);
+          let end = Self::point_index(index, &target, &[]);
+
+          start.zip(end).map(|(start, end)| {
+            let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
+            ast.push(Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(id, source, distance, target)));
+          }
+          );
         }
         Rule::line => {
           let id = Self::rule_to_string(&pair, Rule::id);
@@ -346,6 +364,29 @@ impl<'i> Diagram<'i> {
 
   fn render_shape(&self, canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape) {
     match shape {
+      Shape::Arrow(_, _, distance, _) => {
+        canvas.move_to(used.left, used.top);
+        let mut point = Point::new(used.left, used.top);
+        if let Some(distance) = distance {
+          point = point.add(distance.offset());
+
+          if distance.is_horizontal() {
+            canvas.line_to(point.x, point.y);
+            canvas.line_to(point.x, used.bottom);
+          } else {
+            canvas.line_to(point.x, point.y);
+            canvas.line_to(used.right, point.y);
+          }
+        }
+
+        canvas.line_to(used.right, used.bottom);
+        canvas.stroke();
+
+        let p1 = Point::new(used.left, used.top);
+        let p2 = Point::new(used.right, used.bottom);
+        let direction = p2.sub(p1);
+        Self::draw_arrow_head(canvas, p2, direction);
+      }
       Shape::Line(_, _, distance, _) => {
         canvas.move_to(used.left, used.top);
         let mut point = Point::new(used.left, used.top);
@@ -383,6 +424,20 @@ impl<'i> Diagram<'i> {
         Self::render_paragraph(canvas, used, title);
       }
     }
+  }
+
+  fn draw_arrow_head(canvas: &mut Canvas, p2: Point, direction: Point) {
+    let angle = direction.y.atan2(direction.x);
+    let arrow = 25. * PI / 180.;
+    let size = 15.;
+    canvas.move_to(
+      p2.x - size * (angle - arrow).cos(),
+      p2.y - size * (angle - arrow).sin());
+    canvas.line_to(p2.x, p2.y);
+    canvas.line_to(
+      p2.x - size * (angle + arrow).cos(),
+      p2.y - size * (angle + arrow).sin());
+    canvas.fill();
   }
 
   fn render_paragraph(canvas: &mut Canvas, rect: &Rect, title: &&str) {

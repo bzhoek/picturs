@@ -186,9 +186,9 @@ mod tests {
       box.step2 "Output" .sw 1cm left 1cm up from step1.ne
       box.step3 "Outcome" .nw 2cm right from step1.ne
       box.step4 "Impact" .n 2cm left 1cm down from step3.s
-      line from step1.n to step2.w
-      line from step2.e to step3.n
-      line from step3.s to step4.e
+      arrow from step1.n to step2.w
+      arrow from step2.e to step3.n
+      arrow from step3.s to step4.e
       "#;
     let diagram = create_diagram_inset(string);
 
@@ -318,7 +318,7 @@ mod tests {
       r#"
       box.top    "Top"
       box.bottom "Bottom" .n 2cm down from top.s
-      line from top.s to bottom.n
+      arrow from top.s to bottom.n
       "#;
     let diagram = create_diagram_inset(string);
     assert_visual(diagram, "target/visual_top_down_line")?;

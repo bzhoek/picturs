@@ -2,7 +2,8 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
 picture = _{ SOI ~ shapes* ~ EOI }
 shapes = _{ container | shape }
-shape = _{ line | rectangle | text }
+shape = _{ arrow | line | rectangle | text }
+
 container = { "box" ~ identified? ~ attributes ~ "{" ~ shapes* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
 attributes = { attribute* }
@@ -27,6 +28,7 @@ length = { ASCII_DIGIT* }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
 direction = { "up" | "down" | "left" | "right" }
 
+arrow = { "arrow" ~ "from" ~ source ~ distance? ~ "to" ~ target }
 line = { "line" ~ "from" ~ source ~ distance? ~ "to" ~ target }
 source = { edge }
 target = { edge }
