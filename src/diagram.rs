@@ -37,8 +37,15 @@ type Displacement = (Anchor, Vec<Distance>, Edge);
 pub enum Shape<'a> {
   Arrow(Option<&'a str>, Edge, Option<Distance>, Edge),
   Line(Option<&'a str>, Edge, Option<Distance>, Edge),
-  Rectangle(Color, Option<&'a str>, Radius, Color, Option<Displacement>),
+  Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<Displacement>),
   Text(&'a str, Option<Displacement>),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Paragraph<'a> {
+  pub text: &'a str,
+  pub widths: Vec<f32>,
+  pub height: f32,
 }
 
 #[derive(Debug)]
@@ -69,7 +76,7 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, index: &mut HashMap<String, Rect>)
-                            -> (Vec<Node<'a>>, Rect) {
+    -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
 
     for pair in pairs.into_iter() {
@@ -101,7 +108,7 @@ impl<'i> Diagram<'i> {
 
           if let Some(title) = title {
             let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
-            let down = canvas.paragraph(title, (0., 0.), text_inset.width());
+            let (widths, down) = canvas.paragraph(title, (0., 0.), text_inset.width());
             used.bottom = inner.bottom + down + TEXT_PADDING;
           }
 
@@ -158,11 +165,15 @@ impl<'i> Diagram<'i> {
           let title = Self::rule_to_string(&attributes, Rule::inner);
           let location = Self::rule_to_location(&attributes, Rule::location);
 
+          let mut para_height = None;
+          let paragraph = title.map(|title| {
+            let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+            para_height = Some(height);
+            Paragraph { text: title, widths, height }
+          });
+
           let height = height.unwrap_or_else(|| {
-            match title {
-              Some(title) => canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING),
-              None => 40.,
-            }
+            para_height.unwrap_or(40.)
           });
 
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, width, height.max(40.));
@@ -175,7 +186,7 @@ impl<'i> Diagram<'i> {
 
           let mut rect = used;
           rect.bottom += BLOCK_PADDING;
-          ast.push(Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, title, radius, fill, location)));
+          ast.push(Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location)));
 
           bounds.top = bounds.top.min(rect.top);
           bounds.left = rect.left;
@@ -188,7 +199,7 @@ impl<'i> Diagram<'i> {
           let attributes = Self::find_rule(&pair, Rule::text_attributes).unwrap();
           let (width, _height, _radius) = Self::parse_dimension(&attributes);
           let location = Self::rule_to_location(&pair, Rule::location);
-          let height = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+          let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
 
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, width, height);
           used.bottom += BLOCK_PADDING;
@@ -421,7 +432,7 @@ impl<'i> Diagram<'i> {
         canvas.line_to(used.right, used.bottom);
         canvas.stroke();
       }
-      Shape::Rectangle(text_color, title, radius, fill, _) => {
+      Shape::Rectangle(text_color, paragraph, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
         canvas.rectangle(used, radius.pixels());
@@ -430,10 +441,17 @@ impl<'i> Diagram<'i> {
         canvas.paint.set_color(*fill);
         canvas.rectangle(used, radius.pixels());
 
-        if let Some(title) = title {
+        if let Some(paragraph) = paragraph {
           canvas.paint.set_style(PaintStyle::Fill);
           canvas.paint.set_color(*text_color);
-          Self::render_paragraph(canvas, used, title);
+          let mut rect = *used;
+          if paragraph.widths.len() == 1 {
+            rect.top += (used.height() - paragraph.height) / 2. - Canvas::get_font_descent();
+            rect.left += (used.width() - paragraph.widths.first().unwrap()) / 2.;
+          } else {
+            rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
+          }
+          Self::render_paragraph(canvas, &rect, &paragraph.text);
         }
       }
       Shape::Text(title, _) => {
@@ -457,9 +475,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn render_paragraph(canvas: &mut Canvas, rect: &Rect, title: &&str) {
-    let inset = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
-    let origin = (inset.left, rect.top);
-    canvas.paragraph(title, origin, inset.width());
+    let origin = (rect.left, rect.top);
+    canvas.paragraph(title, origin, rect.width());
   }
 
   fn rule_to_location(pair: &Pair<Rule>, rule: Rule) -> Option<(Anchor, Vec<Distance>, Edge)> {

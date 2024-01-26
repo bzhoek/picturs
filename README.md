@@ -16,9 +16,9 @@
 9. ~Lijn trekken van `now` naar `future`~
 10. ~Lijn met pijlpunt~
 11. ~Move met meerdere offsets~
+12. ~Tekst centreren in een rechthoek~
 12. `nnw` en uren op de klok, met horizontal en vertical
-13. at voor absolute locatie
-14. dot
+13. dot
 
 `.nw 1cm right 2cm down from left.ne`
 `.nw=left.ne 1cr 2cd`
