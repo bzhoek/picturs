@@ -17,8 +17,9 @@
 10. ~Lijn met pijlpunt~
 11. ~Move met meerdere offsets~
 12. ~Tekst centreren in een rechthoek~
-12. `nnw` en uren op de klok, met horizontal en vertical
-13. dot
+12. ~dot at edge~
+13. `arrow` met offset
+13. `nnw` en uren op de klok, met horizontal en vertical
 
 `.nw 1cm right 2cm down from left.ne`
 `.nw=left.ne 1cr 2cd`

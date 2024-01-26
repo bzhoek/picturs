@@ -2,7 +2,7 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
 picture = _{ SOI ~ shapes* ~ EOI }
 shapes = _{ container | shape }
-shape = _{ move_to | arrow | line | rectangle | text }
+shape = _{ move_to | dot | arrow | line | rectangle | text }
 
 container = { "box" ~ identified? ~ attributes ~ "{" ~ shapes* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
@@ -33,6 +33,10 @@ distances = { distance* }
 
 arrow = { "arrow" ~ "from" ~ source ~ distance? ~ "to" ~ target }
 line = { "line" ~ "from" ~ source ~ distance? ~ "to" ~ target }
+dot = { "dot" ~ target ~ dot_attributes }
+dot_attributes = { dot_attribute* }
+dot_attribute = { color | radius }
+
 source = { edge }
 target = { edge }
 edge = { id ~ anchor }

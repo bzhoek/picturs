@@ -35,6 +35,7 @@ type Displacement = (Anchor, Vec<Distance>, Edge);
 
 #[derive(Debug, PartialEq)]
 pub enum Shape<'a> {
+  Dot(Edge, Radius),
   Arrow(Option<&'a str>, Edge, Option<Distance>, Edge),
   Line(Option<&'a str>, Edge, Option<Distance>, Edge),
   Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<Displacement>),
@@ -108,7 +109,7 @@ impl<'i> Diagram<'i> {
 
           if let Some(title) = title {
             let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
-            let (widths, down) = canvas.paragraph(title, (0., 0.), text_inset.width());
+            let (_widths, down) = canvas.paragraph(title, (0., 0.), text_inset.width());
             used.bottom = inner.bottom + down + TEXT_PADDING;
           }
 
@@ -123,6 +124,16 @@ impl<'i> Diagram<'i> {
           bounds.left = rect.left;
           bounds.right = bounds.right.max(rect.right);
           bounds.bottom = rect.bottom;
+        }
+        Rule::dot => {
+          let attributes = Self::find_rule(&pair, Rule::dot_attributes).unwrap();
+          let color = Self::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
+          let radius = Self::rule_to_radius(&attributes);
+
+          let target = Self::location_to_edge(&pair, Rule::target).unwrap();
+          let point = Self::point_index(index, &target, &[]).unwrap();
+          let rect = Rect::from_xywh(point.x, point.y, 0., 0.);
+          ast.push(Primitive(None, rect, rect, color, Shape::Dot(target, radius)));
         }
         Rule::arrow => {
           let id = Self::rule_to_string(&pair, Rule::id);
@@ -199,7 +210,7 @@ impl<'i> Diagram<'i> {
           let attributes = Self::find_rule(&pair, Rule::text_attributes).unwrap();
           let (width, _height, _radius) = Self::parse_dimension(&attributes);
           let location = Self::rule_to_location(&pair, Rule::location);
-          let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+          let (_widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
 
           let mut used = Rect::from_xywh(bounds.left, bounds.bottom, width, height);
           used.bottom += BLOCK_PADDING;
@@ -383,6 +394,12 @@ impl<'i> Diagram<'i> {
 
   fn render_shape(&self, canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape) {
     match shape {
+      Shape::Dot(edge, radius) => {
+        let point = Self::point_from_rect(used, &edge.anchor, &[]);
+        canvas.paint.set_style(PaintStyle::Fill);
+        canvas.paint.set_color(*color);
+        canvas.circle(&point, radius.pixels());
+      }
       Shape::Arrow(_, from, distance, to) => {
         canvas.move_to(used.left, used.top);
         let mut point = Point::new(used.left, used.top);

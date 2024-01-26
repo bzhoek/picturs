@@ -121,6 +121,10 @@ impl Canvas {
     self.surface.canvas().draw_round_rect(rect, radius, radius, &self.paint);
   }
 
+  pub fn circle(&mut self, point: &Point, radius: f32) {
+    self.surface.canvas().draw_circle(*point, radius, &self.paint);
+  }
+
   pub fn data(&mut self) -> Data {
     let image = self.surface.image_snapshot();
     let mut context = self.surface.direct_context();

@@ -29,7 +29,7 @@ mod tests {
     diagram
   }
 
-1  fn rectangle(title: Option<(&str, f32)>) -> picturs::diagram::Shape {
+  fn rectangle(title: Option<(&str, f32)>) -> picturs::diagram::Shape {
     let paragraph = title.map(|(title, width)| {
       Paragraph { text: title, widths: vec!(width), height: 17. }
     });
@@ -324,6 +324,8 @@ mod tests {
       box.top    "Top"
       box.bottom "Bottom" .n 2cm down from top.s
       arrow from top.s to bottom.n
+      dot top.s color red rad 4pt
+      dot top.n color green rad 4pt
       "#;
     let diagram = create_diagram_inset(string);
     assert_visual(diagram, "target/visual_top_down_line")?;
