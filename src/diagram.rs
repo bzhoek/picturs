@@ -372,7 +372,7 @@ impl<'i> Diagram<'i> {
 
   fn render_shape(&self, canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape) {
     match shape {
-      Shape::Arrow(_, _, distance, _) => {
+      Shape::Arrow(_, from, distance, to) => {
         canvas.move_to(used.left, used.top);
         let mut point = Point::new(used.left, used.top);
         if let Some(distance) = distance {
@@ -385,15 +385,23 @@ impl<'i> Diagram<'i> {
             canvas.line_to(point.x, point.y);
             canvas.line_to(used.right, point.y);
           }
+        } else {
+          let p1 = if from.anchor.is_vertical() && to.anchor.is_horizontal() {
+            Point::new(used.left, used.bottom)
+          } else if from.anchor.is_horizontal() && to.anchor.is_vertical() {
+            Point::new(used.right, used.top)
+          } else {
+            Point::new(used.left, used.top)
+          };
+
+          let p2 = Point::new(used.right, used.bottom);
+          canvas.line_to(p1.x, p1.y);
+          canvas.line_to(p2.x, p2.y);
+          canvas.stroke();
+
+          let direction = p2.sub(p1);
+          Self::draw_arrow_head(canvas, p2, direction);
         }
-
-        canvas.line_to(used.right, used.bottom);
-        canvas.stroke();
-
-        let p1 = Point::new(used.left, used.top);
-        let p2 = Point::new(used.right, used.bottom);
-        let direction = p2.sub(p1);
-        Self::draw_arrow_head(canvas, p2, direction);
       }
       Shape::Line(_, _, distance, _) => {
         canvas.move_to(used.left, used.top);

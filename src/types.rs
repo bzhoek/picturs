@@ -39,6 +39,14 @@ impl Anchor {
     let point = point.add(Vector::new(0.5, 0.5));
     Point::new(rect.width() * -point.x, rect.height() * -point.y)
   }
+
+  pub fn is_horizontal(&self) -> bool {
+    self.y == 0.
+  }
+
+  pub fn is_vertical(&self) -> bool {
+    self.x == 0.
+  }
 }
 
 #[derive(Debug, Default, PartialEq)]
