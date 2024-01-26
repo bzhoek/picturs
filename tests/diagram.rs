@@ -183,9 +183,9 @@ mod tests {
       r#"
       move 4cm down 4cm right
       box.step1 "Effort"
-      box.step2 "Output" .sw 1cm left 1cm up from step1.ne
-      box.step3 "Outcome" .nw 2cm right from step1.ne
-      box.step4 "Impact" .n 2cm left 1cm down from step3.s
+      box.step2 "Output"  .w 2cm right 1cm up from step1.n
+      box.step3 "Outcome" .n 2cm right 1cm down from step2.e
+      box.step4 "Impact"  .e 2cm left 1cm down from step3.s
       arrow from step1.n to step2.w
       arrow from step2.e to step3.n
       arrow from step3.s to step4.e
