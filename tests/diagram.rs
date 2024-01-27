@@ -158,7 +158,7 @@ mod tests {
   #[test]
   fn visual_hello_world() -> Result<()> {
     let string = r#"
-      # line
+      line
       # box "Hello," "World!"
       # arrow
       "#;

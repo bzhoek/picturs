@@ -32,14 +32,14 @@ direction = { "up" | "down" | "left" | "right" }
 move_to = { "move" ~ displacements }
 displacements = { displacement* }
 
-arrow = { "arrow" ~ "from" ~ source ~ displacement? ~ "to" ~ target }
-line = { "line" ~ "from" ~ source ~ displacement? ~ "to" ~ target }
-dot = { "dot" ~ target ~ dot_attributes }
+arrow = { "arrow" ~ source? ~ displacement? ~ target? }
+line = { "line" ~ source? ~ displacement? ~ target? }
+dot = { "dot" ~ object_edge ~ dot_attributes }
 dot_attributes = { dot_attribute* }
 dot_attribute = { color | radius }
 
-source = { object_edge }
-target = { object_edge }
+source = { "from" ~ object_edge }
+target = { "to" ~ object_edge }
 object_edge = { id ~ edge }
 edge = { "." ~ ("ne" | "nw" | "n" | "e" | "se" | "sw" | "s" | "w" |  "c") }
 

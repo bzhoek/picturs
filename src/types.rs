@@ -94,6 +94,15 @@ pub struct Displacement {
   direction: Vector,
 }
 
+pub fn vector_from_string(str: &str) -> Vector {
+  match str {
+    "left" => Vector::new(-1., 0.),
+    "right" => Vector::new(1., 0.),
+    "up" => Vector::new(0., -1.),
+    _ => Vector::new(0., 1.),
+  }
+}
+
 impl Displacement {
   pub fn new(length: f32, unit: Unit, direction: Vector) -> Self {
     let length = Length::new(length, unit);
