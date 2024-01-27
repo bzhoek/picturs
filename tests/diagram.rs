@@ -11,24 +11,16 @@ mod tests {
   use picturs::diagram::{A5, Diagram, Node, Paragraph, Radius};
   use picturs::diagram::Node::{Container, Primitive};
   use picturs::diagram::Shape::Rectangle;
-  use picturs::init_logging;
   use picturs::types::{Anchor, Distance, Edge, Unit};
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
   fn create_diagram(string: &str) -> Diagram {
-    let mut diagram = Diagram::offset(A5, (0., 0.));
+    let mut diagram = Diagram::inset(A5, (32., 32.));
     diagram.parse_string(string);
     diagram
   }
-
-  fn create_diagram_inset(string: &str) -> Diagram {
-    init_logging();
-    let mut diagram = Diagram::offset(A5, (32., 32.));
-    diagram.parse_string(string);
-    diagram
-  }
-
+  
   fn rectangle(title: Option<(&str, f32)>) -> picturs::diagram::Shape {
     let paragraph = title.map(|(title, width)| {
       Paragraph { text: title, widths: vec!(width), height: 17. }
@@ -176,8 +168,7 @@ mod tests {
       }
       line from now.e 1cm right to future.e
       "#;
-    let diagram = create_diagram_inset(string);
-
+    let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_double_containers")?;
     Ok(())
   }
@@ -186,7 +177,6 @@ mod tests {
   fn visual_effort_to_impact() -> Result<()> {
     let string =
       r#"
-      move 4cm down 4cm right
       box.step1 "Effort"
       box.step2 "Output"  .w 2cm right 1cm up from step1.n
       box.step3 "Outcome" .n 2cm right 1cm down from step2.e
@@ -195,9 +185,20 @@ mod tests {
       arrow from step2.e to step3.n
       arrow from step3.s to step4.e
       "#;
-    let diagram = create_diagram_inset(string);
-
+    let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_effort_to_impact")?;
+    Ok(())
+  }
+
+  #[test]
+  fn visual_move() -> Result<()> {
+    let string =
+      r#"
+      box "Input"
+      box "Output"
+      "#;
+    let diagram = create_diagram(string);
+    assert_visual(diagram, "target/visual_move")?;
     Ok(())
   }
 
@@ -209,8 +210,7 @@ mod tests {
         box rad 4pt "What do we need to start doing now"
       }
       "#;
-    let diagram = create_diagram_inset(string);
-
+    let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_text_shape")?;
     Ok(())
   }
@@ -229,8 +229,7 @@ mod tests {
       line from now.n 1pc up to future.n
       line from future.s 2pc down to now.s
       "#;
-    let diagram = create_diagram_inset(string);
-
+    let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_remember_the_future")?;
     Ok(())
   }
@@ -241,13 +240,13 @@ mod tests {
       r#"box.now "Now" {
         box.step3 "What do we need to start doing now"
       }
-      box.future "March" {
-        box.step1 "Imagine it is four months into the future" .nw 1cm right from now.ne
+      box.future "March" .nw 1cm right from now.ne {
+        box.step1 "Imagine it is four months into the future"
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
       }
       "#;
-    let diagram = create_diagram_inset(string);
+    let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_whole_ast")?;
     Ok(())
   }
@@ -259,14 +258,14 @@ mod tests {
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .nw 2cm right from left.ne
       "#;
-    let diagram = create_diagram_inset(string);
+    let diagram = create_diagram(string);
 
     let left = diagram.used_rect("left").unwrap();
-    let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
+    let expected = Rect { left: 0., top: 0., right: 120., bottom: 59. };
     assert_eq!(&expected, left);
 
     let right = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(228., 32., 120., 59.);
+    let expected = Rect::from_xywh(196., 0., 120., 59.);
     assert_eq!(&expected, right);
   }
 
@@ -277,13 +276,7 @@ mod tests {
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .nw 2cm right 1cm down from left.ne
       "#;
-    let diagram = create_diagram_inset(string);
-    assert_eq!(2, diagram.nodes.len());
-
-    let rect = diagram.used_rect("left").unwrap();
-    let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
-    assert_eq!(&expected, rect);
-
+    let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_side_by_side")?;
     Ok(())
   }
@@ -294,7 +287,7 @@ mod tests {
       r#"
       box wd 4cm ht 4cm "This goes to the left hand side"
       "#;
-    let diagram = create_diagram_inset(string);
+    let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_width_and_height")?;
     Ok(())
   }
@@ -306,13 +299,7 @@ mod tests {
       box.left "This goes to the left hand side" color green fill white
       box.right "While this goes to the right hand side" color magenta fill gray text white .w 2cm right from left.ne
       "#;
-    let diagram = create_diagram_inset(string);
-    assert_eq!(2, diagram.nodes.len());
-
-    let rect = diagram.used_rect("left").unwrap();
-    let expected = Rect { left: 32., top: 32., right: 152., bottom: 91. };
-    assert_eq!(&expected, rect);
-
+    let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_right_center_left")?;
     Ok(())
   }
@@ -327,7 +314,7 @@ mod tests {
       dot top.s color red rad 4pt
       dot top.n color green rad 4pt
       "#;
-    let diagram = create_diagram_inset(string);
+    let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_top_down_line")?;
     Ok(())
   }
@@ -408,7 +395,7 @@ mod tests {
       box "Right" .nw 1cm right 2cm down from left.ne
       "#;
 
-    create_diagram_inset(string);
+    create_diagram(string);
 
     let _point = Point::new(32., 32.);
     let offset = Vector::new(-1., 0.);
@@ -423,11 +410,11 @@ mod tests {
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .nw 2cm right from left.ne
       "#;
-    let mut diagram = Diagram::offset(A5, (32., 32.));
+    let mut diagram = Diagram::inset(A5, (32., 32.));
     diagram.parse_string(string);
 
     let rect = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(228., 32., 120., 59.);
+    let expected = Rect::from_xywh(196., 0., 120., 59.);
     assert_eq!(&expected, rect);
 
     let distances = vec![
@@ -436,17 +423,17 @@ mod tests {
     ];
 
     let left = diagram.used_rect("left").unwrap();
-    let expected = Rect::from_xywh(32., 32., 120., 59.);
+    let expected = Rect::from_xywh(0., 0., 120., 59.);
     assert_eq!(&expected, left);
 
     let edge = Edge::new("left", "ne"); // 32 + 120 + (2 * 38) = 228
     let shifted = diagram.offset_from(&edge, &distances).unwrap();
-    let expected = Rect::from_xywh(228., 70., 120., 59.);
+    let expected = Rect::from_xywh(196., 38., 120., 59.);
     assert_eq!(expected, shifted);
 
     diagram.node_mut("right", distances);
     let rect = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(304., 70., 120., 59.);
+    let expected = Rect::from_xywh(272., 38., 120., 59.);
     assert_eq!(&expected, rect);
   }
 

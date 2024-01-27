@@ -15,7 +15,7 @@ struct Args {
 fn main() -> Result<()> {
   let args = Args::parse();
   let string = fs::read_to_string(args.file).unwrap();
-  let mut diagram = Diagram::offset(A5, (32., 32.));
+  let mut diagram = Diagram::inset(A5, (32., 32.));
   diagram.parse_string(&string);
   Ok(())
 }

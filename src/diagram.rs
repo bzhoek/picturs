@@ -5,7 +5,7 @@ use std::error::Error;
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
-use log::{error, warn};
+use log::{debug, error, info};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
@@ -54,25 +54,28 @@ pub struct Diagram<'a> {
   pub nodes: Vec<Node<'a>>,
   pub index: HashMap<String, Rect>,
   size: ISize,
-  offset: Point,
+  inset: Point,
+  bounds: Rect,
 }
 
 impl<'i> Diagram<'i> {
-  pub fn offset(size: impl Into<ISize>, offset: impl Into<Point>) -> Self {
+  pub fn inset(size: impl Into<ISize>, inset: impl Into<Point>) -> Self {
     Self {
       nodes: vec![],
       index: HashMap::new(),
       size: size.into(),
-      offset: offset.into(),
+      inset: inset.into(),
+      bounds: Default::default(),
     }
   }
 
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
     let top = DiagramParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(self.size);
-    canvas.cursor = self.offset;
-    let (ast, _bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &self.offset, &mut self.index);
+    let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), &mut self.index);
+    info!("Bounds {:?}", bounds);
     self.nodes = ast;
+    self.bounds = bounds;
     top
   }
 
@@ -121,9 +124,7 @@ impl<'i> Diagram<'i> {
           rect.bottom += BLOCK_PADDING;
           ast.push(Container(id, radius, title, rect, used, nodes));
 
-          bounds.left = rect.left;
-          bounds.right = bounds.right.max(rect.right);
-          bounds.bottom = rect.bottom;
+          Self::update_bounds(&mut bounds, rect);
         }
         Rule::dot => {
           let attributes = Self::find_rule(&pair, Rule::dot_attributes).unwrap();
@@ -163,6 +164,7 @@ impl<'i> Diagram<'i> {
           if let Some((start, end)) = start.zip(end) {
             let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
             ast.push(Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, source, distance, target)));
+            Self::update_bounds(&mut bounds, rect);
           }
         }
         Rule::rectangle => {
@@ -199,10 +201,7 @@ impl<'i> Diagram<'i> {
           rect.bottom += BLOCK_PADDING;
           ast.push(Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location)));
 
-          bounds.top = bounds.top.min(rect.top);
-          bounds.left = rect.left;
-          bounds.right = bounds.right.max(rect.right);
-          bounds.bottom = rect.bottom
+          Self::update_bounds(&mut bounds, rect);
         }
         Rule::text => {
           let id = Self::rule_to_string(&pair, Rule::id);
@@ -224,19 +223,23 @@ impl<'i> Diagram<'i> {
           let rect = used;
           ast.push(Primitive(id, rect, used, Color::BLACK, Shape::Text(title, location)));
 
-          bounds.top = bounds.top.min(rect.top);
-          bounds.left = rect.left;
-          bounds.right = bounds.right.max(rect.right);
-          bounds.bottom = rect.bottom
+          Self::update_bounds(&mut bounds, rect);
         }
         _ => {
-          warn!("unmatched {:?}", pair);
+          debug!("Unmatched {:?}", pair);
           // let inset = Point::new(bounds.left, bounds.bottom);
           // (ast, bounds) = Self::pairs_to_nodes(pair.into_inner(), ast, canvas, &inset);
         }
       }
     }
     (ast, bounds)
+  }
+
+  fn update_bounds(bounds: &mut Rect, rect: Rect) {
+    bounds.top = bounds.top.min(rect.top);
+    bounds.left = bounds.left.min(rect.left);
+    bounds.right = bounds.right.max(rect.right);
+    bounds.bottom = bounds.bottom.max(rect.bottom)
   }
 
   fn parse_dimension(attributes: &Pair<Rule>) -> (f32, Option<f32>, Radius) {
@@ -362,7 +365,7 @@ impl<'i> Diagram<'i> {
 
   pub fn render_to_file(&self, filepath: &str) {
     let mut canvas = Canvas::new(self.size);
-    canvas.cursor = self.offset;
+    canvas.translate(self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
     self.render_to_canvas(&mut canvas, &self.nodes);
     canvas.write_png(filepath);
   }

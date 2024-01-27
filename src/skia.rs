@@ -8,7 +8,6 @@ pub struct Canvas {
   pub surface: Surface,
   path: Path,
   pub paint: Paint,
-  pub cursor: Point,
 }
 
 impl Canvas {
@@ -25,7 +24,6 @@ impl Canvas {
       surface,
       path,
       paint,
-      cursor: Point::new(0., 0.),
     }
   }
 
