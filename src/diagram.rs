@@ -5,7 +5,7 @@ use std::error::Error;
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
-use log::{debug, error, info};
+use log::{debug, error};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
@@ -73,7 +73,6 @@ impl<'i> Diagram<'i> {
     let top = DiagramParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(self.size);
     let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), &mut self.index);
-    info!("Bounds {:?}", bounds);
     self.nodes = ast;
     self.bounds = bounds;
     top
@@ -126,104 +125,28 @@ impl<'i> Diagram<'i> {
           Self::update_bounds(&mut bounds, &mut cursor, rect);
         }
         Rule::dot => {
-          let attributes = Self::find_rule(&pair, Rule::dot_attributes).unwrap();
-          let color = Self::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
-          let radius = Self::rule_to_radius(&attributes);
-
-          let target = Self::location_to_edge(&pair, Rule::target).unwrap();
-          let point = Self::point_index(index, &target, &[]).unwrap();
-          let rect = Rect::from_xywh(point.x, point.y, 0., 0.);
-          ast.push(Primitive(None, rect, rect, color, Shape::Dot(target, radius)));
+          let node = Self::dot_from_pair(index, &pair);
+          ast.push(node);
         }
         Rule::arrow => {
-          let id = Self::rule_to_string(&pair, Rule::id);
-
-          let source = Self::location_to_edge(&pair, Rule::source).unwrap();
-          let distance = Self::rule_to_distance(&pair, Rule::displacement);
-          let target = Self::location_to_edge(&pair, Rule::target).unwrap();
-
-          let start = Self::point_index(index, &source, &[]);
-          let end = Self::point_index(index, &target, &[]);
-
-          if let Some((start, end)) = start.zip(end) {
-            let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
-            ast.push(Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(id, source, distance, target)));
+          if let Some(node) = Self::arrow_from_pair(index, &pair) {
+            ast.push(node);
           }
         }
         Rule::line => {
-          let id = Self::rule_to_string(&pair, Rule::id);
-
-          let source = Self::location_to_edge(&pair, Rule::source).unwrap();
-          let distance = Self::rule_to_distance(&pair, Rule::displacement);
-          let target = Self::location_to_edge(&pair, Rule::target).unwrap();
-
-          let start = Self::point_index(index, &source, &[]);
-          let end = Self::point_index(index, &target, &[]);
-
-          if let Some((start, end)) = start.zip(end) {
-            let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
-            ast.push(Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, source, distance, target)));
-            Self::update_bounds(&mut bounds, &mut cursor, rect);
+          if let Some(node) = Self::line_from_pair(index, &cursor, pair) {
+            ast.push(node);
           }
         }
         Rule::rectangle => {
-          let id = Self::rule_to_string(&pair, Rule::id);
-          let attributes = Self::find_rule(&pair, Rule::attributes).unwrap();
-          let (width, height, radius) = Self::parse_dimension(&attributes);
-
-          let stroke = Self::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
-          let fill = Self::rule_to_color(&attributes, Rule::fill).unwrap_or(Color::TRANSPARENT);
-          let text_color = Self::rule_to_color(&attributes, Rule::text_color).unwrap_or(Color::BLACK);
-          let title = Self::rule_to_string(&attributes, Rule::inner);
-          let location = Self::location_from_pair(&attributes);
-
-          let mut para_height = None;
-          let paragraph = title.map(|title| {
-            let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
-            para_height = Some(height);
-            Paragraph { text: title, widths, height }
-          });
-
-          let height = height.unwrap_or_else(|| {
-            para_height.unwrap_or(40.)
-          });
-
-          let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(40.));
-          used.bottom += BLOCK_PADDING;
-          Self::position_rect(index, &location, &mut used);
-
-          if let Some(id) = id {
-            index.insert(id.into(), used);
-          }
-
-          let mut rect = used;
-          rect.bottom += BLOCK_PADDING;
-          ast.push(Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location)));
-
-          Self::update_bounds(&mut bounds, &mut cursor, rect);
+          let (used, node) = Self::rectangle_from_pair(canvas, index, &cursor, &pair);
+          ast.push(node);
+          Self::update_bounds(&mut bounds, &mut cursor, used);
         }
         Rule::text => {
-          let id = Self::rule_to_string(&pair, Rule::id);
-          let title = Self::rule_to_string(&pair, Rule::inner).unwrap();
-          let attributes = Self::find_rule(&pair, Rule::text_attributes).unwrap();
-          let (width, _height, _radius) = Self::parse_dimension(&attributes);
-          let location = Self::location_from_pair(&pair);
-          let (_widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
-
-          let mut used = Rect::from_xywh(bounds.left, bounds.bottom, width, height);
-          used.bottom += BLOCK_PADDING;
-
-          Self::position_rect(index, &location, &mut used);
-
-          if let Some(id) = id {
-            index.insert(id.into(), used);
-          }
-
-          let rect = used;
-          ast.push(Primitive(id, rect, used, Color::BLACK, Shape::Text(title, location)));
-
-          Self::update_bounds(&mut bounds, &mut cursor, rect);
-          cursor.y = rect.bottom;
+          let (used, text) = Self::text_from_pair(canvas, index, &cursor, &pair);
+          ast.push(text);
+          Self::update_bounds(&mut bounds, &mut cursor, used);
         }
         _ => {
           debug!("Unmatched {:?}", pair);
@@ -233,6 +156,105 @@ impl<'i> Diagram<'i> {
       }
     }
     (ast, bounds)
+  }
+
+  fn dot_from_pair<'a>(index: &HashMap<String, Rect>, pair: &Pair<'a, Rule>) -> Node<'a> {
+    let attributes = Self::find_rule(pair, Rule::dot_attributes).unwrap();
+    let color = Self::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
+    let radius = Self::rule_to_radius(&attributes);
+
+    let target = Self::location_to_edge(pair, Rule::target).unwrap();
+    let point = Self::point_index(index, &target, &[]).unwrap();
+    let rect = Rect::from_xywh(point.x, point.y, 0., 0.);
+    Primitive(None, rect, rect, color, Shape::Dot(target, radius))
+  }
+
+  fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, pair: &Pair<'a, Rule>) -> Option<Node<'a>> {
+    let id = Self::rule_to_string(pair, Rule::id);
+
+    let source = Self::location_to_edge(pair, Rule::source).unwrap();
+    let distance = Self::rule_to_distance(pair, Rule::displacement);
+    let target = Self::location_to_edge(pair, Rule::target).unwrap();
+
+    let start = Self::point_index(index, &source, &[]);
+    let end = Self::point_index(index, &target, &[]);
+
+    start.zip(end).map(|(start, end)| {
+      let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
+      Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(id, source, distance, target))
+    })
+  }
+
+  fn rectangle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, pair: &Pair<'a, Rule>) -> (Rect, Node<'a>) {
+    let id = Self::rule_to_string(pair, Rule::id);
+    let attributes = Self::find_rule(pair, Rule::attributes).unwrap();
+    let (width, height, radius) = Self::parse_dimension(&attributes);
+
+    let stroke = Self::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
+    let fill = Self::rule_to_color(&attributes, Rule::fill).unwrap_or(Color::TRANSPARENT);
+    let text_color = Self::rule_to_color(&attributes, Rule::text_color).unwrap_or(Color::BLACK);
+    let title = Self::rule_to_string(&attributes, Rule::inner);
+    let location = Self::location_from_pair(&attributes);
+
+    let mut para_height = None;
+    let paragraph = title.map(|title| {
+      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+      para_height = Some(height);
+      Paragraph { text: title, widths, height }
+    });
+
+    let height = height.unwrap_or_else(|| {
+      para_height.unwrap_or(40.)
+    });
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(40.));
+    used.bottom += BLOCK_PADDING;
+    Self::position_rect(index, &location, &mut used);
+
+    if let Some(id) = id {
+      index.insert(id.into(), used);
+    }
+
+    let mut rect = used;
+    rect.bottom += BLOCK_PADDING;
+
+    (rect, Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location)))
+  }
+
+  fn text_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, pair: &Pair<'a, Rule>) -> (Rect, Node<'a>) {
+    let id = Self::rule_to_string(pair, Rule::id);
+    let title = Self::rule_to_string(pair, Rule::inner).unwrap();
+    let attributes = Self::find_rule(pair, Rule::text_attributes).unwrap();
+    let (width, _height, _radius) = Self::parse_dimension(&attributes);
+    let location = Self::location_from_pair(pair);
+    let (_widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
+    used.bottom += BLOCK_PADDING;
+
+    Self::position_rect(index, &location, &mut used);
+
+    if let Some(id) = id {
+      index.insert(id.into(), used);
+    }
+
+    (used, Primitive(id, used, used, Color::BLACK, Shape::Text(title, location)))
+  }
+
+  fn line_from_pair<'a>(index: &mut HashMap<String, Rect>, _cursor: &Point, pair: Pair<'a, Rule>) -> Option<Node<'a>> {
+    let id = Self::rule_to_string(&pair, Rule::id);
+
+    let source = Self::location_to_edge(&pair, Rule::source).unwrap();
+    let distance = Self::rule_to_distance(&pair, Rule::displacement);
+    let target = Self::location_to_edge(&pair, Rule::target).unwrap();
+
+    let start = Self::point_index(index, &source, &[]);
+    let end = Self::point_index(index, &target, &[]);
+
+    start.zip(end).map(|(start, end)| {
+      let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
+      Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, source, distance, target))
+    })
   }
 
   fn move_from_pair(pair: &Pair<Rule>, cursor: Point) -> Option<Rect> {
