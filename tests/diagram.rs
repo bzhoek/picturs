@@ -156,6 +156,18 @@ mod tests {
   }
 
   #[test]
+  fn visual_hello_world() -> Result<()> {
+    let string = r#"
+      # line
+      # box "Hello," "World!"
+      # arrow
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram(diagram, "target/visual_hello_world")?;
+    Ok(())
+  }
+
+  #[test]
   fn visual_double_containers() -> Result<()> {
     let string =
       r#"box.now "Now" {

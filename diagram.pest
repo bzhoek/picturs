@@ -1,10 +1,11 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
-picture = _{ SOI ~ shapes* ~ EOI }
-shapes = _{ container | shape }
+picture = _{ SOI ~ statements* ~ EOI }
+statements = _{ comment | container | shape }
+comment = @{ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ move_to | dot | arrow | line | rectangle | text }
 
-container = { "box" ~ identified? ~ attributes ~ "{" ~ shapes* ~ "}" }
+container = { "box" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
 attributes = { attribute* }
 attribute = { string | color | fill | width | height | radius | location | text_color }
