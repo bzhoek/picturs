@@ -87,11 +87,8 @@ impl<'i> Diagram<'i> {
     for pair in pairs.into_iter() {
       match pair.as_rule() {
         Rule::move_to => {
-          if let Some(displacements) = Self::displacements_from_pair(&pair) {
-            let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-
-            Self::offset_rect(&mut used, &displacements);
-            Self::update_bounds(&mut bounds, &mut cursor, used);
+          if let Some(rect) = Self::move_from_pair(&pair, cursor) {
+            Self::update_bounds(&mut bounds, &mut cursor, rect);
           }
         }
         Rule::container => {
@@ -238,8 +235,15 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
+  fn move_from_pair(pair: &Pair<Rule>, cursor: Point) -> Option<Rect> {
+    Self::displacements_from_pair(pair).map(|displacements| {
+      let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+      Self::offset_rect(&mut used, &displacements);
+      used
+    })
+  }
+
   fn update_bounds(bounds: &mut Rect, cursor: &mut Point, rect: Rect) {
-    info!("Bounds {:?} rect {:?}", bounds, rect);
     bounds.top = bounds.top.min(rect.top);
     bounds.left = bounds.left.min(rect.left);
     bounds.right = bounds.right.max(rect.right);
