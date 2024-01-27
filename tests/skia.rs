@@ -3,6 +3,7 @@ mod tests {
   use skia_safe::{Font, PaintStyle, Rect, Typeface};
 
   use picturs::skia::Canvas;
+  use picturs::test::assert_canvas;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
@@ -15,7 +16,7 @@ mod tests {
   }
 
   #[test]
-  fn test_paragraph() {
+  fn draw_paragraph() {
     let mut canvas = Canvas::new((1024, 1024));
 
     canvas.paint.set_style(PaintStyle::Stroke);
@@ -23,13 +24,14 @@ mod tests {
 
     canvas.paint.set_style(PaintStyle::Fill);
     let (widths, height) = canvas.paragraph(TQBF, (40, 40), 320.);
-    canvas.write_png("target/paragraph.png");
+    assert_canvas(canvas, "target/draw_paragraph").unwrap();
+
     assert_eq!(vec!(299.0, 33.0), widths);
     assert_eq!(34., height);
   }
 
   #[test]
-  fn write_png() {
+  fn draw_demo() {
     let mut canvas = Canvas::new((1024, 1024));
 
     canvas.set_line_width(2.0);
@@ -59,6 +61,30 @@ mod tests {
     canvas.line_to(690.0, 20.0);
     canvas.line_to(770.0, 90.0);
     canvas.fill();
-    canvas.write_png("target/test.png");
+    assert_canvas(canvas, "target/draw_demo").unwrap();
+  }
+
+  #[test]
+  fn draw_quad() {
+    let mut canvas = Canvas::new((1024, 1024));
+
+    canvas.move_to(40.0, 40.0);
+    canvas.quad_to(440.0, 440.0, 840.0, 40.0);
+    canvas.stroke();
+    canvas.save();
+
+    assert_canvas(canvas, "target/draw_quad").unwrap();
+  }
+
+  #[test]
+  fn draw_cubic() {
+    let mut canvas = Canvas::new((1024, 1024));
+
+    canvas.move_to(36.0, 48.0);
+    canvas.cubic_to(36.0, 400.0, 1000.0, 400.0, 1000.0, 48.0);
+    canvas.stroke();
+    canvas.save();
+
+    assert_canvas(canvas, "target/draw_cubic").unwrap();
   }
 }
