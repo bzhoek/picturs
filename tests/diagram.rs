@@ -229,8 +229,8 @@ mod tests {
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
       }
-      line from now.n 1pc up to future.n
-      line from future.s 2pc down to now.s
+      line from now.n 1cm up to future.n
+      line from future.s 1cm down to now.s
       "#;
     let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_remember_the_future")?;

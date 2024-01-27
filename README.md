@@ -18,9 +18,15 @@
 11. ~Move met meerdere offsets~
 12. ~Tekst centreren in een rechthoek~
 12. ~dot at edge~
+13. ~Automatisch topleft bepalen~
 13. Automatisch grootte bepalen
 13. `arrow` met offset
-13. `nnw` en uren op de klok, met horizontal en vertical
+14. `nnw` en uren op de klok, met horizontal en vertical
+15. Richting binnen container, zoals flex
+16. Circle en Ellipse shapes
+17. Cylinder shape
+18. Oval shape
+18. File shape
 
 `.nw 1cm right 2cm down from left.ne`
 `.nw=left.ne 1cr 2cd`

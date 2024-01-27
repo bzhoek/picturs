@@ -129,14 +129,13 @@ impl<'i> Diagram<'i> {
           ast.push(node);
         }
         Rule::arrow => {
-          if let Some(node) = Self::arrow_from_pair(index, &pair) {
-            ast.push(node);
-          }
+          let node = Self::arrow_from_pair(index, &pair);
+          ast.push(node);
         }
         Rule::line => {
-          if let Some(node) = Self::line_from_pair(index, &cursor, pair) {
-            ast.push(node);
-          }
+          let (used, node) = Self::line_from_pair(index, &cursor, pair);
+          ast.push(node);
+          Self::update_bounds(&mut bounds, &mut cursor, used);
         }
         Rule::rectangle => {
           let (used, node) = Self::rectangle_from_pair(canvas, index, &cursor, &pair);
@@ -169,7 +168,7 @@ impl<'i> Diagram<'i> {
     Primitive(None, rect, rect, color, Shape::Dot(target, radius))
   }
 
-  fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, pair: &Pair<'a, Rule>) -> Option<Node<'a>> {
+  fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, pair: &Pair<'a, Rule>) -> Node<'a> {
     let id = Self::rule_to_string(pair, Rule::id);
 
     let source = Self::location_to_edge(pair, Rule::source).unwrap();
@@ -182,7 +181,7 @@ impl<'i> Diagram<'i> {
     start.zip(end).map(|(start, end)| {
       let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
       Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(id, source, distance, target))
-    })
+    }).expect(&format!("line start {:?} end {:?}", start, end))
   }
 
   fn rectangle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, pair: &Pair<'a, Rule>) -> (Rect, Node<'a>) {
@@ -241,7 +240,7 @@ impl<'i> Diagram<'i> {
     (used, Primitive(id, used, used, Color::BLACK, Shape::Text(title, location)))
   }
 
-  fn line_from_pair<'a>(index: &mut HashMap<String, Rect>, _cursor: &Point, pair: Pair<'a, Rule>) -> Option<Node<'a>> {
+  fn line_from_pair<'a>(index: &mut HashMap<String, Rect>, _cursor: &Point, pair: Pair<'a, Rule>) -> (Rect, Node<'a>) {
     let id = Self::rule_to_string(&pair, Rule::id);
 
     let source = Self::location_to_edge(&pair, Rule::source).unwrap();
@@ -253,8 +252,12 @@ impl<'i> Diagram<'i> {
 
     start.zip(end).map(|(start, end)| {
       let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
-      Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, source, distance, target))
-    })
+      let mut used = rect;
+      if let Some(displacement) = &distance {
+        used.offset(displacement.offset());
+      }
+      (used, Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, source, distance, target)))
+    }).expect(&format!("line start {:?} end {:?}", start, end))
   }
 
   fn move_from_pair(pair: &Pair<Rule>, cursor: Point) -> Option<Rect> {
@@ -466,13 +469,13 @@ impl<'i> Diagram<'i> {
           Self::draw_arrow_head(canvas, p2, direction);
         }
       }
-      Shape::Line(_, _, distance, _) => {
+      Shape::Line(_, _, displacement, _) => {
         canvas.move_to(used.left, used.top);
         let mut point = Point::new(used.left, used.top);
-        if let Some(distance) = distance {
-          point = point.add(distance.offset());
+        if let Some(displacement) = displacement {
+          point = point.add(displacement.offset());
 
-          if distance.is_horizontal() {
+          if displacement.is_horizontal() {
             canvas.line_to(point.x, point.y);
             canvas.line_to(point.x, used.bottom);
           } else {
