@@ -3,12 +3,12 @@ use std::ops::{Add, Mul};
 use skia_safe::{Point, Rect, Vector};
 
 #[derive(Debug, PartialEq)]
-pub struct Anchor {
+pub struct Edge {
   pub x: f32,
   pub y: f32,
 }
 
-impl Anchor {
+impl Edge {
   pub fn new(string: &str) -> Self {
     let dot_removed = string.trim_start_matches('.');
     match dot_removed.to_lowercase().as_str() {
@@ -89,12 +89,12 @@ impl Length {
 }
 
 #[derive(Debug, Default, PartialEq)]
-pub struct Distance {
+pub struct Displacement {
   length: Length,
   direction: Vector,
 }
 
-impl Distance {
+impl Displacement {
   pub fn new(length: f32, unit: Unit, direction: Vector) -> Self {
     let length = Length::new(length, unit);
     Self { length, direction }
@@ -114,14 +114,13 @@ impl Distance {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Edge {
+pub struct ObjectEdge {
   pub(crate) id: String,
-  pub(crate) anchor: Anchor,
+  pub(crate) edge: Edge,
 }
 
-impl Edge {
+impl ObjectEdge {
   pub fn new(id: &str, edge: &str) -> Self {
-    let anchor = Anchor::new(edge);
-    Self { id: id.to_string(), anchor }
+    Self { id: id.into(), edge: Edge::new(edge) }
   }
 }

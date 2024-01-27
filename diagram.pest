@@ -21,26 +21,26 @@ radius = { ("rd" | "rad" | "radius") ~ size }
 width = { ("wd" | "wid" | "width") ~ size }
 height = { ("ht" | "height") ~ size }
 
-location = { anchor ~ distance* ~ "from" ~ edge }
+location = { edge ~ displacement* ~ "from" ~ object_edge }
 size = _{ length ~ unit }
-distance = { length ~ unit ~ direction }
+displacement = { length ~ unit ~ direction }
 length = { ASCII_DIGIT* }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
 direction = { "up" | "down" | "left" | "right" }
 
-move_to = { "move" ~ distances }
-distances = { distance* }
+move_to = { "move" ~ displacements }
+displacements = { displacement* }
 
-arrow = { "arrow" ~ "from" ~ source ~ distance? ~ "to" ~ target }
-line = { "line" ~ "from" ~ source ~ distance? ~ "to" ~ target }
+arrow = { "arrow" ~ "from" ~ source ~ displacement? ~ "to" ~ target }
+line = { "line" ~ "from" ~ source ~ displacement? ~ "to" ~ target }
 dot = { "dot" ~ target ~ dot_attributes }
 dot_attributes = { dot_attribute* }
 dot_attribute = { color | radius }
 
-source = { edge }
-target = { edge }
-edge = { id ~ anchor }
-anchor = { "." ~ ("ne" | "nw" | "n" | "e" | "se" | "sw" | "s" | "w" |  "c") }
+source = { object_edge }
+target = { object_edge }
+object_edge = { id ~ edge }
+edge = { "." ~ ("ne" | "nw" | "n" | "e" | "se" | "sw" | "s" | "w" |  "c") }
 
 title = { string? }
 string = _{ "\"" ~ inner ~ "\"" }

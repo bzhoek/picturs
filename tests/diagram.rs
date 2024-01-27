@@ -11,16 +11,18 @@ mod tests {
   use picturs::diagram::{A5, Diagram, Node, Paragraph, Radius};
   use picturs::diagram::Node::{Container, Primitive};
   use picturs::diagram::Shape::Rectangle;
-  use picturs::types::{Anchor, Distance, Edge, Unit};
+  use picturs::init_logging;
+  use picturs::types::{Displacement, Edge, ObjectEdge, Unit};
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
   fn create_diagram(string: &str) -> Diagram {
+    init_logging();
     let mut diagram = Diagram::inset(A5, (32., 32.));
     diagram.parse_string(string);
     diagram
   }
-  
+
   fn rectangle(title: Option<(&str, f32)>) -> picturs::diagram::Shape {
     let paragraph = title.map(|(title, width)| {
       Paragraph { text: title, widths: vec!(width), height: 17. }
@@ -194,8 +196,9 @@ mod tests {
   fn visual_move() -> Result<()> {
     let string =
       r#"
-      box "Input"
-      box "Output"
+      box "Top"
+      move 1cm right 1cm down
+      box "Bottom"
       "#;
     let diagram = create_diagram(string);
     assert_visual(diagram, "target/visual_move")?;
@@ -350,15 +353,15 @@ mod tests {
   fn to_edge() {
     let rect = Rect::from_xywh(40., 40., 100., 200.);
 
-    let anchor = Anchor::new("nw");
+    let edge = Edge::new("nw");
     let center = rect.center();
     assert_eq!(Point::new(90., 140.), center);
 
-    let nw = anchor.to_edge(&rect);
+    let nw = edge.to_edge(&rect);
     assert_eq!(Point::new(40., 40.), nw);
 
-    let anchor = Anchor::new("se");
-    let se = anchor.to_edge(&rect);
+    let edge = Edge::new("se");
+    let se = edge.to_edge(&rect);
     assert_eq!(Point::new(140., 240.), se);
   }
 
@@ -368,22 +371,22 @@ mod tests {
     /*
     het verschil moet van topleft worden afgetrokken
      */
-    let anchor = Anchor::new("nw");
-    let factors = anchor.to_tuple();
+    let edge = Edge::new("nw");
+    let factors = edge.to_tuple();
     assert_eq!((-0.5, -0.5), factors);
-    let nw = anchor.topleft_offset(&rect);
+    let nw = edge.topleft_offset(&rect);
     assert_eq!(Point::new(-0., -0.), nw);
 
-    let anchor = Anchor::new("ne");
-    let factors = anchor.to_tuple();
+    let edge = Edge::new("ne");
+    let factors = edge.to_tuple();
     assert_eq!((0.5, -0.5), factors);
-    let ne = anchor.topleft_offset(&rect);
+    let ne = edge.topleft_offset(&rect);
     assert_eq!(Point::new(-10., -0.), ne);
 
-    let anchor = Anchor::new("se");
-    let factors = anchor.to_tuple();
+    let edge = Edge::new("se");
+    let factors = edge.to_tuple();
     assert_eq!((0.5, 0.5), factors);
-    let se = anchor.topleft_offset(&rect);
+    let se = edge.topleft_offset(&rect);
     assert_eq!(Point::new(-10., -20.), se);
   }
 
@@ -418,15 +421,15 @@ mod tests {
     assert_eq!(&expected, rect);
 
     let distances = vec![
-      Distance::new(2., Unit::Cm, Vector::new(1., 0.)),
-      Distance::new(1., Unit::Cm, Vector::new(0., 1.)),
+      Displacement::new(2., Unit::Cm, Vector::new(1., 0.)),
+      Displacement::new(1., Unit::Cm, Vector::new(0., 1.)),
     ];
 
     let left = diagram.used_rect("left").unwrap();
     let expected = Rect::from_xywh(0., 0., 120., 59.);
     assert_eq!(&expected, left);
 
-    let edge = Edge::new("left", "ne"); // 32 + 120 + (2 * 38) = 228
+    let edge = ObjectEdge::new("left", "ne"); // 32 + 120 + (2 * 38) = 228
     let shifted = diagram.offset_from(&edge, &distances).unwrap();
     let expected = Rect::from_xywh(196., 38., 120., 59.);
     assert_eq!(expected, shifted);
@@ -441,10 +444,10 @@ mod tests {
   fn offset_from_rect() {
     let rect = Rect::from_xywh(40., 40., 40., 40.);
     let distances = vec![
-      Distance::new(2., Unit::Cm, Vector::new(1., 0.)),
-      Distance::new(1., Unit::Cm, Vector::new(0., 1.)),
+      Displacement::new(2., Unit::Cm, Vector::new(1., 0.)),
+      Displacement::new(1., Unit::Cm, Vector::new(0., 1.)),
     ];
-    let result = Diagram::offset_from_rect(&rect, &Anchor::new("nw"), &distances);
+    let result = Diagram::offset_from_rect(&rect, &Edge::new("nw"), &distances);
     let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };
     assert_eq!(expected, result);
   }
