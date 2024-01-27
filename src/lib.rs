@@ -7,6 +7,7 @@ use pest_derive::Parser;
 pub mod diagram;
 pub mod skia;
 pub mod types;
+pub mod test;
 
 #[derive(Parser)]
 #[grammar = "pic.pest"] // relative to project `src`

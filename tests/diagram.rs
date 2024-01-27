@@ -1,9 +1,6 @@
 #[cfg(test)]
 mod tests {
-  use std::fs;
   use std::ops::{Mul, Sub};
-  use std::path::Path;
-  use std::process::Command;
 
   use anyhow::Result;
   use skia_safe::{Color, Point, Rect, Vector};
@@ -12,6 +9,7 @@ mod tests {
   use picturs::diagram::Node::{Container, Primitive};
   use picturs::diagram::Shape::Rectangle;
   use picturs::init_logging;
+  use picturs::test::assert_diagram;
   use picturs::types::{Displacement, Edge, ObjectEdge, Unit};
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
@@ -171,7 +169,7 @@ mod tests {
       line from now.e 1cm right to future.e
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_double_containers")?;
+    assert_diagram(diagram, "target/visual_double_containers")?;
     Ok(())
   }
 
@@ -188,7 +186,7 @@ mod tests {
       arrow from step3.s to step4.e
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_effort_to_impact")?;
+    assert_diagram(diagram, "target/visual_effort_to_impact")?;
     Ok(())
   }
 
@@ -201,7 +199,7 @@ mod tests {
       box "Bottom"
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_move")?;
+    assert_diagram(diagram, "target/visual_move")?;
     Ok(())
   }
 
@@ -214,7 +212,7 @@ mod tests {
       }
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_text_shape")?;
+    assert_diagram(diagram, "target/visual_text_shape")?;
     Ok(())
   }
 
@@ -233,7 +231,7 @@ mod tests {
       line from future.s 1cm down to now.s
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_remember_the_future")?;
+    assert_diagram(diagram, "target/visual_remember_the_future")?;
     Ok(())
   }
 
@@ -250,7 +248,7 @@ mod tests {
       }
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_whole_ast")?;
+    assert_diagram(diagram, "target/visual_whole_ast")?;
     Ok(())
   }
 
@@ -280,7 +278,7 @@ mod tests {
       box.right "While this goes to the right hand side" .nw 2cm right 1cm down from left.ne
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_side_by_side")?;
+    assert_diagram(diagram, "target/visual_side_by_side")?;
     Ok(())
   }
 
@@ -291,7 +289,7 @@ mod tests {
       box wd 4cm ht 4cm "This goes to the left hand side"
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_width_and_height")?;
+    assert_diagram(diagram, "target/visual_width_and_height")?;
     Ok(())
   }
 
@@ -303,7 +301,7 @@ mod tests {
       box.right "While this goes to the right hand side" color magenta fill gray text white .w 2cm right from left.ne
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_right_center_left")?;
+    assert_diagram(diagram, "target/visual_right_center_left")?;
     Ok(())
   }
 
@@ -318,34 +316,7 @@ mod tests {
       dot top.n color green rad 4pt
       "#;
     let diagram = create_diagram(string);
-    assert_visual(diagram, "target/visual_top_down_line")?;
-    Ok(())
-  }
-
-  fn assert_visual(diagram: Diagram, prefix: &str) -> Result<()> {
-    let ref_file = format!("{}.png", prefix);
-    let last_file = format!("{}-last.png", prefix);
-    let diff_file = format!("{}-diff.png", prefix);
-
-    diagram.render_to_file(&*last_file);
-
-    if !Path::new(&ref_file).exists() {
-      fs::rename(last_file, ref_file)?;
-      if Path::new(&diff_file).exists() {
-        fs::remove_file(diff_file)?;
-      }
-    } else {
-      let output = Command::new("/usr/local/bin/compare")
-        .arg("-metric")
-        .arg("rmse")
-        .arg(&last_file)
-        .arg(ref_file)
-        .arg(&diff_file)
-        .output()?;
-      assert!(output.status.success());
-      fs::remove_file(last_file)?;
-      fs::remove_file(diff_file)?;
-    }
+    assert_diagram(diagram, "target/visual_top_down_line")?;
     Ok(())
   }
 

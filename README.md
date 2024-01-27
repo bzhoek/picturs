@@ -19,6 +19,7 @@
 12. ~Tekst centreren in een rechthoek~
 12. ~dot at edge~
 13. ~Automatisch topleft bepalen~
+14. Arc
 13. Automatisch grootte bepalen
 13. `arrow` met offset
 14. `nnw` en uren op de klok, met horizontal en vertical
