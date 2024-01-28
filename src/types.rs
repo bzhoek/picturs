@@ -2,7 +2,7 @@ use std::ops::{Add, Mul};
 
 use skia_safe::{Point, Rect, Vector};
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Edge {
   pub x: f32,
   pub y: f32,
@@ -24,7 +24,15 @@ impl Edge {
     }
   }
 
-  pub fn to_tuple(&self) -> (f32, f32) {
+  pub fn flip(&self) -> Self {
+    match self {
+      v if v.y == 0. && v.x != 0. => Self { x: -self.x, y: self.y },
+      v if v.y != 0. && v.x == 0. => Self { x: self.x, y: -self.y },
+      _ => Self { x: self.x, y: -self.y }
+    }
+  }
+
+  pub fn tuple(&self) -> (f32, f32) {
     (self.x, self.y)
   }
 
@@ -44,11 +52,11 @@ impl Edge {
     Point::new(rect.width() * -point.x, rect.height() * -point.y)
   }
 
-  pub fn is_horizontal(&self) -> bool {
+  pub fn horizontal(&self) -> bool {
     self.y == 0.
   }
 
-  pub fn is_vertical(&self) -> bool {
+  pub fn vertical(&self) -> bool {
     self.x == 0.
   }
 }

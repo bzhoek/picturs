@@ -369,19 +369,19 @@ mod tests {
     het verschil moet van topleft worden afgetrokken
      */
     let edge = Edge::new("nw");
-    let factors = edge.to_tuple();
+    let factors = edge.tuple();
     assert_eq!((-0.5, -0.5), factors);
     let nw = edge.topleft_offset(&rect);
     assert_eq!(Point::new(-0., -0.), nw);
 
     let edge = Edge::new("ne");
-    let factors = edge.to_tuple();
+    let factors = edge.tuple();
     assert_eq!((0.5, -0.5), factors);
     let ne = edge.topleft_offset(&rect);
     assert_eq!(Point::new(-10., -0.), ne);
 
     let edge = Edge::new("se");
-    let factors = edge.to_tuple();
+    let factors = edge.tuple();
     assert_eq!((0.5, 0.5), factors);
     let se = edge.topleft_offset(&rect);
     assert_eq!(Point::new(-10., -20.), se);

@@ -9,7 +9,7 @@ use log::{debug, error};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
-use skia_safe::{Color, ISize, PaintStyle, Point, Rect, Vector};
+use skia_safe::{Color, ISize, PaintStyle, Point, Rect};
 
 use crate::diagram::Node::{Container, Primitive};
 use crate::skia::Canvas;
@@ -73,24 +73,22 @@ impl<'i> Diagram<'i> {
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
     let top = DiagramParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(self.size);
-    let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), &mut self.index);
+    let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), Edge::new("sw"), &mut self.index);
     self.nodes = ast;
     self.bounds = bounds;
     top
   }
 
-  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, index: &mut HashMap<String, Rect>)
+  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, flow: Edge, index: &mut HashMap<String, Rect>)
     -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
     let mut cursor = Point::new(offset.x, offset.y);
-    let mut direction = Edge::new("none").vector();
-    let mut flow = Edge::new("sw");
+    let mut flow = flow;
 
     for pair in pairs.into_iter() {
       let result = match pair.as_rule() {
         Rule::flow => {
           flow = Edge::new(pair.as_str());
-          direction = flow.vector();
           None
         }
         Rule::container => {
@@ -106,7 +104,7 @@ impl<'i> Diagram<'i> {
           let mut inset = Point::new(used.left, used.bottom);
           inset.offset((BLOCK_PADDING, BLOCK_PADDING));
           let (nodes, inner)
-            = Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, index);
+            = Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, flow, index);
           used.top = inner.top - BLOCK_PADDING;
           used.left = inner.left - BLOCK_PADDING;
           used.bottom = inner.bottom + BLOCK_PADDING;
@@ -130,7 +128,7 @@ impl<'i> Diagram<'i> {
         Rule::arrow => Self::arrow_from_pair(index, &cursor, &flow, pair),
         Rule::line => Self::line_from_pair(index, &cursor, &flow, pair),
         Rule::move_to => Self::move_from_pair(&pair, cursor),
-        Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &direction, &pair),
+        Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &flow, &pair),
         Rule::text => Self::text_from_pair(canvas, index, &cursor, &pair),
         _ => {
           debug!("Unmatched {:?}", pair);
@@ -226,7 +224,7 @@ impl<'i> Diagram<'i> {
     })
   }
 
-  fn rectangle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Vector, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn rectangle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Edge, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Self::rule_to_string(pair, Rule::id);
     let attributes = Self::find_rule(pair, Rule::attributes).unwrap();
     let (width, height, radius) = Self::parse_dimension(&attributes);
@@ -250,20 +248,11 @@ impl<'i> Diagram<'i> {
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(40.));
     used.bottom += BLOCK_PADDING;
+    Self::adjust_topleft(flow, &mut used);
     Self::position_rect(index, &location, &mut used);
 
     if let Some(id) = id {
       index.insert(id.into(), used);
-    }
-
-    if location.is_none() {
-      let edge = match *flow {
-        v if v.x > 0. => Edge::new("w"),
-        v if v.y > 0. => Edge::new("n"),
-        _ => Edge::new("nw")
-      };
-      let offset = edge.topleft_offset(&used);
-      used.offset(offset);
     }
 
     let mut rect = used;
@@ -273,6 +262,12 @@ impl<'i> Diagram<'i> {
 
     let rectangle = Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location));
     Some((rect, rectangle))
+  }
+
+  fn adjust_topleft(flow: &Edge, used: &mut Rect) {
+    let edge = flow.flip();
+    let offset = edge.topleft_offset(used);
+    used.offset(offset);
   }
 
   fn text_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
@@ -478,9 +473,9 @@ impl<'i> Diagram<'i> {
             canvas.line_to(used.right, point.y);
           }
         } else {
-          let p1 = if from.edge.is_vertical() && to.edge.is_horizontal() {
+          let p1 = if from.edge.vertical() && to.edge.horizontal() {
             Point::new(used.left, used.bottom)
-          } else if from.edge.is_horizontal() && to.edge.is_vertical() {
+          } else if from.edge.horizontal() && to.edge.vertical() {
             Point::new(used.right, used.top)
           } else {
             Point::new(used.left, used.top)
