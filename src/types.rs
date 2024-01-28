@@ -12,13 +12,13 @@ impl Edge {
   pub fn new(string: &str) -> Self {
     let dot_removed = string.trim_start_matches('.');
     match dot_removed.to_lowercase().as_str() {
-      "n" => Self { x: 0., y: -0.5 },
+      "n" | "up" => Self { x: 0., y: -0.5 },
       "ne" => Self { x: 0.5, y: -0.5 },
-      "e" => Self { x: 0.5, y: 0. },
+      "e" | "right" => Self { x: 0.5, y: 0. },
       "se" => Self { x: 0.5, y: 0.5 },
-      "s" => Self { x: 0., y: 0.5 },
+      "s" | "down" => Self { x: 0., y: 0.5 },
       "sw" => Self { x: -0.5, y: 0.5 },
-      "w" => Self { x: -0.5, y: 0. },
+      "w" | "left" => Self { x: -0.5, y: 0. },
       "nw" => Self { x: -0.5, y: -0.5 },
       _ => Self { x: 0., y: 0. }
     }
@@ -26,6 +26,10 @@ impl Edge {
 
   pub fn to_tuple(&self) -> (f32, f32) {
     (self.x, self.y)
+  }
+
+  pub fn vector(&self) -> Vector {
+    Vector::new(self.x, self.y).mul(2.0)
   }
 
   pub fn to_edge(&self, rect: &Rect) -> Point {
@@ -92,16 +96,6 @@ impl Length {
 pub struct Displacement {
   length: Length,
   direction: Vector,
-}
-
-pub fn vector_from_string(str: &str) -> Vector {
-  match str {
-    "left" => Vector::new(-1., 0.),
-    "right" => Vector::new(1., 0.),
-    "up" => Vector::new(0., -1.),
-    "down" => Vector::new(0., 1.),
-    _ => Vector::new(0., 0.),
-  }
 }
 
 impl Displacement {

@@ -13,7 +13,7 @@ use skia_safe::{Color, ISize, PaintStyle, Point, Rect, Vector};
 
 use crate::diagram::Node::{Container, Primitive};
 use crate::skia::Canvas;
-use crate::types::{Displacement, Edge, Length, ObjectEdge, vector_from_string};
+use crate::types::{Displacement, Edge, Length, ObjectEdge};
 
 pub static A5: (i32, i32) = (798, 562);
 
@@ -83,12 +83,14 @@ impl<'i> Diagram<'i> {
     -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
     let mut cursor = Point::new(offset.x, offset.y);
-    let mut flow = vector_from_string("none");
+    let mut direction = Edge::new("none").vector();
+    let mut flow = Edge::new("sw");
 
     for pair in pairs.into_iter() {
       let result = match pair.as_rule() {
         Rule::flow => {
-          flow = vector_from_string(pair.as_str());
+          flow = Edge::new(pair.as_str());
+          direction = flow.vector();
           None
         }
         Rule::container => {
@@ -128,7 +130,7 @@ impl<'i> Diagram<'i> {
         Rule::arrow => Self::arrow_from_pair(index, &cursor, &flow, pair),
         Rule::line => Self::line_from_pair(index, &cursor, &flow, pair),
         Rule::move_to => Self::move_from_pair(&pair, cursor),
-        Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &flow, &pair),
+        Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &direction, &pair),
         Rule::text => Self::text_from_pair(canvas, index, &cursor, &pair),
         _ => {
           debug!("Unmatched {:?}", pair);
@@ -138,13 +140,15 @@ impl<'i> Diagram<'i> {
 
       if let Some((rect, node)) = result {
         ast.push(node);
-        Self::update_bounds(&mut bounds, &mut cursor, rect, &flow);
+        Self::update_bounds(&mut bounds, rect);
+        let point = flow.to_edge(&rect);
+        cursor.set_abs(point);
       }
     }
     (ast, bounds)
   }
 
-  fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, cursor: &Point, flow: &Vector, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, cursor: &Point, flow: &Edge, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Self::rule_to_string(&pair, Rule::id);
 
     let (source, displacement, target) = Self::source_displacement_target_from_pair(&pair);
@@ -167,20 +171,16 @@ impl<'i> Diagram<'i> {
     (source, distance, target)
   }
 
-  fn displace_from_start(start: Point, displacement: &Option<Displacement>, flow: &Vector) -> Point {
+  fn displace_from_start(start: Point, displacement: &Option<Displacement>, flow: &Edge) -> Point {
     displacement.as_ref()
       .map(|displacement| start.add(displacement.offset()))
       .unwrap_or_else(|| {
-        let vector = match flow {
-          &v if v.x > 0. => vector_from_string("right"),
-          _ => vector_from_string("down")
-        };
-        let distance = Displacement::new(2., "cm".into(), vector);
+        let distance = Displacement::new(2., "cm".into(), flow.vector());
         start.add(distance.offset())
       })
   }
 
-  fn line_from_pair<'a>(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Vector, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn line_from_pair<'a>(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Edge, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Self::rule_to_string(&pair, Rule::id);
     let (start, distance, end) = Self::points_from_pair(index, cursor, flow, &pair);
     let (rect, used) = Self::rect_from_points(start, &distance, end);
@@ -188,7 +188,7 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn points_from_pair(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Vector, pair: &Pair<Rule>) -> (Point, Option<Displacement>, Point) {
+  fn points_from_pair(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Edge, pair: &Pair<Rule>) -> (Point, Option<Displacement>, Point) {
     let (source, displacement, target) = Self::source_displacement_target_from_pair(pair);
     let start = Self::point_index(index, &source, &[])
       .unwrap_or(*cursor);
@@ -257,7 +257,12 @@ impl<'i> Diagram<'i> {
     }
 
     if location.is_none() {
-      let offset = Self::offset_for_flow(flow, &mut used);
+      let edge = match *flow {
+        v if v.x > 0. => Edge::new("w"),
+        v if v.y > 0. => Edge::new("n"),
+        _ => Edge::new("nw")
+      };
+      let offset = edge.topleft_offset(&used);
       used.offset(offset);
     }
 
@@ -268,15 +273,6 @@ impl<'i> Diagram<'i> {
 
     let rectangle = Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location));
     Some((rect, rectangle))
-  }
-
-  fn offset_for_flow(flow: &Vector, used: &mut Rect) -> Point {
-    let edge = match *flow {
-      v if v.x > 0. => Edge::new("w"),
-      v if v.y > 0. => Edge::new("n"),
-      _ => Edge::new("nw")
-    };
-    edge.topleft_offset(used)
   }
 
   fn text_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
@@ -300,20 +296,11 @@ impl<'i> Diagram<'i> {
     Some((used, text))
   }
 
-  fn update_bounds(bounds: &mut Rect, cursor: &mut Point, rect: Rect, flow: &Vector) {
+  fn update_bounds(bounds: &mut Rect, rect: Rect) {
     bounds.top = bounds.top.min(rect.top);
     bounds.left = bounds.left.min(rect.left);
     bounds.right = bounds.right.max(rect.right);
     bounds.bottom = bounds.bottom.max(rect.bottom);
-
-    let edge = match *flow {
-      v if v.x > 0. => Edge::new("e"),
-      v if v.y > 0. => Edge::new("s"),
-      _ => Edge::new("sw")
-    };
-    let point = edge.to_edge(&rect);
-    cursor.x = point.x;
-    cursor.y = point.y;
   }
 
   fn parse_dimension(attributes: &Pair<Rule>) -> (f32, Option<f32>, Radius) {
@@ -625,8 +612,8 @@ impl<'i> Diagram<'i> {
     let unit = Self::rule_to_string(&pair, Rule::unit)
       .unwrap();
     let direction = Self::rule_to_string(&pair, Rule::direction).unwrap();
-    let vector = vector_from_string(direction);
-    Displacement::new(length as f32, unit.into(), vector)
+    let edge = Edge::new(direction);
+    Displacement::new(length as f32, unit.into(), edge.vector())
   }
 
   fn location_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
