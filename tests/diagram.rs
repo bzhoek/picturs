@@ -324,12 +324,24 @@ mod tests {
     let center = rect.center();
     assert_eq!(Point::new(90., 140.), center);
 
-    let nw = edge.to_edge(&rect);
+    let nw = edge.edge_point(&rect);
     assert_eq!(Point::new(40., 40.), nw);
 
     let edge = Edge::new("se");
-    let se = edge.to_edge(&rect);
+    let se = edge.edge_point(&rect);
     assert_eq!(Point::new(140., 240.), se);
+  }
+
+  #[test]
+  fn to_edge_from_negative() {
+    let rect = Rect { left: 0.0, top: -30.0, right: 360.0, bottom: 30.0 };
+
+    let edge = Edge::new("sw");
+    let center = rect.center();
+    assert_eq!(Point::new(180., 0.), center);
+
+    let nw = edge.edge_point(&rect);
+    assert_eq!(Point::new(0., 30.), nw);
   }
 
   #[test]

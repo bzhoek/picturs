@@ -5,7 +5,7 @@ use std::error::Error;
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
-use log::{debug, error};
+use log::{debug, error, info};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
@@ -101,15 +101,16 @@ impl<'i> Diagram<'i> {
           let padding = Conversion::padding(&attributes).unwrap_or(BLOCK_PADDING);
           let title = Conversion::rule_to_string(&attributes, Rule::inner);
           let location = Conversion::location_from_pair(&attributes);
-          let flow = Conversion::flow(&attributes).unwrap_or(flow);
 
           let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
           Self::position_rect(index, &location, &mut used);
 
           let mut inset = Point::new(used.left, used.bottom);
           inset.offset((padding, padding));
-          let (nodes, inner)
-            = Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, flow, index);
+          let (nodes, inner) = {
+            let flow = Conversion::flow(&attributes).unwrap_or(flow);
+            Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, flow, index)
+          };
           used.top = inner.top - padding;
           used.left = inner.left - padding;
           used.bottom = inner.bottom + padding;
@@ -145,8 +146,8 @@ impl<'i> Diagram<'i> {
       if let Some((rect, node)) = result {
         ast.push(node);
         Self::update_bounds(&mut bounds, rect);
-        let point = flow.to_edge(&rect);
-        cursor.set_abs(point);
+        let point = flow.edge_point(&rect);
+        cursor = point
       }
     }
     (ast, bounds)
@@ -394,7 +395,7 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn point_from_rect(rect: &Rect, edge: &Edge, distances: &[Displacement]) -> Point {
-    let point = edge.to_edge(rect);
+    let point = edge.edge_point(rect);
     for distance in distances.iter() {
       let _ = point.add(distance.offset());
     }
@@ -412,7 +413,7 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn offset_from_rect(rect: &Rect, edge: &Edge, distances: &[Displacement]) -> Rect {
-    let point = edge.to_edge(rect);
+    let point = edge.edge_point(rect);
     let mut rect = Rect::from_xywh(point.x, point.y, rect.width(), rect.height());
     Self::offset_rect(&mut rect, distances);
     rect
@@ -451,9 +452,10 @@ impl<'i> Diagram<'i> {
     None
   }
 
-  pub fn render_to_file(&self, filepath: &str) {
+  pub fn render_to_file(&mut self, filepath: &str) {
     let mut canvas = Canvas::new(self.size);
     canvas.translate(-self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
+    // Self::final_placement(&mut self.nodes);
     self.render_to_canvas(&mut canvas, &self.nodes);
     canvas.write_png(filepath);
   }
@@ -478,6 +480,19 @@ impl<'i> Diagram<'i> {
         }
         Primitive(_id, _, used, color, shape) => {
           self.render_shape(canvas, used, color, shape);
+        }
+      }
+    }
+  }
+  fn final_placement(nodes: &mut [Node]) {
+    for node in nodes.iter_mut() {
+      match node {
+        Container(_id, radius, title, _rect, used, nodes) => {
+          used.top += 16.;
+          Self::final_placement(nodes);
+        }
+        Primitive(_id, _, used, color, shape) => {
+          used.top += 16.;
         }
       }
     }

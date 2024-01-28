@@ -40,7 +40,7 @@ impl Edge {
     Vector::new(self.x, self.y).mul(2.0)
   }
 
-  pub fn to_edge(&self, rect: &Rect) -> Point {
+  pub fn edge_point(&self, rect: &Rect) -> Point {
     let mut point = rect.center();
     point.offset((self.x * rect.width(), self.y * rect.height()));
     point
@@ -49,7 +49,7 @@ impl Edge {
   pub fn topleft_offset(&self, rect: &Rect) -> Point {
     let point = Point::new(self.x, self.y);
     let point = point.add(Vector::new(0.5, 0.5));
-    Point::new(rect.width() * -point.x, rect.height() * -point.y)
+    Point::new(-point.x * rect.width(), -point.y * rect.height())
   }
 
   pub fn horizontal(&self) -> bool {

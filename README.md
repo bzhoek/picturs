@@ -32,6 +32,18 @@
 18. Oval shape
 18. File shape
 
+De topleft wordt het nieuwe centrum voor een rechter rij, waardoor er overlap ontstaat. De oplossing is om de container te positioneren nadat de inhoud is bepaald en de grootte bekend is.
+
+Daarvoor moet de inhoud van de container relatief gepositioneerd worden.
+
+Dat heeft wel gevolgen voor lookups, omdat de positie niet meer absoluut bekend is. 
+
+Een tweede pass lost het probleem niet op, omdat hier element relatief geplaatst kunnen zijn die weer gevolgen hebben voor andere elementen.
+
+Een tweede pass kan werken als alleen wordt verwezen naar items die al hun absolute positie hebben.
+
+Het makkelijkste is misschien om top alignment te houden.
+
 `.nw 1cm right 2cm down from left.ne`
 `.nw=left.ne 1cr 2cd`
 

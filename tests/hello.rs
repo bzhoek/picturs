@@ -49,12 +49,12 @@ mod tests {
   #[test]
   fn visual_box_box_box() -> anyhow::Result<()> {
     let string = r#"
-      box pd 0 right {
+      box pd 0 right color green{
         box pd 0
         box pd 0
         box pd 0
       }
-      // box pd 0 right {
+      // box pd 0 right color blue {
       //   box pd 0
       //   box pd 0
       //   box pd 0
