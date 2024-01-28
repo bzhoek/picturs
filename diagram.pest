@@ -2,7 +2,7 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
 picture = _{ SOI ~ statements* ~ EOI }
 statements = _{ comment | container | shape }
-comment = @{ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ flow | move_to | dot | arrow | line | rectangle | circle | text }
 flow = { direction }
 
@@ -10,7 +10,7 @@ container = { "box" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
 circle = { "circle" ~ identified? ~ attributes }
 attributes = { attribute* }
-attribute = { string | color | fill | width | height | radius | location | text_color }
+attribute = { string | color | fill | width | height | padding | radius | location | text_color | flow }
 text = { "text" ~ identified? ~ text_attributes }
 text_attributes = { text_attribute* }
 text_attribute = { string | color | fill | width | location }
@@ -23,9 +23,10 @@ id = @{ ASCII_ALPHANUMERIC* }
 radius = { ("rd" | "rad" | "radius") ~ size }
 width = { ("wd" | "wid" | "width") ~ size }
 height = { ("ht" | "height") ~ size }
+padding = { ("pd" | "padding") ~ size }
 
 location = { edge ~ displacement* ~ "from" ~ object_edge }
-size = _{ length ~ unit }
+size = _{ length ~ unit? }
 displacement = { length ~ unit ~ direction }
 length = { ASCII_DIGIT* }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }

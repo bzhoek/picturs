@@ -79,6 +79,15 @@ impl Conversion {
     Rules::dig_rule(pair, rule).map(Self::pair_to_length)
   }
 
+  fn pair_to_length(pair: Pair<Rule>) -> Length {
+    let length = Rules::find_rule(&pair, Rule::length)
+      .and_then(|p| p.as_str().parse::<usize>().ok())
+      .unwrap();
+    let unit = Self::rule_to_string(&pair, Rule::unit)
+      .unwrap_or("px");
+    Length::new(length as f32, unit.into())
+  }
+
   pub fn parse_dimension(attributes: &Pair<Rule>) -> (f32, Option<f32>, Radius) {
     let width = Conversion::rule_to_length(attributes, Rule::width)
       .map(|length| length.pixels())
@@ -97,13 +106,8 @@ impl Conversion {
     Conversion::rule_to_length(attributes, Rule::width).map(|length| length.pixels())
   }
 
-  fn pair_to_length(pair: Pair<Rule>) -> Length {
-    let length = Rules::find_rule(&pair, Rule::length)
-      .and_then(|p| p.as_str().parse::<usize>().ok())
-      .unwrap();
-    let unit = Self::rule_to_string(&pair, Rule::unit)
-      .unwrap();
-    Length::new(length as f32, unit.into())
+  pub fn padding(attributes: &Pair<Rule>) -> Option<f32> {
+    Conversion::rule_to_length(attributes, Rule::padding).map(|length| length.pixels())
   }
 
   pub fn object_edge_from_pair(pair: &Pair<Rule>) -> Option<ObjectEdge> {
@@ -116,10 +120,24 @@ impl Conversion {
     ObjectEdge::new(id, edge)
   }
 
+  pub fn flow(pair: &Pair<Rule>) -> Option<Edge> {
+    Rules::dig_rule(pair, Rule::flow)
+      .map(|pair| Edge::new(pair.as_str()))
+  }
+
   pub fn rule_to_radius(pair: &Pair<Rule>) -> Radius {
     Rules::dig_rule(pair, Rule::radius)
       .map(Self::pair_to_radius)
       .unwrap_or_default()
+  }
+
+  fn pair_to_radius(pair: Pair<Rule>) -> Radius {
+    let length = Rules::find_rule(&pair, Rule::length)
+      .and_then(|p| p.as_str().parse::<usize>().ok())
+      .unwrap();
+    let unit = Self::rule_to_string(&pair, Rule::unit)
+      .unwrap();
+    Radius::new(length as f32, unit.into())
   }
 
   fn pair_to_displacement(pair: Pair<Rule>) -> Displacement {
@@ -150,15 +168,6 @@ impl Conversion {
           .map(|inner| Self::pair_to_displacement(inner))
           .collect::<Vec<_>>()
       })
-  }
-
-  fn pair_to_radius(pair: Pair<Rule>) -> Radius {
-    let length = Rules::find_rule(&pair, Rule::length)
-      .and_then(|p| p.as_str().parse::<usize>().ok())
-      .unwrap();
-    let unit = Self::rule_to_string(&pair, Rule::unit)
-      .unwrap();
-    Radius::new(length as f32, unit.into())
   }
 
   pub fn location_from_pair(pair: &Pair<Rule>) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {

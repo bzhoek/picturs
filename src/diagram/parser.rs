@@ -98,20 +98,22 @@ impl<'i> Diagram<'i> {
           let id = Conversion::rule_to_string(&pair, Rule::id);
           let attributes = Rules::find_rule(&pair, Rule::attributes).unwrap();
           let (_width, _height, radius) = Conversion::parse_dimension(&attributes);
+          let padding = Conversion::padding(&attributes).unwrap_or(BLOCK_PADDING);
           let title = Conversion::rule_to_string(&attributes, Rule::inner);
           let location = Conversion::location_from_pair(&attributes);
+          let flow = Conversion::flow(&attributes).unwrap_or(flow);
 
           let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
           Self::position_rect(index, &location, &mut used);
 
           let mut inset = Point::new(used.left, used.bottom);
-          inset.offset((BLOCK_PADDING, BLOCK_PADDING));
+          inset.offset((padding, padding));
           let (nodes, inner)
             = Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, flow, index);
-          used.top = inner.top - BLOCK_PADDING;
-          used.left = inner.left - BLOCK_PADDING;
-          used.bottom = inner.bottom + BLOCK_PADDING;
-          used.right = inner.right + 2. * BLOCK_PADDING;
+          used.top = inner.top - padding;
+          used.left = inner.left - padding;
+          used.bottom = inner.bottom + padding;
+          used.right = inner.right + 2. * padding;
 
           if let Some(title) = title {
             let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
@@ -124,7 +126,7 @@ impl<'i> Diagram<'i> {
           }
 
           let mut rect = used;
-          rect.bottom += BLOCK_PADDING;
+          rect.bottom += padding;
           Some((rect, Container(id, radius, title, rect, used, nodes)))
         }
         Rule::dot => Self::dot_from_pair(index, &pair),
@@ -232,6 +234,7 @@ impl<'i> Diagram<'i> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
     let (width, height, radius) = Conversion::parse_dimension(&attributes);
+    let padding = Conversion::padding(&attributes).unwrap_or(BLOCK_PADDING);
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
     let location = Conversion::location_from_pair(&attributes);
@@ -248,7 +251,7 @@ impl<'i> Diagram<'i> {
     });
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(HEIGHT));
-    used.bottom += BLOCK_PADDING;
+    used.bottom += padding;
     Self::adjust_topleft(flow, &mut used);
     Self::position_rect(index, &location, &mut used);
 
@@ -258,7 +261,7 @@ impl<'i> Diagram<'i> {
 
     let mut rect = used;
     if flow.x <= 0. {
-      rect.bottom += BLOCK_PADDING;
+      rect.bottom += padding;
     }
 
     let rectangle = Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location));

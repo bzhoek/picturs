@@ -68,6 +68,7 @@ pub enum Unit {
   Pc,
   Cm,
   In,
+  Px,
 }
 
 impl From<&str> for Unit {
@@ -77,6 +78,7 @@ impl From<&str> for Unit {
       "in" => Unit::In,
       "pc" => Unit::Pc,
       "pt" => Unit::Pt,
+      "px" => Unit::Px,
       _ => panic!("unknown unit {}", item)
     }
   }
@@ -99,6 +101,7 @@ impl Length {
       Unit::In => self.length * 118.,
       Unit::Pc => self.length * 16.,
       Unit::Pt => self.length * 1.3333,
+      _ => self.length * 1.,
     }
   }
 }

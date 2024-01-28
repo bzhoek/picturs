@@ -49,9 +49,16 @@ mod tests {
   #[test]
   fn visual_box_box_box() -> anyhow::Result<()> {
     let string = r#"
-      box
-      box
-      box
+      box pd 0 right {
+        box pd 0
+        box pd 0
+        box pd 0
+      }
+      // box pd 0 right {
+      //   box pd 0
+      //   box pd 0
+      //   box pd 0
+      // }
       "#;
     let diagram = create_diagram(string);
     dbg!(&diagram);
