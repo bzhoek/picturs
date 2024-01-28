@@ -5,12 +5,12 @@ mod tests {
   use anyhow::Result;
   use skia_safe::{Color, Point, Rect, Vector};
 
-  use picturs::diagram::{A5, Diagram, Node, Paragraph, Radius};
-  use picturs::diagram::Node::{Container, Primitive};
-  use picturs::diagram::Shape::Rectangle;
+  use picturs::diagram::parser::{A5, Diagram, Node, Paragraph, Radius};
+  use picturs::diagram::parser::Node::{Container, Primitive};
+  use picturs::diagram::parser::Shape::Rectangle;
+  use picturs::diagram::types::{Displacement, Edge, ObjectEdge, Unit};
   use picturs::init_logging;
   use picturs::test::assert_diagram;
-  use picturs::types::{Displacement, Edge, ObjectEdge, Unit};
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
@@ -21,7 +21,7 @@ mod tests {
     diagram
   }
 
-  fn rectangle(title: Option<(&str, f32)>) -> picturs::diagram::Shape {
+  fn rectangle(title: Option<(&str, f32)>) -> picturs::diagram::parser::Shape {
     let paragraph = title.map(|(title, width)| {
       Paragraph { text: title, widths: vec!(width), height: 17. }
     });

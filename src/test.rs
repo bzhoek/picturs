@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-use crate::diagram::Diagram;
+use crate::diagram::parser::Diagram;
 use crate::skia::Canvas;
 
 pub fn assert_canvas(mut canvas: Canvas, prefix: &str) -> anyhow::Result<()> {

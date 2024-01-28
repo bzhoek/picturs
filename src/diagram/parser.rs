@@ -11,9 +11,9 @@ use pest::Parser;
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, PaintStyle, Point, Rect};
 
-use crate::diagram::Node::{Container, Primitive};
+use crate::diagram::parser::Node::{Container, Primitive};
 use crate::skia::Canvas;
-use crate::types::{Displacement, Edge, Length, ObjectEdge};
+use crate::diagram::types::{Displacement, Edge, Length, ObjectEdge};
 
 pub static A5: (i32, i32) = (798, 562);
 

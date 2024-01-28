@@ -4,9 +4,8 @@ use log::warn;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 
-pub mod diagram;
 pub mod skia;
-pub mod types;
+pub mod diagram;
 pub mod test;
 
 #[derive(Parser)]
