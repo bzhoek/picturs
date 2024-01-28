@@ -1,3 +1,5 @@
+mod common;
+
 #[cfg(test)]
 mod tests {
   use std::ops::{Mul, Sub};
@@ -9,17 +11,10 @@ mod tests {
   use picturs::diagram::parser::Node::{Container, Primitive};
   use picturs::diagram::parser::Shape::Rectangle;
   use picturs::diagram::types::{Displacement, Edge, ObjectEdge, Unit};
-  use picturs::init_logging;
   use picturs::test::assert_diagram;
+  use crate::common::create_diagram;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
-
-  fn create_diagram(string: &str) -> Diagram {
-    init_logging();
-    let mut diagram = Diagram::inset(A5, (32., 32.));
-    diagram.parse_string(string);
-    diagram
-  }
 
   fn rectangle(title: Option<(&str, f32)>) -> picturs::diagram::parser::Shape {
     let paragraph = title.map(|(title, width)| {
@@ -35,8 +30,8 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        Rect::from_xywh(0., 0., 120., 56.),
-        Rect::from_xywh(0., 0., 120., 48.),
+        Rect::from_xywh(0., 0., 120., 76.),
+        Rect::from_xywh(0., 0., 120., 68.),
         Color::BLUE,
         rectangle(None)),
     ], diagram.nodes);
@@ -49,8 +44,8 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(Some("first"),
-        Rect::from_xywh(0., 0., 120., 56.),
-        Rect::from_xywh(0., 0., 120., 48.),
+        Rect::from_xywh(0., 0., 120., 76.),
+        Rect::from_xywh(0., 0., 120., 68.),
         Color::BLUE,
         rectangle(Some(("title", 31.)))),
     ], diagram.nodes);
@@ -63,8 +58,8 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        Rect::from_xywh(0., 0., 120., 56.),
-        Rect::from_xywh(0., 0., 120., 48.),
+        Rect::from_xywh(0., 0., 120., 76.),
+        Rect::from_xywh(0., 0., 120., 68.),
         Color::BLUE,
         rectangle(Some(("title", 31.)))),
     ], diagram.nodes);
@@ -78,13 +73,13 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        Rect::from_xywh(0., 0., 120., 56.),
-        Rect::from_xywh(0., 0., 120., 48.),
+        Rect::from_xywh(0., 0., 120., 76.),
+        Rect::from_xywh(0., 0., 120., 68.),
         Color::BLUE,
         rectangle(None)),
       Primitive(None,
-        Rect::from_xywh(0., 56., 120., 56.),
-        Rect::from_xywh(0., 56., 120., 48.),
+        Rect::from_xywh(0., 76., 120., 76.),
+        Rect::from_xywh(0., 76., 120., 68.),
         Color::BLUE,
         rectangle(None)),
     ], diagram.nodes);
@@ -97,12 +92,12 @@ mod tests {
 
     assert_eq!(vec![
       Container(Some("parent"), Radius::default(), None,
-        Rect::from_xywh(0., 0., 144., 80.),
-        Rect::from_xywh(0., 0., 144., 72.),
+        Rect::from_xywh(0., 0., 144., 100.),
+        Rect::from_xywh(0., 0., 144., 92.),
         vec![
           Primitive(None,
-            Rect::from_xywh(8., 8., 120., 56.),
-            Rect::from_xywh(8., 8., 120., 48.),
+            Rect::from_xywh(8., 8., 120., 76.),
+            Rect::from_xywh(8., 8., 120., 68.),
             Color::BLUE,
             rectangle(None))
         ])
@@ -116,12 +111,12 @@ mod tests {
 
     assert_eq!(vec![
       Container(None, Radius::default(), Some("parent"),
-        Rect::from_xywh(0., 0., 144., 93.),
-        Rect::from_xywh(0., 0., 144., 85.),
+        Rect::from_xywh(0., 0., 144., 113.),
+        Rect::from_xywh(0., 0., 144., 105.),
         vec![
           Primitive(None,
-            Rect::from_xywh(8., 8., 120., 56.),
-            Rect::from_xywh(8., 8., 120., 48.),
+            Rect::from_xywh(8., 8., 120., 76.),
+            Rect::from_xywh(8., 8., 120., 68.),
             Color::BLUE,
             rectangle(Some(("child", 40.))))
         ])
@@ -155,31 +150,6 @@ mod tests {
     assert_eq!(45., angle.to_degrees())
   }
 
-  #[test]
-  fn visual_hello_world_right() -> Result<()> {
-    let string = r#"
-      right
-      line
-      box "Hello"
-      arrow
-      "#;
-    let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_hello_world_right")?;
-    Ok(())
-  }
-
-  #[test]
-  fn visual_hello_world_down() -> Result<()> {
-    let string = r#"
-      down
-      line
-      box "Hello"
-      arrow
-      "#;
-    let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_hello_world_down")?;
-    Ok(())
-  }
 
   #[test]
   fn visual_double_containers() -> Result<()> {
@@ -288,11 +258,11 @@ mod tests {
     let diagram = create_diagram(string);
 
     let left = diagram.used_rect("left").unwrap();
-    let expected = Rect { left: 0., top: 0., right: 120., bottom: 59. };
+    let expected = Rect { left: 0., top: 0., right: 120., bottom: 68. };
     assert_eq!(&expected, left);
 
     let right = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(196., 0., 120., 59.);
+    let expected = Rect::from_xywh(196., 0., 120., 68.);
     assert_eq!(&expected, right);
   }
 
@@ -414,7 +384,7 @@ mod tests {
     diagram.parse_string(string);
 
     let rect = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(196., 0., 120., 59.);
+    let expected = Rect::from_xywh(196., 0., 120., 68.);
     assert_eq!(&expected, rect);
 
     let distances = vec![
@@ -423,17 +393,17 @@ mod tests {
     ];
 
     let left = diagram.used_rect("left").unwrap();
-    let expected = Rect::from_xywh(0., 0., 120., 59.);
+    let expected = Rect::from_xywh(0., 0., 120., 68.);
     assert_eq!(&expected, left);
 
     let edge = ObjectEdge::new("left", "ne"); // 32 + 120 + (2 * 38) = 228
     let shifted = diagram.offset_from(&edge, &distances).unwrap();
-    let expected = Rect::from_xywh(196., 38., 120., 59.);
+    let expected = Rect::from_xywh(196., 38., 120., 68.);
     assert_eq!(expected, shifted);
 
     diagram.node_mut("right", distances);
     let rect = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(272., 38., 120., 59.);
+    let expected = Rect::from_xywh(272., 38., 120., 68.);
     assert_eq!(&expected, rect);
   }
 
@@ -457,8 +427,8 @@ mod tests {
   #[test]
   fn test_primitives_mut() {
     let mut primitive = Primitive(None,
-      Rect::from_xywh(0., 0., 120., 56.),
-      Rect::from_xywh(0., 0., 120., 48.),
+      Rect::from_xywh(0., 0., 120., 76.),
+      Rect::from_xywh(0., 0., 120., 68.),
       Color::BLACK,
       rectangle(None));
 
