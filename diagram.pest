@@ -3,7 +3,8 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 picture = _{ SOI ~ statements* ~ EOI }
 statements = _{ comment | container | shape }
 comment = @{ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
-shape = _{ move_to | dot | arrow | line | rectangle | text }
+shape = _{ flow | move_to | dot | arrow | line | rectangle | text }
+flow = { direction }
 
 container = { "box" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }

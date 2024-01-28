@@ -158,9 +158,10 @@ mod tests {
   #[test]
   fn visual_hello_world() -> Result<()> {
     let string = r#"
+      right
       line
-      # box "Hello," "World!"
-      # arrow
+      box "Hello"
+      arrow
       "#;
     let diagram = create_diagram(string);
     assert_diagram(diagram, "target/visual_hello_world")?;
