@@ -67,12 +67,14 @@ pub enum Unit {
   Pt,
   Pc,
   Cm,
+  In,
 }
 
 impl From<&str> for Unit {
   fn from(item: &str) -> Self {
     match item {
       "cm" => Unit::Cm,
+      "in" => Unit::In,
       "pc" => Unit::Pc,
       "pt" => Unit::Pt,
       _ => panic!("unknown unit {}", item)
@@ -94,6 +96,7 @@ impl Length {
   pub fn pixels(&self) -> f32 {
     match self.unit {
       Unit::Cm => self.length * 38.,
+      Unit::In => self.length * 118.,
       Unit::Pc => self.length * 16.,
       Unit::Pt => self.length * 1.3333,
     }
