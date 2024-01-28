@@ -83,7 +83,7 @@ impl<'i> Diagram<'i> {
     -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
     let mut cursor = Point::new(offset.x, offset.y);
-    let mut flow = vector_from_string("down");
+    let mut flow = vector_from_string("none");
 
     for pair in pairs.into_iter() {
       let result = match pair.as_rule() {
@@ -125,8 +125,8 @@ impl<'i> Diagram<'i> {
           Some((rect, Container(id, radius, title, rect, used, nodes)))
         }
         Rule::dot => Self::dot_from_pair(index, &pair),
-        Rule::arrow => Self::arrow_from_pair(index, &cursor, pair),
-        Rule::line => Self::line_from_pair(index, &cursor, pair),
+        Rule::arrow => Self::arrow_from_pair(index, &cursor, &flow, pair),
+        Rule::line => Self::line_from_pair(index, &cursor, &flow, pair),
         Rule::move_to => Self::move_from_pair(&pair, cursor),
         Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &flow, &pair),
         Rule::text => Self::text_from_pair(canvas, index, &cursor, &pair),
@@ -144,14 +144,14 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, cursor: &Point, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, cursor: &Point, flow: &Vector, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Self::rule_to_string(&pair, Rule::id);
 
     let (source, displacement, target) = Self::source_displacement_target_from_pair(&pair);
     let start = Self::point_index(index, &source, &[])
       .unwrap_or(*cursor);
     let end = Self::point_index(index, &target, &[])
-      .unwrap_or(Self::displace_from_start(start, &displacement));
+      .unwrap_or(Self::displace_from_start(start, &displacement, flow));
 
     let (rect, used) = Self::rect_from_points(start, &displacement, end);
     let node = Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(id, source, displacement, target));
@@ -167,30 +167,33 @@ impl<'i> Diagram<'i> {
     (source, distance, target)
   }
 
-  fn displace_from_start(start: Point, displacement: &Option<Displacement>) -> Point {
+  fn displace_from_start(start: Point, displacement: &Option<Displacement>, flow: &Vector) -> Point {
     displacement.as_ref()
       .map(|displacement| start.add(displacement.offset()))
       .unwrap_or_else(|| {
-        let vector = vector_from_string("right");
+        let vector = match flow {
+          &v if v.x > 0. => vector_from_string("right"),
+          _ => vector_from_string("down")
+        };
         let distance = Displacement::new(2., "cm".into(), vector);
         start.add(distance.offset())
       })
   }
 
-  fn line_from_pair<'a>(index: &mut HashMap<String, Rect>, cursor: &Point, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn line_from_pair<'a>(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Vector, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Self::rule_to_string(&pair, Rule::id);
-    let (start, distance, end) = Self::points_from_pair(index, cursor, &pair);
+    let (start, distance, end) = Self::points_from_pair(index, cursor, flow, &pair);
     let (rect, used) = Self::rect_from_points(start, &distance, end);
     let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, start, distance, end));
     Some((used, node))
   }
 
-  fn points_from_pair(index: &mut HashMap<String, Rect>, cursor: &Point, pair: &Pair<Rule>) -> (Point, Option<Displacement>, Point) {
+  fn points_from_pair(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Vector, pair: &Pair<Rule>) -> (Point, Option<Displacement>, Point) {
     let (source, displacement, target) = Self::source_displacement_target_from_pair(pair);
     let start = Self::point_index(index, &source, &[])
       .unwrap_or(*cursor);
     let end = Self::point_index(index, &target, &[])
-      .unwrap_or(Self::displace_from_start(start, &displacement));
+      .unwrap_or(Self::displace_from_start(start, &displacement, flow));
     (start, displacement, end)
   }
 
@@ -253,17 +256,27 @@ impl<'i> Diagram<'i> {
       index.insert(id.into(), used);
     }
 
-    let mut rect = used;
-    rect.bottom += BLOCK_PADDING;
-
-    if location.is_none() && flow.x > 0. {
-      let edge = Edge::new("w");
-      let offset = edge.topleft_offset(&used);
+    if location.is_none() {
+      let offset = Self::offset_for_flow(flow, &mut used);
       used.offset(offset);
+    }
+
+    let mut rect = used;
+    if flow.x <= 0. {
+      rect.bottom += BLOCK_PADDING;
     }
 
     let rectangle = Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location));
     Some((rect, rectangle))
+  }
+
+  fn offset_for_flow(flow: &Vector, used: &mut Rect) -> Point {
+    let edge = match *flow {
+      v if v.x > 0. => Edge::new("w"),
+      v if v.y > 0. => Edge::new("n"),
+      _ => Edge::new("nw")
+    };
+    edge.topleft_offset(used)
   }
 
   fn text_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
@@ -292,12 +305,15 @@ impl<'i> Diagram<'i> {
     bounds.left = bounds.left.min(rect.left);
     bounds.right = bounds.right.max(rect.right);
     bounds.bottom = bounds.bottom.max(rect.bottom);
-    if flow.x > 0. {
-      cursor.x = rect.right;
-    } else {
-      cursor.x = rect.left;
-      cursor.y = rect.bottom;
-    }
+
+    let edge = match *flow {
+      v if v.x > 0. => Edge::new("e"),
+      v if v.y > 0. => Edge::new("s"),
+      _ => Edge::new("sw")
+    };
+    let point = edge.to_edge(&rect);
+    cursor.x = point.x;
+    cursor.y = point.y;
   }
 
   fn parse_dimension(attributes: &Pair<Rule>) -> (f32, Option<f32>, Radius) {
@@ -423,7 +439,7 @@ impl<'i> Diagram<'i> {
 
   pub fn render_to_file(&self, filepath: &str) {
     let mut canvas = Canvas::new(self.size);
-    canvas.translate(self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
+    canvas.translate(-self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
     self.render_to_canvas(&mut canvas, &self.nodes);
     canvas.write_png(filepath);
   }

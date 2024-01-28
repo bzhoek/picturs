@@ -156,7 +156,7 @@ mod tests {
   }
 
   #[test]
-  fn visual_hello_world() -> Result<()> {
+  fn visual_hello_world_right() -> Result<()> {
     let string = r#"
       right
       line
@@ -164,7 +164,20 @@ mod tests {
       arrow
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_hello_world")?;
+    assert_diagram(diagram, "target/visual_hello_world_right")?;
+    Ok(())
+  }
+
+  #[test]
+  fn visual_hello_world_down() -> Result<()> {
+    let string = r#"
+      down
+      line
+      box "Hello"
+      arrow
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram(diagram, "target/visual_hello_world_down")?;
     Ok(())
   }
 

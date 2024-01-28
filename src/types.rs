@@ -99,7 +99,8 @@ pub fn vector_from_string(str: &str) -> Vector {
     "left" => Vector::new(-1., 0.),
     "right" => Vector::new(1., 0.),
     "up" => Vector::new(0., -1.),
-    _ => Vector::new(0., 1.),
+    "down" => Vector::new(0., 1.),
+    _ => Vector::new(0., 0.),
   }
 }
 
