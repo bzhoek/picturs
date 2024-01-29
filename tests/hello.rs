@@ -66,10 +66,10 @@ mod tests {
   }
 
   #[test]
-  fn visual_config() -> anyhow::Result<()> {
+  fn visual_direction_start_end() -> anyhow::Result<()> {
     let string = r#"
       config pd 0 ht 32 wd 64
-      box topright color green{
+      box topright color green {
         box "Layout Direction" wd 160
         box ".start"
         box ".end"
@@ -96,7 +96,7 @@ mod tests {
       }
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_config")?;
+    assert_diagram(diagram, "target/visual_direction_start_end")?;
     Ok(())
   }
 }

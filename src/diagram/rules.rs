@@ -5,6 +5,11 @@ use crate::diagram::parser::Rule;
 pub struct Rules;
 
 impl Rules {
+
+  pub fn get_rule<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Pair<'a, Rule> {
+    Self::find_rule(pair, rule).unwrap()
+  }
+
   pub fn find_rule<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<Pair<'a, Rule>> {
     pair.clone().into_inner()
       .find(|p| p.as_rule() == rule)

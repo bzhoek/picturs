@@ -76,7 +76,8 @@ impl Conversion {
   }
 
   pub fn rule_to_length(pair: &Pair<Rule>, rule: Rule) -> Option<Length> {
-    Rules::dig_rule(pair, rule).map(Self::pair_to_length)
+    Rules::dig_rule(pair, rule)
+      .map(Self::pair_to_length)
   }
 
   fn pair_to_length(pair: Pair<Rule>) -> Length {
@@ -88,13 +89,11 @@ impl Conversion {
     Length::new(length as f32, unit.into())
   }
 
-  pub fn parse_dimension(attributes: &Pair<Rule>) -> (f32, Option<f32>, Radius) {
-    let width = Conversion::width(attributes)
-      .unwrap_or(WIDTH);
+  pub fn dimensions_from(attributes: &Pair<Rule>) -> (Option<f32>, Radius) {
     let height = Conversion::height(attributes);
     let radius = Conversion::radius(attributes).unwrap_or_default();
 
-    (width, height, radius)
+    (height, radius)
   }
 
   pub fn radius(attributes: &Pair<Rule>) -> Option<Length> {
@@ -158,7 +157,7 @@ impl Conversion {
       })
   }
 
-  pub fn location_from_pair(pair: &Pair<Rule>) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
+  pub fn location_from(pair: &Pair<Rule>) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
     Rules::dig_rule(pair, Rule::location)
       .map(|p| {
         let mut edge: Option<Edge> = None;
