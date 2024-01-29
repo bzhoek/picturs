@@ -61,9 +61,42 @@ mod tests {
       }
       "#;
     let diagram = create_diagram(string);
-    dbg!(&diagram);
     assert_diagram(diagram, "target/visual_box_box_box")?;
     Ok(())
   }
 
+  #[test]
+  fn visual_config() -> anyhow::Result<()> {
+    let string = r#"
+      config pd 0 ht 32 wd 64
+      box topright color green{
+        box "Layout Direction" wd 160
+        box ".start"
+        box ".end"
+      }
+      box topright color blue {
+        box "right" wd 160
+        box ".w"
+        box ".e"
+      }
+      box topright color blue {
+        box "down" wd 160
+        box ".n"
+        box ".s"
+      }
+      box topright color blue {
+        box "left" wd 160
+        box ".e"
+        box ".w"
+      }
+      box topright color blue {
+        box "up" wd 160
+        box ".s"
+        box ".n"
+      }
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram(diagram, "target/visual_config")?;
+    Ok(())
+  }
 }

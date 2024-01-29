@@ -89,13 +89,16 @@ impl Conversion {
   }
 
   pub fn parse_dimension(attributes: &Pair<Rule>) -> (f32, Option<f32>, Radius) {
-    let width = Conversion::rule_to_length(attributes, Rule::width)
-      .map(|length| length.pixels())
+    let width = Conversion::width(attributes)
       .unwrap_or(WIDTH);
-    let height = Conversion::rule_to_length(attributes, Rule::height).map(|length| length.pixels());
-    let radius = Conversion::rule_to_radius(attributes);
+    let height = Conversion::height(attributes);
+    let radius = Conversion::radius(attributes).unwrap_or_default();
 
     (width, height, radius)
+  }
+
+  pub fn radius(attributes: &Pair<Rule>) -> Option<Length> {
+    Conversion::rule_to_length(attributes, Rule::radius)
   }
 
   pub fn width(attributes: &Pair<Rule>) -> Option<f32> {
@@ -103,7 +106,7 @@ impl Conversion {
   }
 
   pub fn height(attributes: &Pair<Rule>) -> Option<f32> {
-    Conversion::rule_to_length(attributes, Rule::width).map(|length| length.pixels())
+    Conversion::rule_to_length(attributes, Rule::height).map(|length| length.pixels())
   }
 
   pub fn padding(attributes: &Pair<Rule>) -> Option<f32> {
@@ -123,21 +126,6 @@ impl Conversion {
   pub fn flow(pair: &Pair<Rule>) -> Option<Flow> {
     Rules::dig_rule(pair, Rule::flow)
       .map(|pair| Flow::new(pair.as_str()))
-  }
-
-  pub fn rule_to_radius(pair: &Pair<Rule>) -> Radius {
-    Rules::dig_rule(pair, Rule::radius)
-      .map(Self::pair_to_radius)
-      .unwrap_or_default()
-  }
-
-  fn pair_to_radius(pair: Pair<Rule>) -> Radius {
-    let length = Rules::find_rule(&pair, Rule::length)
-      .and_then(|p| p.as_str().parse::<usize>().ok())
-      .unwrap();
-    let unit = Self::rule_to_string(&pair, Rule::unit)
-      .unwrap();
-    Radius::new(length as f32, unit.into())
   }
 
   fn pair_to_displacement(pair: Pair<Rule>) -> Displacement {

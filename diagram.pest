@@ -1,11 +1,12 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
 picture = _{ SOI ~ statements* ~ EOI }
-statements = _{ comment | container | shape }
+statements = _{ comment | config | container | shape | flow | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
-shape = _{ flow | move_to | dot | arrow | line | rectangle | circle | text }
+shape = _{ dot | arrow | line | rectangle | circle | text }
 flow = { "down" | "right" | "topright" | "topleft" }
 
+config = { "config" ~ attributes }
 container = { "box" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
 circle = { "circle" ~ identified? ~ attributes }

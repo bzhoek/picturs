@@ -2,6 +2,21 @@ use std::ops::{Add, Mul};
 
 use skia_safe::{Point, Rect, Vector};
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Config {
+  pub(crate) padding: f32,
+  pub(crate) flow: Flow,
+  pub(crate) width: f32,
+  pub(crate) height: f32,
+}
+
+impl Config {
+  pub fn new(padding: f32, flow: Flow, width: f32, height: f32) -> Self {
+    Self { padding, flow, width, height }
+  }
+}
+
+
 #[derive(Debug, Default, PartialEq)]
 pub enum Direction {
   #[default]
@@ -31,10 +46,10 @@ pub struct Flow {
 
 impl Flow {
   pub fn new(string: &str) -> Self {
-    match string {
-      "topright" => Flow::edges("nw", "ne"),
-      "right" => Flow::edges("w", "e"),
-      "down" => Flow::edges("n", "s"),
+    match string.into() {
+      Direction::NE => Flow::edges("nw", "ne"),
+      Direction::E => Flow::edges("w", "e"),
+      Direction::S => Flow::edges("n", "s"),
       _ => Flow::edges("nw", "sw"),
     }
   }

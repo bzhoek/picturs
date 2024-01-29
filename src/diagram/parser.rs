@@ -14,7 +14,7 @@ use skia_safe::{Color, ISize, PaintStyle, Point, Rect};
 use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Node::{Container, Primitive};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge};
+use crate::diagram::types::{Config, Displacement, Edge, Flow, Length, ObjectEdge};
 use crate::skia::Canvas;
 
 pub static A5: (i32, i32) = (798, 562);
@@ -76,29 +76,46 @@ impl<'i> Diagram<'i> {
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
     let top = DiagramParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(self.size);
-    let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), Flow::new("sw"), &mut self.index);
+    let flow = Flow::new("sw");
+    let config = Config::new(BLOCK_PADDING, flow, 120., 60.);
+    let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), config, flow, &mut self.index);
     self.nodes = ast;
     self.bounds = bounds;
     top
   }
 
-  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, flow: Flow, index: &mut HashMap<String, Rect>)
+  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, mut config: Config, flow: Flow, index: &mut HashMap<String, Rect>)
     -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
     let mut cursor = Point::new(offset.x, offset.y);
     let mut flow = flow;
+    // let mut config = Config::new(BLOCK_PADDING, flow, 120.);
 
     for pair in pairs.into_iter() {
       let result = match pair.as_rule() {
+        Rule::config => {
+          let attributes = Rules::find_rule(&pair, Rule::attributes).unwrap();
+          Conversion::padding(&attributes).iter().for_each(|padding| {
+            config.padding = *padding;
+          });
+          Conversion::width(&attributes).iter().for_each(|width| {
+            config.width = *width;
+          });
+          Conversion::height(&attributes).iter().for_each(|height| {
+            config.height = *height;
+          });
+          None
+        }
         Rule::flow => {
           flow = Flow::new(pair.as_str());
+          config.flow = flow;
           None
         }
         Rule::container => {
           let id = Conversion::rule_to_string(&pair, Rule::id);
           let attributes = Rules::find_rule(&pair, Rule::attributes).unwrap();
           let (_width, _height, radius) = Conversion::parse_dimension(&attributes);
-          let padding = Conversion::padding(&attributes).unwrap_or(BLOCK_PADDING);
+          let padding = Conversion::padding(&attributes).unwrap_or(config.padding);
           let title = Conversion::rule_to_string(&attributes, Rule::inner);
           let location = Conversion::location_from_pair(&attributes);
 
@@ -109,7 +126,9 @@ impl<'i> Diagram<'i> {
           inset.offset((padding, padding));
           let (nodes, inner) = {
             let flow = Conversion::flow(&attributes).unwrap_or(flow);
-            Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, flow, index)
+            let mut config = config.clone();
+            config.flow = Conversion::flow(&attributes).unwrap_or(flow);
+            Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, config, flow, index)
           };
           used.top = inner.top - padding;
           used.left = inner.left - padding;
@@ -134,7 +153,7 @@ impl<'i> Diagram<'i> {
         Rule::arrow => Self::arrow_from_pair(index, &cursor, &flow, pair),
         Rule::line => Self::line_from_pair(index, &cursor, &flow, pair),
         Rule::move_to => Self::move_from_pair(&pair, cursor),
-        Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &flow, &pair),
+        Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &config, &pair),
         Rule::circle => Self::circle_from_pair(canvas, index, &cursor, &flow, &pair),
         Rule::text => Self::text_from_pair(canvas, index, &cursor, &pair),
         _ => {
@@ -214,7 +233,7 @@ impl<'i> Diagram<'i> {
   fn dot_from_pair<'a>(index: &HashMap<String, Rect>, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let attributes = Rules::find_rule(pair, Rule::dot_attributes).unwrap();
     let color = Conversion::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
-    let radius = Conversion::rule_to_radius(&attributes);
+    let radius = Conversion::radius(&attributes).unwrap_or_default();
 
     let target = Conversion::object_edge_from_pair(pair).unwrap();
     let point = Self::point_index(index, &target, &[]).unwrap();
@@ -231,10 +250,11 @@ impl<'i> Diagram<'i> {
     })
   }
 
-  fn rectangle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Flow, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn rectangle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, config: &Config, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
     let (width, height, radius) = Conversion::parse_dimension(&attributes);
+    let width = Conversion::width(&attributes).unwrap_or(config.width);
     let padding = Conversion::padding(&attributes).unwrap_or(BLOCK_PADDING);
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
@@ -248,12 +268,12 @@ impl<'i> Diagram<'i> {
     });
 
     let height = height.unwrap_or_else(|| {
-      para_height.unwrap_or(HEIGHT)
+      para_height.unwrap_or(config.height)
     });
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(HEIGHT));
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.height));
     used.bottom += padding;
-    Self::adjust_topleft(flow, &mut used);
+    Self::adjust_topleft(&config.flow, &mut used);
     Self::position_rect(index, &location, &mut used);
 
     if let Some(id) = id {
@@ -261,7 +281,7 @@ impl<'i> Diagram<'i> {
     }
 
     let mut rect = used;
-    if flow.end.x <= 0. {
+    if config.flow.end.x <= 0. {
       rect.bottom += padding;
     }
 
