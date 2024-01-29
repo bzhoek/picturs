@@ -2,6 +2,48 @@ use std::ops::{Add, Mul};
 
 use skia_safe::{Point, Rect, Vector};
 
+#[derive(Debug, Default, PartialEq)]
+pub enum Direction {
+  #[default]
+  S,
+  NE,
+  E,
+  SW,
+}
+
+impl From<&str> for Direction {
+  fn from(item: &str) -> Self {
+    match item {
+      "ne" | "topright" => Direction::NE,
+      "e" | "right" => Direction::E,
+      "s" | "down" => Direction::S,
+      "sw" => Direction::SW,
+      _ => panic!("unknown unit {}", item)
+    }
+  }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Flow {
+  pub(crate) start: Edge,
+  pub(crate) end: Edge,
+}
+
+impl Flow {
+  pub fn new(string: &str) -> Self {
+    match string {
+      "topright" => Flow::edges("nw", "ne"),
+      "right" => Flow::edges("w", "e"),
+      "down" => Flow::edges("n", "s"),
+      _ => Flow::edges("nw", "sw"),
+    }
+  }
+
+  pub fn edges(start: &str, end: &str) -> Self {
+    Self { start: Edge::new(start), end: Edge::new(end) }
+  }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Edge {
   pub x: f32,
@@ -21,14 +63,6 @@ impl Edge {
       "w" | "left" => Self { x: -0.5, y: 0. },
       "nw" => Self { x: -0.5, y: -0.5 },
       _ => Self { x: 0., y: 0. }
-    }
-  }
-
-  pub fn flip(&self) -> Self {
-    match self {
-      v if v.y == 0. && v.x != 0. => Self { x: -self.x, y: self.y },
-      v if v.y != 0. && v.x == 0. => Self { x: self.x, y: -self.y },
-      _ => Self { x: self.x, y: -self.y }
     }
   }
 

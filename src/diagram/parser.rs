@@ -5,7 +5,7 @@ use std::error::Error;
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
-use log::{debug, error, info};
+use log::{debug, error};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
@@ -14,7 +14,7 @@ use skia_safe::{Color, ISize, PaintStyle, Point, Rect};
 use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Node::{Container, Primitive};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Displacement, Edge, Length, ObjectEdge};
+use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge};
 use crate::skia::Canvas;
 
 pub static A5: (i32, i32) = (798, 562);
@@ -76,13 +76,13 @@ impl<'i> Diagram<'i> {
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
     let top = DiagramParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(self.size);
-    let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), Edge::new("sw"), &mut self.index);
+    let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), Flow::new("sw"), &mut self.index);
     self.nodes = ast;
     self.bounds = bounds;
     top
   }
 
-  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, flow: Edge, index: &mut HashMap<String, Rect>)
+  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, flow: Flow, index: &mut HashMap<String, Rect>)
     -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
     let mut cursor = Point::new(offset.x, offset.y);
@@ -91,7 +91,7 @@ impl<'i> Diagram<'i> {
     for pair in pairs.into_iter() {
       let result = match pair.as_rule() {
         Rule::flow => {
-          flow = Edge::new(pair.as_str());
+          flow = Flow::new(pair.as_str());
           None
         }
         Rule::container => {
@@ -146,14 +146,14 @@ impl<'i> Diagram<'i> {
       if let Some((rect, node)) = result {
         ast.push(node);
         Self::update_bounds(&mut bounds, rect);
-        let point = flow.edge_point(&rect);
+        let point = flow.end.edge_point(&rect);
         cursor = point
       }
     }
     (ast, bounds)
   }
 
-  fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, cursor: &Point, flow: &Edge, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, cursor: &Point, flow: &Flow, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(&pair, Rule::id);
 
     let (source, displacement, target) = Self::source_displacement_target_from_pair(&pair);
@@ -176,16 +176,16 @@ impl<'i> Diagram<'i> {
     (source, distance, target)
   }
 
-  fn displace_from_start(start: Point, displacement: &Option<Displacement>, flow: &Edge) -> Point {
+  fn displace_from_start(start: Point, displacement: &Option<Displacement>, flow: &Flow) -> Point {
     displacement.as_ref()
       .map(|displacement| start.add(displacement.offset()))
       .unwrap_or_else(|| {
-        let distance = Displacement::new(2., "cm".into(), flow.vector());
+        let distance = Displacement::new(2., "cm".into(), flow.end.vector());
         start.add(distance.offset())
       })
   }
 
-  fn line_from_pair<'a>(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Edge, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn line_from_pair<'a>(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Flow, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(&pair, Rule::id);
     let (start, distance, end) = Self::points_from_pair(index, cursor, flow, &pair);
     let (rect, used) = Self::rect_from_points(start, &distance, end);
@@ -193,7 +193,7 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn points_from_pair(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Edge, pair: &Pair<Rule>) -> (Point, Option<Displacement>, Point) {
+  fn points_from_pair(index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Flow, pair: &Pair<Rule>) -> (Point, Option<Displacement>, Point) {
     let (source, displacement, target) = Self::source_displacement_target_from_pair(pair);
     let start = Self::point_index(index, &source, &[])
       .unwrap_or(*cursor);
@@ -231,7 +231,7 @@ impl<'i> Diagram<'i> {
     })
   }
 
-  fn rectangle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Edge, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn rectangle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Flow, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
     let (width, height, radius) = Conversion::parse_dimension(&attributes);
@@ -261,7 +261,7 @@ impl<'i> Diagram<'i> {
     }
 
     let mut rect = used;
-    if flow.x <= 0. {
+    if flow.end.x <= 0. {
       rect.bottom += padding;
     }
 
@@ -269,7 +269,7 @@ impl<'i> Diagram<'i> {
     Some((rect, rectangle))
   }
 
-  fn circle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Edge, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+  fn circle_from_pair<'a>(canvas: &mut Canvas, index: &mut HashMap<String, Rect>, cursor: &Point, flow: &Flow, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
     let width = Conversion::width(&attributes)
@@ -305,9 +305,8 @@ impl<'i> Diagram<'i> {
     Some((used, circle))
   }
 
-  fn adjust_topleft(flow: &Edge, used: &mut Rect) {
-    let edge = flow.flip();
-    let offset = edge.topleft_offset(used);
+  fn adjust_topleft(flow: &Flow, used: &mut Rect) {
+    let offset = flow.start.topleft_offset(used);
     used.offset(offset);
   }
 
@@ -487,11 +486,11 @@ impl<'i> Diagram<'i> {
   fn final_placement(nodes: &mut [Node]) {
     for node in nodes.iter_mut() {
       match node {
-        Container(_id, radius, title, _rect, used, nodes) => {
+        Container(_id, _, _, _rect, used, nodes) => {
           used.top += 16.;
           Self::final_placement(nodes);
         }
-        Primitive(_id, _, used, color, shape) => {
+        Primitive(_id, _, used, _, _) => {
           used.top += 16.;
         }
       }

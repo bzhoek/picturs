@@ -5,7 +5,7 @@ use skia_safe::Color;
 
 use crate::diagram::parser::{Radius, Rule};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Displacement, Edge, Length, ObjectEdge};
+use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge};
 
 const WIDTH: f32 = 120.;
 const HEIGHT: f32 = 60.;
@@ -120,9 +120,9 @@ impl Conversion {
     ObjectEdge::new(id, edge)
   }
 
-  pub fn flow(pair: &Pair<Rule>) -> Option<Edge> {
+  pub fn flow(pair: &Pair<Rule>) -> Option<Flow> {
     Rules::dig_rule(pair, Rule::flow)
-      .map(|pair| Edge::new(pair.as_str()))
+      .map(|pair| Flow::new(pair.as_str()))
   }
 
   pub fn rule_to_radius(pair: &Pair<Rule>) -> Radius {
