@@ -68,7 +68,7 @@ mod tests {
   #[test]
   fn visual_direction_start_end() -> anyhow::Result<()> {
     let string = r#"
-      config pd 0 ht 32 wd 64
+      config box pd 0 ht 32 wd 64
       box topright color green {
         box "Layout Direction" wd 160
         box ".start"

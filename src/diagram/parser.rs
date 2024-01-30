@@ -91,7 +91,48 @@ impl<'i> Diagram<'i> {
 
     for pair in pairs.into_iter() {
       let result = match pair.as_rule() {
-        Rule::config => {
+        Rule::box_config => {
+          // dbg!(&pair);
+          pair.clone().into_inner().for_each(|a| {
+            match a.as_rule() {
+              Rule::padding => {
+                let length = Self::length_from(a);
+                config.rectangle.padding = length.pixels();
+              }
+              Rule::height => {
+                let length = Self::length_from(a);
+                config.rectangle.height = length.pixels();
+              }
+              Rule::width => {
+                let length = Self::length_from(a);
+                config.rectangle.width = length.pixels();
+                dbg!(length);
+              }
+              Rule::length => {}
+              Rule::unit => {}
+              Rule::direction => {}
+              Rule::move_to => {}
+              Rule::arrow => {}
+              Rule::line => {}
+              Rule::source => {}
+              Rule::target => {}
+              Rule::edge => {}
+              Rule::title => {}
+              Rule::string => {}
+              Rule::inner => {}
+              Rule::char => {}
+              _ => {}
+            }
+          });
+          let mut inner = pair.clone().into_inner();
+          let next = inner.next().unwrap();
+          dbg!(&next.as_str());
+          let next = inner.next().unwrap();
+          dbg!(&next.as_str());
+          let next = inner.next().unwrap();
+          dbg!(&next.as_str());
+          let next = inner.next().unwrap();
+          dbg!(&next.as_str());
           let attributes = Rules::get_rule(&pair, Rule::attributes);
           Conversion::padding(&attributes).iter().for_each(|padding| {
             config.padding = *padding;
@@ -169,6 +210,22 @@ impl<'i> Diagram<'i> {
     }
     (ast, bounds)
   }
+
+  fn length_from(a: Pair<Rule>) -> Length {
+    let mut width = a.into_inner();
+    let length = Self::next_to_usize(&mut width).unwrap();
+    let unit = Self::next_to_string(&mut width).unwrap_or("px");
+    let length = Length::new(length as f32, unit.into());
+    length
+  }
+
+  fn next_to_usize(iter: &mut Pairs<Rule>) -> Option<usize> {
+    iter.next().and_then(|p| p.as_str().parse::<usize>().ok())
+  }
+  fn next_to_string<'a>(iter: &mut Pairs<'a, Rule>) -> Option<&'a str> {
+    iter.next().map(|p| p.as_str())
+  }
+
 
   fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, cursor: &Point, flow: &Flow, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(&pair, Rule::id);

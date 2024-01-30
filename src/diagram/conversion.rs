@@ -7,8 +7,8 @@ use crate::diagram::parser::{Radius, Rule};
 use crate::diagram::rules::Rules;
 use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge};
 
-const WIDTH: f32 = 120.;
-const HEIGHT: f32 = 60.;
+pub const WIDTH: f32 = 120.;
+pub const HEIGHT: f32 = 60.;
 
 pub struct Conversion;
 

@@ -2,17 +2,41 @@ use std::ops::{Add, Mul};
 
 use skia_safe::{Point, Rect, Vector};
 
+use crate::diagram::conversion::{HEIGHT, WIDTH};
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Config {
   pub(crate) padding: f32,
   pub(crate) flow: Flow,
   pub(crate) width: f32,
   pub(crate) height: f32,
+  pub(crate) circle: ShapeConfig,
+  pub(crate) rectangle: ShapeConfig,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ShapeConfig {
+  pub(crate) padding: f32,
+  pub(crate) width: f32,
+  pub(crate) height: f32,
+}
+
+impl Default for ShapeConfig {
+  fn default() -> Self {
+    Self { padding: 0., width: WIDTH, height: HEIGHT }
+  }
 }
 
 impl Config {
   pub fn new(padding: f32, flow: Flow, width: f32, height: f32) -> Self {
-    Self { padding, flow, width, height }
+    Self {
+      padding,
+      flow,
+      width,
+      height,
+      circle: ShapeConfig::default(),
+      rectangle: ShapeConfig::default(),
+    }
   }
 }
 
