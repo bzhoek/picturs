@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use pest::iterators::Pair;
+use pest::iterators::{Pair, Pairs};
 use skia_safe::Color;
 
 use crate::diagram::parser::{Radius, Rule};
@@ -13,6 +13,22 @@ pub const HEIGHT: f32 = 60.;
 pub struct Conversion;
 
 impl Conversion {
+
+  pub fn length_from(pair: Pair<Rule>) -> Length {
+    let mut width = pair.into_inner();
+    let length = Self::next_to_usize(&mut width).unwrap();
+    let unit = Self::next_to_string(&mut width).unwrap_or("px");
+    Length::new(length as f32, unit.into())
+  }
+
+  fn next_to_usize(iter: &mut Pairs<Rule>) -> Option<usize> {
+    iter.next().and_then(|p| p.as_str().parse::<usize>().ok())
+  }
+
+  fn next_to_string<'a>(iter: &mut Pairs<'a, Rule>) -> Option<&'a str> {
+    iter.next().map(|p| p.as_str())
+  }
+
   pub fn colors_from(pair: &Pair<Rule>) -> (Color, Color, Color) {
     let stroke = Conversion::stroke_color(pair).unwrap_or(Color::BLUE);
     let fill = Conversion::fill_color(pair).unwrap_or(Color::TRANSPARENT);

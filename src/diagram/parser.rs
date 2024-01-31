@@ -169,15 +169,15 @@ impl<'i> Diagram<'i> {
     pair.into_inner().for_each(|pair| {
       match pair.as_rule() {
         Rule::padding => {
-          let length = Self::length_from(pair);
+          let length = Conversion::length_from(pair);
           config.padding = length.pixels();
         }
         Rule::height => {
-          let length = Self::length_from(pair);
+          let length = Conversion::length_from(pair);
           config.height = length.pixels();
         }
         Rule::width => {
-          let length = Self::length_from(pair);
+          let length = Conversion::length_from(pair);
           config.width = length.pixels();
         }
         _ => {
@@ -186,21 +186,6 @@ impl<'i> Diagram<'i> {
       }
     });
   }
-
-  fn length_from(pair: Pair<Rule>) -> Length {
-    let mut width = pair.into_inner();
-    let length = Self::next_to_usize(&mut width).unwrap();
-    let unit = Self::next_to_string(&mut width).unwrap_or("px");
-    Length::new(length as f32, unit.into())
-  }
-
-  fn next_to_usize(iter: &mut Pairs<Rule>) -> Option<usize> {
-    iter.next().and_then(|p| p.as_str().parse::<usize>().ok())
-  }
-  fn next_to_string<'a>(iter: &mut Pairs<'a, Rule>) -> Option<&'a str> {
-    iter.next().map(|p| p.as_str())
-  }
-
 
   fn arrow_from_pair<'a>(index: &HashMap<String, Rect>, cursor: &Point, flow: &Flow, pair: Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(&pair, Rule::id);
