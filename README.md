@@ -20,7 +20,7 @@
 12. ~dot at edge~
 13. ~Automatisch topleft bepalen~
 14. Circle
-14. Renderer uitsplitsen
+14. ~Renderer uitsplitsen~
 15. Tekstgrootte zonder canvas bepalen
 14. Arc
 13. Automatisch grootte bepalen
