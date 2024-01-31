@@ -13,7 +13,6 @@ pub const HEIGHT: f32 = 60.;
 pub struct Conversion;
 
 impl Conversion {
-
   pub fn length_from(pair: Pair<Rule>) -> Length {
     let mut width = pair.into_inner();
     let length = Self::next_to_usize(&mut width).unwrap();
@@ -138,6 +137,14 @@ impl Conversion {
     ObjectEdge::new(id, edge)
   }
 
+  fn object_edge_from(pair: Pair<Rule>, edge: &Edge) -> ObjectEdge {
+    let id = Self::rule_to_string(&pair, Rule::id).unwrap();
+    let edge = Self::rule_to_string(&pair, Rule::edge)
+      .map(Edge::new)
+      .unwrap_or(*edge);
+    ObjectEdge::edge(id, edge)
+  }
+
   pub fn flow(pair: &Pair<Rule>) -> Option<Flow> {
     Rules::dig_rule(pair, Rule::flow)
       .map(|pair| Flow::new(pair.as_str()))
@@ -151,7 +158,7 @@ impl Conversion {
       .unwrap();
     let direction = Self::rule_to_string(&pair, Rule::direction).unwrap();
     let edge = Edge::new(direction);
-    Displacement::new(length as f32, unit.into(), edge.vector())
+    Displacement::new(length as f32, unit.into(), edge)
   }
 
   pub fn location_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
@@ -173,24 +180,38 @@ impl Conversion {
       })
   }
 
-  pub fn location_from(pair: &Pair<Rule>, edge: &Edge) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
+  pub fn location_from(pair: &Pair<Rule>, end: &Edge) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
     Rules::dig_rule(pair, Rule::location)
       .map(|p| {
-        let mut object: Option<ObjectEdge> = Some(ObjectEdge::edge("#last", *edge));
+        let mut object: Option<ObjectEdge> = None;
         let mut directions: Vec<Displacement> = vec![];
-        let mut edge: Option<Edge> = Some(edge.flip());
+        let mut edge: Option<Edge> = None;
 
         for rule in p.into_inner() {
           match rule.as_rule() {
             Rule::edge => { edge = Some(Edge::new(rule.as_str())); }
             Rule::displacement => {
-              let distance = Self::pair_to_displacement(rule);
-              directions.push(distance);
+              let displacement = Self::pair_to_displacement(rule);
+              directions.push(displacement);
             }
-            Rule::object_edge => { object = Some(Self::pair_to_object_edge(rule)); }
+            Rule::object_edge => { object = Some(Self::object_edge_from(rule, end)); }
             _ => {}
           }
         };
+        if let Some(displacement) = directions.first() {
+          if let Some(object) = object.as_mut() {
+            if object.id.eq("box") {
+              object.edge = displacement.edge
+            }
+          }
+          if object.is_none() {
+            object = Some(ObjectEdge::edge("#last", displacement.edge))
+          }
+          if edge.is_none() {
+            edge = Some(displacement.edge.flip())
+          }
+        }
+
         (edge.unwrap(), directions, object.unwrap())
       })
   }

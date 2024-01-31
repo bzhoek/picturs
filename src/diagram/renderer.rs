@@ -158,7 +158,7 @@ impl Renderer {
           Self::render_paragraph(canvas, &rect, &paragraph.text);
         }
       }
-      Shape::Oval(text_color, paragraph, fill, _) => {
+      Shape::Oval(text_color, paragraph, _fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
         canvas.oval(used);

@@ -391,8 +391,8 @@ mod tests {
   fn offset_from_rect() {
     let rect = Rect::from_xywh(40., 40., 40., 40.);
     let distances = vec![
-      Displacement::new(2., Unit::Cm, Vector::new(1., 0.)),
-      Displacement::new(1., Unit::Cm, Vector::new(0., 1.)),
+      Displacement::new(2., Unit::Cm, Edge::new("e")),
+      Displacement::new(1., Unit::Cm, Edge::new("s")),
     ];
     let result = Index::offset_from_rect(&rect, &Edge::new("nw"), &distances);
     let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };

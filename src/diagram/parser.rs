@@ -209,7 +209,7 @@ impl<'i> Diagram<'i> {
     displacement.as_ref()
       .map(|displacement| start.add(displacement.offset()))
       .unwrap_or_else(|| {
-        let distance = Displacement::new(2., "cm".into(), flow.end.vector());
+        let distance = Displacement::new(2., "cm".into(), flow.end);
         start.add(distance.offset())
       })
   }
@@ -384,7 +384,12 @@ impl<'i> Diagram<'i> {
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.oval.height));
 
-    Self::adjust_topleft(&config.flow, &mut used);
+    let edge = match location {
+      Some((edge, _, _)) => edge,
+      None => config.flow.start
+    };
+    let offset = edge.topleft_offset(&used);
+    used.offset(offset);
     index.position_rect(&location, &mut used);
 
     index.insert(ShapeName::Oval, id, used);

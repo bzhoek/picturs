@@ -1,16 +1,32 @@
 use std::collections::HashMap;
 use std::ops::Add;
+
 use log::error;
 use skia_safe::{Point, Rect};
+
 use crate::diagram::types::{Displacement, Edge, ObjectEdge};
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum ShapeName {
   Rectangle,
   Container,
   Circle,
   Text,
   Oval,
+}
+
+impl From<&str> for ShapeName {
+  fn from(name: &str) -> Self {
+    match name {
+      "rectangle" => ShapeName::Rectangle,
+      "container" => ShapeName::Container,
+      "circle" => ShapeName::Circle,
+      "text" => ShapeName::Text,
+      "oval" => ShapeName::Oval,
+      _ => panic!("unknown shape {}", name)
+    }
+  }
 }
 
 #[derive(Debug, Default)]
@@ -40,10 +56,17 @@ impl Index {
   fn offset_index(&self, object: &ObjectEdge, distances: &[Displacement]) -> Option<Rect> {
     match &*object.id {
       "#last" => self.shapes.last().map(|(_shape, rect)| rect),
+      "box" => self.last(ShapeName::Rectangle).map(|(_shape, rect)| rect),
       id => self.ids.get(id)
     }.map(|rect| {
       Self::offset_from_rect(rect, &object.edge, distances)
     })
+  }
+
+  fn last(&self, shape: ShapeName) -> Option<&(ShapeName, Rect)> {
+    self.shapes.iter().filter(|(name, _)| {
+      shape == *name
+    }).last()
   }
 
   pub fn offset_from_rect(rect: &Rect, edge: &Edge, distances: &[Displacement]) -> Rect {

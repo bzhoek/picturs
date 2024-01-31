@@ -86,13 +86,14 @@ impl Flow {
   }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum EdgeDirection {
+  #[default]
   Horizontal,
   Vertical,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Edge {
   pub direction: EdgeDirection,
   pub x: f32,
@@ -201,25 +202,25 @@ impl Length {
 #[derive(Debug, Default, PartialEq)]
 pub struct Displacement {
   length: Length,
-  direction: Vector,
+  pub edge: Edge,
 }
 
 impl Displacement {
-  pub fn new(length: f32, unit: Unit, direction: Vector) -> Self {
+  pub fn new(length: f32, unit: Unit, edge: Edge) -> Self {
     let length = Length::new(length, unit);
-    Self { length, direction }
+    Self { length, edge }
   }
 
   pub fn offset(&self) -> Point {
-    self.direction.mul(self.length.pixels())
+    self.edge.vector().mul(self.length.pixels())
   }
 
   pub fn is_horizontal(&self) -> bool {
-    self.direction.x != 0.
+    self.edge.direction == Horizontal
   }
 
   pub fn is_vertical(&self) -> bool {
-    self.direction.y != 0.
+    self.edge.direction == Vertical
   }
 }
 

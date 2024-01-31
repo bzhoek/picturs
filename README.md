@@ -15,6 +15,8 @@ oval "oval" 1 below first box
 
 The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the direction is `right`, the polar opposite `west` is used. For `oval` the polar opposite `north` is assumed, because the placement is `below`.
 
+The first relative component determines direction, `circle 1 right 1 down` will be horizontal, and `oval 1 down` will be vertical.
+
 ## Diagram
 1. ~Render all rectangles~
 2. ~Wrap the text in a rectangle~
