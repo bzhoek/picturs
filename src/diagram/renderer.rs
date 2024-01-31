@@ -3,7 +3,8 @@ use std::ops::{Add, Sub};
 
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
-use crate::diagram::parser::{Diagram, Node, Shape, TEXT_PADDING};
+use crate::diagram::index::Index;
+use crate::diagram::parser::{Node, Shape, TEXT_PADDING};
 use crate::diagram::parser::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -37,7 +38,7 @@ impl Renderer {
   fn render_shape(canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape) {
     match shape {
       Shape::Dot(edge, radius) => {
-        let point = Diagram::point_from_rect(used, &edge.edge, &[]);
+        let point = Index::point_from_rect(used, &edge.edge, &[]);
         canvas.paint.set_style(PaintStyle::Fill);
         canvas.paint.set_color(*color);
         canvas.circle(&point, radius.pixels());

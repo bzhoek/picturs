@@ -7,11 +7,13 @@ mod tests {
   use anyhow::Result;
   use skia_safe::{Color, Point, Rect, Vector};
 
-  use picturs::diagram::parser::{A5, Diagram, Node, Paragraph, Radius};
+  use picturs::diagram::index::Index;
+  use picturs::diagram::parser::{Node, Paragraph, Radius};
   use picturs::diagram::parser::Node::{Container, Primitive};
   use picturs::diagram::parser::Shape::Rectangle;
-  use picturs::diagram::types::{Displacement, Edge, ObjectEdge, Unit};
+  use picturs::diagram::types::{Displacement, Edge, Unit};
   use picturs::test::assert_diagram;
+
   use crate::common::create_diagram;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
@@ -30,10 +32,10 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        Rect::from_xywh(0., 0., 120., 76.),
-        Rect::from_xywh(0., 0., 120., 68.),
-        Color::BLUE,
-        rectangle(None)),
+                Rect::from_xywh(0., 0., 120., 76.),
+                Rect::from_xywh(0., 0., 120., 68.),
+                Color::BLUE,
+                rectangle(None)),
     ], diagram.nodes);
   }
 
@@ -44,10 +46,10 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(Some("first"),
-        Rect::from_xywh(0., 0., 120., 76.),
-        Rect::from_xywh(0., 0., 120., 68.),
-        Color::BLUE,
-        rectangle(Some(("title", 31.)))),
+                Rect::from_xywh(0., 0., 120., 76.),
+                Rect::from_xywh(0., 0., 120., 68.),
+                Color::BLUE,
+                rectangle(Some(("title", 31.)))),
     ], diagram.nodes);
   }
 
@@ -58,10 +60,10 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        Rect::from_xywh(0., 0., 120., 76.),
-        Rect::from_xywh(0., 0., 120., 68.),
-        Color::BLUE,
-        rectangle(Some(("title", 31.)))),
+                Rect::from_xywh(0., 0., 120., 76.),
+                Rect::from_xywh(0., 0., 120., 68.),
+                Color::BLUE,
+                rectangle(Some(("title", 31.)))),
     ], diagram.nodes);
   }
 
@@ -73,15 +75,15 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        Rect::from_xywh(0., 0., 120., 76.),
-        Rect::from_xywh(0., 0., 120., 68.),
-        Color::BLUE,
-        rectangle(None)),
+                Rect::from_xywh(0., 0., 120., 76.),
+                Rect::from_xywh(0., 0., 120., 68.),
+                Color::BLUE,
+                rectangle(None)),
       Primitive(None,
-        Rect::from_xywh(0., 76., 120., 76.),
-        Rect::from_xywh(0., 76., 120., 68.),
-        Color::BLUE,
-        rectangle(None)),
+                Rect::from_xywh(0., 76., 120., 76.),
+                Rect::from_xywh(0., 76., 120., 68.),
+                Color::BLUE,
+                rectangle(None)),
     ], diagram.nodes);
   }
 
@@ -92,15 +94,15 @@ mod tests {
 
     assert_eq!(vec![
       Container(Some("parent"), Radius::default(), None,
-        Rect::from_xywh(0., 0., 144., 100.),
-        Rect::from_xywh(0., 0., 144., 92.),
-        vec![
-          Primitive(None,
-            Rect::from_xywh(8., 8., 120., 76.),
-            Rect::from_xywh(8., 8., 120., 68.),
-            Color::BLUE,
-            rectangle(None))
-        ])
+                Rect::from_xywh(0., 0., 144., 100.),
+                Rect::from_xywh(0., 0., 144., 92.),
+                vec![
+                  Primitive(None,
+                            Rect::from_xywh(8., 8., 120., 76.),
+                            Rect::from_xywh(8., 8., 120., 68.),
+                            Color::BLUE,
+                            rectangle(None))
+                ])
     ], diagram.nodes);
   }
 
@@ -111,15 +113,15 @@ mod tests {
 
     assert_eq!(vec![
       Container(None, Radius::default(), Some("parent"),
-        Rect::from_xywh(0., 0., 144., 113.),
-        Rect::from_xywh(0., 0., 144., 105.),
-        vec![
-          Primitive(None,
-            Rect::from_xywh(8., 8., 120., 76.),
-            Rect::from_xywh(8., 8., 120., 68.),
-            Color::BLUE,
-            rectangle(Some(("child", 40.))))
-        ])
+                Rect::from_xywh(0., 0., 144., 113.),
+                Rect::from_xywh(0., 0., 144., 105.),
+                vec![
+                  Primitive(None,
+                            Rect::from_xywh(8., 8., 120., 76.),
+                            Rect::from_xywh(8., 8., 120., 68.),
+                            Color::BLUE,
+                            rectangle(Some(("child", 40.))))
+                ])
     ], diagram.nodes);
   }
 
@@ -134,10 +136,10 @@ mod tests {
 
     assert_eq!(vec![
       Primitive(None,
-        paragraph1_rect,
-        paragraph2_rect,
-        Color::BLUE,
-        tqbf),
+                paragraph1_rect,
+                paragraph2_rect,
+                Color::BLUE,
+                tqbf),
     ], diagram.nodes);
   }
 
@@ -386,47 +388,13 @@ mod tests {
   }
 
   #[test]
-  fn node_mut() {
-    let string =
-      r#"
-      box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" .nw 2cm right from left.ne
-      "#;
-    let mut diagram = Diagram::inset(A5, (32., 32.));
-    diagram.parse_string(string);
-
-    let rect = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(196., 0., 120., 68.);
-    assert_eq!(&expected, rect);
-
-    let distances = vec![
-      Displacement::new(2., Unit::Cm, Vector::new(1., 0.)),
-      Displacement::new(1., Unit::Cm, Vector::new(0., 1.)),
-    ];
-
-    let left = diagram.used_rect("left").unwrap();
-    let expected = Rect::from_xywh(0., 0., 120., 68.);
-    assert_eq!(&expected, left);
-
-    let edge = ObjectEdge::new("left", "ne"); // 32 + 120 + (2 * 38) = 228
-    let shifted = diagram.offset_from(&edge, &distances).unwrap();
-    let expected = Rect::from_xywh(196., 38., 120., 68.);
-    assert_eq!(expected, shifted);
-
-    diagram.node_mut("right", distances);
-    let rect = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(272., 38., 120., 68.);
-    assert_eq!(&expected, rect);
-  }
-
-  #[test]
   fn offset_from_rect() {
     let rect = Rect::from_xywh(40., 40., 40., 40.);
     let distances = vec![
       Displacement::new(2., Unit::Cm, Vector::new(1., 0.)),
       Displacement::new(1., Unit::Cm, Vector::new(0., 1.)),
     ];
-    let result = Diagram::offset_from_rect(&rect, &Edge::new("nw"), &distances);
+    let result = Index::offset_from_rect(&rect, &Edge::new("nw"), &distances);
     let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };
     assert_eq!(expected, result);
   }
@@ -439,10 +407,10 @@ mod tests {
   #[test]
   fn test_primitives_mut() {
     let mut primitive = Primitive(None,
-      Rect::from_xywh(0., 0., 120., 76.),
-      Rect::from_xywh(0., 0., 120., 68.),
-      Color::BLACK,
-      rectangle(None));
+                                  Rect::from_xywh(0., 0., 120., 76.),
+                                  Rect::from_xywh(0., 0., 120., 68.),
+                                  Color::BLACK,
+                                  rectangle(None));
 
     match primitive {
       Primitive(_, ref mut rect, _, _, _) => {

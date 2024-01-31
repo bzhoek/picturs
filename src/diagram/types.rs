@@ -39,7 +39,6 @@ impl Config {
   }
 }
 
-
 #[derive(Debug, Default, PartialEq)]
 pub enum Direction {
   #[default]
