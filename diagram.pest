@@ -3,15 +3,15 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 picture = _{ SOI ~ statements* ~ EOI }
 statements = _{ comment | container | shape | box_config | circle_config | flow | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
-shape = _{ dot | arrow | line | rectangle | circle | text }
+shape = _{ dot | arrow | line | rectangle | circle | ellipse | text }
 flow = { "down" | "right" | "topright" | "topleft" }
 
 box_config = { "set box" ~ (padding | width| height)* }
 circle_config = { "set circle" ~ (height) }
-shape_name = { "box" | "circle" }
 container = { "box" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
 circle = { "circle" ~ identified? ~ attributes }
+ellipse = { "ellipse" ~ identified? ~ attributes }
 attributes = { attribute* }
 attribute = { string | color | fill | width | height | padding | radius | location | text_color | flow }
 text = { "text" ~ identified? ~ text_attributes }

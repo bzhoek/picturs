@@ -31,15 +31,15 @@ The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the dire
 12. ~dot at edge~
 13. ~Automatisch topleft bepalen~
 14. ~Renderer uitsplitsen~
-15. Index als type met last en first_of
-14. Circle
+15. ~Index als type met #last~
+14. ~Circle shape~
+16. ~Ellipse shape~
 15. Tekstgrootte zonder canvas bepalen
 14. Arc
 13. Automatisch grootte bepalen
 13. `arrow` met offset
 14. `nnw` en uren op de klok, met horizontal en vertical
 15. Richting binnen container, zoals flex
-16. Circle en Ellipse shapes
 17. Cylinder shape
 18. Oval shape
 18. File shape

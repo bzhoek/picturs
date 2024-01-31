@@ -123,6 +123,10 @@ impl Canvas {
     self.surface.canvas().draw_circle(*point, radius, &self.paint);
   }
 
+  pub fn ellipse(&mut self, rect: &Rect) {
+    self.surface.canvas().draw_oval(rect, &self.paint);
+  }
+
   pub fn data(&mut self) -> Data {
     let image = self.surface.image_snapshot();
     let mut context = self.surface.direct_context();

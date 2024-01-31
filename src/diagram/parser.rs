@@ -38,6 +38,7 @@ pub enum Shape<'a> {
   Line(Option<&'a str>, Point, Option<Displacement>, Point),
   Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeDisplacement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
+  Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
   Text(&'a str, Option<EdgeDisplacement>),
 }
 
@@ -140,6 +141,7 @@ impl<'i> Diagram<'i> {
         Rule::move_to => Self::move_from_pair(&pair, cursor),
         Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &config, &pair),
         Rule::circle => Self::circle_from_pair(canvas, index, &cursor, &config, &pair),
+        Rule::ellipse => Self::ellipse_from_pair(canvas, index, &cursor, &config, &pair),
         Rule::text => Self::text_from_pair(canvas, index, &cursor, &config, &pair),
         _ => {
           debug!("Unmatched {:?}", pair);
@@ -183,8 +185,7 @@ impl<'i> Diagram<'i> {
     let id = Conversion::rule_to_string(&pair, Rule::id);
 
     let (source, displacement, target) = Self::source_displacement_target_from_pair(&pair);
-    let start = index.point_index(&source, &[])
-      .unwrap_or(*cursor);
+    let start = index.point_index(&source, &[]).unwrap_or(*cursor);
     let end = index.point_index(&target, &[])
       .unwrap_or(Self::displace_from_start(start, &displacement, flow));
 
@@ -221,8 +222,7 @@ impl<'i> Diagram<'i> {
 
   fn points_from_pair(index: &mut Index, cursor: &Point, flow: &Flow, pair: &Pair<Rule>) -> (Point, Option<Displacement>, Point) {
     let (source, displacement, target) = Self::source_displacement_target_from_pair(pair);
-    let start = index.point_index(&source, &[])
-      .unwrap_or(*cursor);
+    let start = index.point_index(&source, &[]).unwrap_or(*cursor);
     let end = index.point_index(&target, &[])
       .unwrap_or(Self::displace_from_start(start, &displacement, flow));
     (start, displacement, end)
@@ -298,8 +298,7 @@ impl<'i> Diagram<'i> {
   fn circle_from_pair<'a>(canvas: &mut Canvas, index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::get_rule(pair, Rule::attributes);
-    let width = Conversion::width(&attributes)
-      .unwrap_or(config.circle.height);
+    let width = Conversion::width(&attributes).unwrap_or(config.circle.height);
     let height = Conversion::width(&attributes);
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
@@ -325,6 +324,38 @@ impl<'i> Diagram<'i> {
     index.insert(ShapeName::Circle, id, used);
 
     let circle = Primitive(id, used, used, stroke, Shape::Circle(text_color, paragraph, fill, location));
+    Some((used, circle))
+  }
+
+  fn ellipse_from_pair<'a>(canvas: &mut Canvas, index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+    let id = Conversion::rule_to_string(pair, Rule::id);
+    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let width = Conversion::width(&attributes).unwrap_or(config.ellipse.width);
+    let height = Conversion::width(&attributes);
+
+    let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
+    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let location = Conversion::location_from(&attributes, &config.flow.end);
+
+    let mut para_height = None;
+    let paragraph = title.map(|title| {
+      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+      para_height = Some(height);
+      Paragraph { text: title, widths, height }
+    });
+
+    let height = height.unwrap_or_else(|| {
+      para_height.unwrap_or(config.ellipse.height)
+    });
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.ellipse.height));
+
+    Self::adjust_topleft(&config.flow, &mut used);
+    index.position_rect(&location, &mut used);
+
+    index.insert(ShapeName::Circle, id, used);
+
+    let circle = Primitive(id, used, used, stroke, Shape::Ellipse(text_color, paragraph, fill, location));
     Some((used, circle))
   }
 

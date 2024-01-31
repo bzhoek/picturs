@@ -12,6 +12,7 @@ pub struct Config {
   pub(crate) width: f32,
   pub(crate) height: f32,
   pub(crate) circle: ShapeConfig,
+  pub(crate) ellipse: ShapeConfig,
   pub(crate) rectangle: ShapeConfig,
 }
 
@@ -35,6 +36,7 @@ impl Config {
       width,
       height,
       circle: ShapeConfig::default(),
+      ellipse: ShapeConfig::default(),
       rectangle: ShapeConfig::default(),
     }
   }
@@ -83,7 +85,7 @@ impl Flow {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-enum EdgeDirection {
+pub enum EdgeDirection {
   Horizontal,
   Vertical,
 }
