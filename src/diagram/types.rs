@@ -3,10 +3,10 @@ use std::ops::{Add, Mul};
 use skia_safe::{Point, Rect, Vector};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
+use crate::diagram::parser::BLOCK_PADDING;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Config {
-  pub(crate) padding: f32,
   pub(crate) flow: Flow,
   pub(crate) width: f32,
   pub(crate) height: f32,
@@ -23,14 +23,13 @@ pub struct ShapeConfig {
 
 impl Default for ShapeConfig {
   fn default() -> Self {
-    Self { padding: 0., width: WIDTH, height: HEIGHT }
+    Self { padding: BLOCK_PADDING, width: WIDTH, height: HEIGHT }
   }
 }
 
 impl Config {
-  pub fn new(padding: f32, flow: Flow, width: f32, height: f32) -> Self {
+  pub fn new(flow: Flow, width: f32, height: f32) -> Self {
     Self {
-      padding,
       flow,
       width,
       height,

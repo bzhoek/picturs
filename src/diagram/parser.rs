@@ -5,7 +5,7 @@ use std::error::Error;
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
-use log::{debug, error};
+use log::{debug, error, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
@@ -14,7 +14,7 @@ use skia_safe::{Color, ISize, PaintStyle, Point, Rect};
 use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Node::{Container, Primitive};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Config, Displacement, Edge, Flow, Length, ObjectEdge};
+use crate::diagram::types::{Config, Displacement, Edge, Flow, Length, ObjectEdge, ShapeConfig};
 use crate::skia::Canvas;
 
 pub static A5: (i32, i32) = (798, 562);
@@ -77,7 +77,7 @@ impl<'i> Diagram<'i> {
     let top = DiagramParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(self.size);
     let flow = Flow::new("sw");
-    let config = Config::new(BLOCK_PADDING, flow, 120., 60.);
+    let config = Config::new(flow, 120., 60.);
     let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), config, &mut self.index);
     self.nodes = ast;
     self.bounds = bounds;
@@ -92,57 +92,11 @@ impl<'i> Diagram<'i> {
     for pair in pairs.into_iter() {
       let result = match pair.as_rule() {
         Rule::box_config => {
-          // dbg!(&pair);
-          pair.clone().into_inner().for_each(|a| {
-            match a.as_rule() {
-              Rule::padding => {
-                let length = Self::length_from(a);
-                config.rectangle.padding = length.pixels();
-              }
-              Rule::height => {
-                let length = Self::length_from(a);
-                config.rectangle.height = length.pixels();
-              }
-              Rule::width => {
-                let length = Self::length_from(a);
-                config.rectangle.width = length.pixels();
-                dbg!(length);
-              }
-              Rule::length => {}
-              Rule::unit => {}
-              Rule::direction => {}
-              Rule::move_to => {}
-              Rule::arrow => {}
-              Rule::line => {}
-              Rule::source => {}
-              Rule::target => {}
-              Rule::edge => {}
-              Rule::title => {}
-              Rule::string => {}
-              Rule::inner => {}
-              Rule::char => {}
-              _ => {}
-            }
-          });
-          let mut inner = pair.clone().into_inner();
-          let next = inner.next().unwrap();
-          dbg!(&next.as_str());
-          let next = inner.next().unwrap();
-          dbg!(&next.as_str());
-          let next = inner.next().unwrap();
-          dbg!(&next.as_str());
-          let next = inner.next().unwrap();
-          dbg!(&next.as_str());
-          let attributes = Rules::get_rule(&pair, Rule::attributes);
-          Conversion::padding(&attributes).iter().for_each(|padding| {
-            config.padding = *padding;
-          });
-          Conversion::width(&attributes).iter().for_each(|width| {
-            config.width = *width;
-          });
-          Conversion::height(&attributes).iter().for_each(|height| {
-            config.height = *height;
-          });
+          Self::config_shape(&mut config.rectangle, pair);
+          None
+        }
+        Rule::circle_config => {
+          Self::config_shape(&mut config.circle, pair);
           None
         }
         Rule::flow => {
@@ -153,7 +107,7 @@ impl<'i> Diagram<'i> {
           let id = Conversion::rule_to_string(&pair, Rule::id);
           let attributes = Rules::get_rule(&pair, Rule::attributes);
           let (_height, radius) = Conversion::dimensions_from(&attributes);
-          let padding = Conversion::padding(&attributes).unwrap_or(config.padding);
+          let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
           let title = Conversion::rule_to_string(&attributes, Rule::inner);
           let location = Conversion::location_from(&attributes);
 
@@ -211,12 +165,33 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  fn length_from(a: Pair<Rule>) -> Length {
-    let mut width = a.into_inner();
+  fn config_shape(config: &mut ShapeConfig, pair: Pair<Rule>) {
+    pair.into_inner().for_each(|pair| {
+      match pair.as_rule() {
+        Rule::padding => {
+          let length = Self::length_from(pair);
+          config.padding = length.pixels();
+        }
+        Rule::height => {
+          let length = Self::length_from(pair);
+          config.height = length.pixels();
+        }
+        Rule::width => {
+          let length = Self::length_from(pair);
+          config.width = length.pixels();
+        }
+        _ => {
+          warn!("Ignored {:?}", pair);
+        }
+      }
+    });
+  }
+
+  fn length_from(pair: Pair<Rule>) -> Length {
+    let mut width = pair.into_inner();
     let length = Self::next_to_usize(&mut width).unwrap();
     let unit = Self::next_to_string(&mut width).unwrap_or("px");
-    let length = Length::new(length as f32, unit.into());
-    length
+    Length::new(length as f32, unit.into())
   }
 
   fn next_to_usize(iter: &mut Pairs<Rule>) -> Option<usize> {
@@ -310,8 +285,8 @@ impl<'i> Diagram<'i> {
     let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
 
     let (height, radius) = Conversion::dimensions_from(&attributes);
-    let width = Conversion::width(&attributes).unwrap_or(config.width);
-    let padding = Conversion::padding(&attributes).unwrap_or(config.padding);
+    let width = Conversion::width(&attributes).unwrap_or(config.rectangle.width);
+    let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes);
@@ -324,10 +299,10 @@ impl<'i> Diagram<'i> {
     });
 
     let height = height.unwrap_or_else(|| {
-      para_height.unwrap_or(config.height)
+      para_height.unwrap_or(config.rectangle.height)
     });
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.height));
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.rectangle.height));
     used.bottom += padding;
     Self::adjust_topleft(&config.flow, &mut used);
     Self::position_rect(index, &location, &mut used);
@@ -349,7 +324,7 @@ impl<'i> Diagram<'i> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let width = Conversion::width(&attributes)
-      .unwrap_or(60.);
+      .unwrap_or(config.circle.height);
     let height = Conversion::width(&attributes);
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
@@ -364,10 +339,10 @@ impl<'i> Diagram<'i> {
     });
 
     let height = height.unwrap_or_else(|| {
-      para_height.unwrap_or(60.)
+      para_height.unwrap_or(config.circle.height)
     });
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(60.));
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.circle.height));
 
     Self::adjust_topleft(&config.flow, &mut used);
     Self::position_rect(index, &location, &mut used);
@@ -700,9 +675,8 @@ impl<'i> Diagram<'i> {
   }
 }
 
-const BLOCK_PADDING: f32 = 8.;
+pub const BLOCK_PADDING: f32 = 8.;
 const TEXT_PADDING: f32 = 4.;
-const HEIGHT: f32 = 60.;
 
 #[allow(dead_code)]
 pub fn dump_nested(level: usize, pairs: Pairs<Rule>) {
