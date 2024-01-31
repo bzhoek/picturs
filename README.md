@@ -4,6 +4,17 @@
 * https://pikchr.org/home/doc/trunk/homepage.md
 * https://pikchr.org/home/doc/trunk/doc/grammar.md
 
+## Relative placement
+
+```pic
+box "box"
+circle "circle" 1 right
+ellipse "ellipse" 1 right
+oval "oval" 1 below first box
+```
+
+The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the direction is `right`, the polar opposite `west` is used. For `oval` the polar opposite `north` is assumed, because the placement is `below`.
+
 ## Diagram
 1. ~Render all rectangles~
 2. ~Wrap the text in a rectangle~

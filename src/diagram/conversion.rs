@@ -176,9 +176,9 @@ impl Conversion {
   pub fn location_from(pair: &Pair<Rule>, edge: &Edge) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
     Rules::dig_rule(pair, Rule::location)
       .map(|p| {
-        let mut edge: Option<Edge> = Some(*edge);
+        let mut object: Option<ObjectEdge> = Some(ObjectEdge::edge("#last", *edge));
         let mut directions: Vec<Displacement> = vec![];
-        let mut object: Option<ObjectEdge> = None;
+        let mut edge: Option<Edge> = Some(edge.flip());
 
         for rule in p.into_inner() {
           match rule.as_rule() {

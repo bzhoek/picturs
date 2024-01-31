@@ -4,6 +4,7 @@ use skia_safe::{Point, Rect, Vector};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
 use crate::diagram::parser::BLOCK_PADDING;
+use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Config {
@@ -82,24 +83,40 @@ impl Flow {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+enum EdgeDirection {
+  Horizontal,
+  Vertical,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Edge {
+  pub direction: EdgeDirection,
   pub x: f32,
   pub y: f32,
+}
+
+impl Edge {
+  pub(crate) fn flip(&self) -> Self {
+    match self.direction {
+      Horizontal => Self { direction: Horizontal, x: self.x * -1., y: self.y },
+      Vertical => Self { direction: Vertical, x: self.x, y: self.y * -1. }
+    }
+  }
 }
 
 impl Edge {
   pub fn new(string: &str) -> Self {
     let dot_removed = string.trim_start_matches('.');
     match dot_removed.to_lowercase().as_str() {
-      "n" | "up" => Self { x: 0., y: -0.5 },
-      "ne" => Self { x: 0.5, y: -0.5 },
-      "e" | "right" => Self { x: 0.5, y: 0. },
-      "se" => Self { x: 0.5, y: 0.5 },
-      "s" | "down" => Self { x: 0., y: 0.5 },
-      "sw" => Self { x: -0.5, y: 0.5 },
-      "w" | "left" => Self { x: -0.5, y: 0. },
-      "nw" => Self { x: -0.5, y: -0.5 },
-      _ => Self { x: 0., y: 0. }
+      "n" | "up" => Self { direction: Vertical, x: 0., y: -0.5 },
+      "ne" => Self { direction: Vertical, x: 0.5, y: -0.5 },
+      "e" | "right" => Self { direction: Horizontal, x: 0.5, y: 0. },
+      "se" => Self { direction: Vertical, x: 0.5, y: 0.5 },
+      "s" | "down" => Self { direction: Vertical, x: 0., y: 0.5 },
+      "sw" => Self { direction: Vertical, x: -0.5, y: 0.5 },
+      "w" | "left" => Self { direction: Horizontal, x: -0.5, y: 0. },
+      "nw" => Self { direction: Vertical, x: -0.5, y: -0.5 },
+      _ => Self { direction: Horizontal, x: 0., y: 0. }
     }
   }
 
@@ -211,5 +228,9 @@ pub struct ObjectEdge {
 impl ObjectEdge {
   pub fn new(id: &str, edge: &str) -> Self {
     Self { id: id.into(), edge: Edge::new(edge) }
+  }
+
+  pub fn edge(id: &str, edge: Edge) -> Self {
+    Self { id: id.into(), edge }
   }
 }

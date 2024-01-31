@@ -304,7 +304,7 @@ impl<'i> Diagram<'i> {
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
-    let location = Conversion::location_from(&attributes, &config.flow.start);
+    let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let mut para_height = None;
     let paragraph = title.map(|title| {

@@ -36,9 +36,12 @@ impl Index {
     }
   }
 
-  fn offset_index(&self, edge: &ObjectEdge, distances: &[Displacement]) -> Option<Rect> {
-    self.ids.get(&edge.id).map(|rect| {
-      Self::offset_from_rect(rect, &edge.edge, distances)
+  fn offset_index(&self, object: &ObjectEdge, distances: &[Displacement]) -> Option<Rect> {
+    match &*object.id {
+      "#last" => self.shapes.last().map(|(_shape, rect)| rect),
+      id => self.ids.get(id)
+    }.map(|rect| {
+      Self::offset_from_rect(rect, &object.edge, distances)
     })
   }
 
