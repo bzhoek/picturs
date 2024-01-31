@@ -158,6 +158,24 @@ impl Renderer {
           Self::render_paragraph(canvas, &rect, &paragraph.text);
         }
       }
+      Shape::Oval(text_color, paragraph, fill, _) => {
+        canvas.paint.set_style(PaintStyle::Stroke);
+        canvas.paint.set_color(*color);
+        canvas.oval(used);
+
+        if let Some(paragraph) = paragraph {
+          canvas.paint.set_style(PaintStyle::Fill);
+          canvas.paint.set_color(*text_color);
+          let mut rect = *used;
+          if paragraph.widths.len() == 1 {
+            rect.top += (used.height() - paragraph.height) / 2. - Canvas::get_font_descent();
+            rect.left += (used.width() - paragraph.widths.first().unwrap()) / 2.;
+          } else {
+            rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
+          }
+          Self::render_paragraph(canvas, &rect, &paragraph.text);
+        }
+      }
       Shape::Text(title, _) => {
         Self::render_paragraph(canvas, used, title);
       }

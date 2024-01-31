@@ -127,6 +127,16 @@ impl Canvas {
     self.surface.canvas().draw_oval(rect, &self.paint);
   }
 
+  pub fn oval(&mut self, rect: &Rect) {
+    let left = Rect::from_xywh(rect.left, rect.top, rect.height(), rect.height());
+    let right = Rect::from_xywh(rect.right - rect.height(), rect.top, rect.height(), rect.height());
+    self.path.arc_to(left, -90., -180., true);
+    self.path.line_to((right.left, right.bottom));
+    self.path.arc_to(right, 90., -180., false);
+    self.path.close();
+    self.stroke();
+  }
+
   pub fn data(&mut self) -> Data {
     let image = self.surface.image_snapshot();
     let mut context = self.surface.direct_context();

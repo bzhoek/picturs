@@ -39,6 +39,7 @@ pub enum Shape<'a> {
   Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeDisplacement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
+  Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
   Text(&'a str, Option<EdgeDisplacement>),
 }
 
@@ -142,6 +143,7 @@ impl<'i> Diagram<'i> {
         Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &config, &pair),
         Rule::circle => Self::circle_from_pair(canvas, index, &cursor, &config, &pair),
         Rule::ellipse => Self::ellipse_from_pair(canvas, index, &cursor, &config, &pair),
+        Rule::oval => Self::oval_from_pair(canvas, index, &cursor, &config, &pair),
         Rule::text => Self::text_from_pair(canvas, index, &cursor, &config, &pair),
         _ => {
           debug!("Unmatched {:?}", pair);
@@ -357,6 +359,38 @@ impl<'i> Diagram<'i> {
 
     let circle = Primitive(id, used, used, stroke, Shape::Ellipse(text_color, paragraph, fill, location));
     Some((used, circle))
+  }
+
+  fn oval_from_pair<'a>(canvas: &mut Canvas, index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
+    let id = Conversion::rule_to_string(pair, Rule::id);
+    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let width = Conversion::width(&attributes).unwrap_or(config.oval.width);
+    let height = Conversion::width(&attributes);
+
+    let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
+    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let location = Conversion::location_from(&attributes, &config.flow.end);
+
+    let mut para_height = None;
+    let paragraph = title.map(|title| {
+      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+      para_height = Some(height);
+      Paragraph { text: title, widths, height }
+    });
+
+    let height = height.unwrap_or_else(|| {
+      para_height.unwrap_or(config.oval.height)
+    });
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.oval.height));
+
+    Self::adjust_topleft(&config.flow, &mut used);
+    index.position_rect(&location, &mut used);
+
+    index.insert(ShapeName::Oval, id, used);
+
+    let oval = Primitive(id, used, used, stroke, Shape::Oval(text_color, paragraph, fill, location));
+    Some((used, oval))
   }
 
   fn adjust_topleft(flow: &Flow, used: &mut Rect) {

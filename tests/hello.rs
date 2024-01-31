@@ -14,6 +14,7 @@ mod tests {
       box.a "box"
       circle "circle" 1cm right
       ellipse "ellipse" 1cm right
+      oval "oval" 1cm right
       "#;
     let diagram = create_diagram(string);
     assert_diagram(diagram, "target/visual_hello_statements")?;

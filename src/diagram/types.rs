@@ -13,6 +13,7 @@ pub struct Config {
   pub(crate) height: f32,
   pub(crate) circle: ShapeConfig,
   pub(crate) ellipse: ShapeConfig,
+  pub(crate) oval: ShapeConfig,
   pub(crate) rectangle: ShapeConfig,
 }
 
@@ -37,6 +38,7 @@ impl Config {
       height,
       circle: ShapeConfig::default(),
       ellipse: ShapeConfig::default(),
+      oval: ShapeConfig::default(),
       rectangle: ShapeConfig::default(),
     }
   }

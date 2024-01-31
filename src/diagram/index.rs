@@ -10,6 +10,7 @@ pub enum ShapeName {
   Container,
   Circle,
   Text,
+  Oval,
 }
 
 #[derive(Debug, Default)]
