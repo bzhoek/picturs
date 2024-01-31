@@ -157,10 +157,10 @@ impl Conversion {
       })
   }
 
-  pub fn location_from(pair: &Pair<Rule>) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
+  pub fn location_from(pair: &Pair<Rule>, edge: &Edge) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
     Rules::dig_rule(pair, Rule::location)
       .map(|p| {
-        let mut edge: Option<Edge> = None;
+        let mut edge: Option<Edge> = Some(*edge);
         let mut directions: Vec<Displacement> = vec![];
         let mut object: Option<ObjectEdge> = None;
 

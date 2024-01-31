@@ -7,6 +7,19 @@ mod tests {
   use crate::common::create_diagram;
 
   #[test]
+  fn visual_hello_statements() -> anyhow::Result<()> {
+    let string = r#"
+      set box pd 0
+      right
+      box.a "box"
+      circle "circle" 1cm right from a.e
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram(diagram, "target/visual_hello_statements")?;
+    Ok(())
+  }
+
+  #[test]
   fn visual_hello_world_right() -> anyhow::Result<()> {
     let string = r#"
       right

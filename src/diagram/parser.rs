@@ -109,7 +109,7 @@ impl<'i> Diagram<'i> {
           let (_height, radius) = Conversion::dimensions_from(&attributes);
           let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
           let title = Conversion::rule_to_string(&attributes, Rule::inner);
-          let location = Conversion::location_from(&attributes);
+          let location = Conversion::location_from(&attributes, &config.flow.start);
 
           let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
           Self::position_rect(index, &location, &mut used);
@@ -289,7 +289,7 @@ impl<'i> Diagram<'i> {
     let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
-    let location = Conversion::location_from(&attributes);
+    let location = Conversion::location_from(&attributes, &config.flow.start);
 
     let mut para_height = None;
     let paragraph = title.map(|title| {
@@ -329,7 +329,7 @@ impl<'i> Diagram<'i> {
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
-    let location = Conversion::location_from(&attributes);
+    let location = Conversion::location_from(&attributes, &config.flow.start);
 
     let mut para_height = None;
     let paragraph = title.map(|title| {
@@ -365,7 +365,7 @@ impl<'i> Diagram<'i> {
     let title = Conversion::rule_to_string(pair, Rule::inner).unwrap();
     let attributes = Rules::find_rule(pair, Rule::text_attributes).unwrap();
     let width = Conversion::width(&attributes).unwrap_or(config.width);
-    let location = Conversion::location_from(pair);
+    let location = Conversion::location_from(pair, &config.flow.start);
     let (_widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);

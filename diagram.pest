@@ -28,7 +28,7 @@ width = { ("wd" | "wid" | "width") ~ size }
 height = { ("ht" | "height") ~ size }
 padding = { ("pd" | "padding") ~ size }
 
-location = { edge ~ displacement* ~ "from" ~ object_edge }
+location = { edge? ~ displacement* ~ "from" ~ object_edge }
 size = _{ length ~ unit? }
 displacement = { length ~ unit ~ direction }
 length = { ASCII_DIGIT* }
