@@ -132,7 +132,8 @@ impl Renderer {
         canvas.paint.set_color(*color);
         canvas.cylinder(used);
 
-        Self::draw_paragraph(canvas, used, text_color, paragraph);
+        let rect = Rect::from_xywh(used.left, used.top + used.height() / 3., used.width(), used.height() * 0.666);
+        Self::draw_paragraph(canvas, &rect, text_color, paragraph);
       }
       Shape::Oval(text_color, paragraph, _fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
