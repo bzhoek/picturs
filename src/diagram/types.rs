@@ -93,7 +93,7 @@ impl From<&str> for Direction {
   }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Flow {
   pub(crate) start: Edge,
   pub(crate) end: Edge,
@@ -121,7 +121,7 @@ pub enum EdgeDirection {
   Vertical,
 }
 
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Edge {
   pub direction: EdgeDirection,
   pub x: f32,

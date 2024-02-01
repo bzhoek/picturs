@@ -141,7 +141,7 @@ impl Conversion {
     let id = Self::rule_to_string(&pair, Rule::id).unwrap();
     let edge = Self::rule_to_string(&pair, Rule::edge)
       .map(Edge::new)
-      .unwrap_or(*edge);
+      .unwrap_or(edge.clone());
     ObjectEdge::edge(id, edge)
   }
 
@@ -201,11 +201,11 @@ impl Conversion {
         if let Some(displacement) = directions.first() {
           if let Some(object) = object.as_mut() {
             if object.id.eq("box") {
-              object.edge = displacement.edge
+              object.edge = displacement.edge.clone()
             }
           }
           if object.is_none() {
-            object = Some(ObjectEdge::edge("#last", displacement.edge))
+            object = Some(ObjectEdge::edge("#last", displacement.edge.clone()))
           }
           if edge.is_none() {
             edge = Some(displacement.edge.flip())
