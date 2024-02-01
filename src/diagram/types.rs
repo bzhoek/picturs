@@ -24,6 +24,7 @@ pub enum Shape<'a> {
   Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeDisplacement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
+  Cylinder(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
   Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
   Text(&'a str, Option<EdgeDisplacement>),
 }

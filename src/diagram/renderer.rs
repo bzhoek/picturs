@@ -1,11 +1,12 @@
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
+use log::warn;
 
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::index::Index;
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Node, Shape};
+use crate::diagram::types::{Node, Paragraph, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -102,18 +103,7 @@ impl Renderer {
         canvas.paint.set_color(*fill);
         canvas.rectangle(used, radius.pixels());
 
-        if let Some(paragraph) = paragraph {
-          canvas.paint.set_style(PaintStyle::Fill);
-          canvas.paint.set_color(*text_color);
-          let mut rect = *used;
-          if paragraph.widths.len() == 1 {
-            rect.top += (used.height() - paragraph.height) / 2. - Canvas::get_font_descent();
-            rect.left += (used.width() - paragraph.widths.first().unwrap()) / 2.;
-          } else {
-            rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
-          }
-          Self::render_paragraph(canvas, &rect, &paragraph.text);
-        }
+        Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::Circle(text_color, paragraph, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
@@ -124,18 +114,7 @@ impl Renderer {
         canvas.paint.set_color(*fill);
         canvas.circle(&used.center(), used.width() / 2.);
 
-        if let Some(paragraph) = paragraph {
-          canvas.paint.set_style(PaintStyle::Fill);
-          canvas.paint.set_color(*text_color);
-          let mut rect = *used;
-          if paragraph.widths.len() == 1 {
-            rect.top += (used.height() - paragraph.height) / 2. - Canvas::get_font_descent();
-            rect.left += (used.width() - paragraph.widths.first().unwrap()) / 2.;
-          } else {
-            rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
-          }
-          Self::render_paragraph(canvas, &rect, &paragraph.text);
-        }
+        Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::Ellipse(text_color, paragraph, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
@@ -146,41 +125,45 @@ impl Renderer {
         canvas.paint.set_color(*fill);
         canvas.ellipse(used);
 
-        if let Some(paragraph) = paragraph {
-          canvas.paint.set_style(PaintStyle::Fill);
-          canvas.paint.set_color(*text_color);
-          let mut rect = *used;
-          if paragraph.widths.len() == 1 {
-            rect.top += (used.height() - paragraph.height) / 2. - Canvas::get_font_descent();
-            rect.left += (used.width() - paragraph.widths.first().unwrap()) / 2.;
-          } else {
-            rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
-          }
-          Self::render_paragraph(canvas, &rect, &paragraph.text);
-        }
+        Self::draw_paragraph(canvas, used, text_color, paragraph);
+      }
+      Shape::Cylinder(text_color, paragraph, fill, _) => {
+        canvas.paint.set_style(PaintStyle::Stroke);
+        canvas.paint.set_color(*color);
+        canvas.ellipse(used);
+
+        canvas.paint.set_style(PaintStyle::Fill);
+        canvas.paint.set_color(*fill);
+        canvas.ellipse(used);
+
+        Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::Oval(text_color, paragraph, _fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
         canvas.oval(used);
 
-        if let Some(paragraph) = paragraph {
-          canvas.paint.set_style(PaintStyle::Fill);
-          canvas.paint.set_color(*text_color);
-          let mut rect = *used;
-          if paragraph.widths.len() == 1 {
-            rect.top += (used.height() - paragraph.height) / 2. - Canvas::get_font_descent();
-            rect.left += (used.width() - paragraph.widths.first().unwrap()) / 2.;
-          } else {
-            rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
-          }
-          Self::render_paragraph(canvas, &rect, &paragraph.text);
-        }
+        Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::Text(title, _) => {
         Self::render_paragraph(canvas, used, title);
       }
-      _ => {}
+      _ => warn!("unmatched shape {:?}", shape)
+    }
+  }
+
+  fn draw_paragraph(canvas: &mut Canvas, used: &Rect, text_color: &Color, paragraph: &Option<Paragraph>) {
+    if let Some(paragraph) = paragraph {
+      canvas.paint.set_style(PaintStyle::Fill);
+      canvas.paint.set_color(*text_color);
+      let mut rect = *used;
+      if paragraph.widths.len() == 1 {
+        rect.top += (used.height() - paragraph.height) / 2. - Canvas::get_font_descent();
+        rect.left += (used.width() - paragraph.widths.first().unwrap()) / 2.;
+      } else {
+        rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
+      }
+      canvas.paragraph(paragraph.text, (rect.left, rect.top), rect.width());
     }
   }
 

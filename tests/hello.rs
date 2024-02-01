@@ -15,7 +15,7 @@ mod tests {
       circle "circle" 1cm right
       ellipse "ellipse" 1cm right
       oval "oval" 1cm down last box
-      ellipse "cylinder" 1cm right ht 32 wd 128
+      cylinder "cylinder" 1cm right ht 32 wd 128
       "#;
     let diagram = create_diagram(string);
     assert_diagram(diagram, "target/visual_hello_statements")?;

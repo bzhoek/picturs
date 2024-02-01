@@ -9,6 +9,7 @@ pub mod skia;
 pub mod diagram;
 pub mod test;
 
+#[allow(dead_code)]
 fn debug_rect(used: &Rect) -> String {
   format!("x: {} y: {}, w: {}, h: {}", used.x(), used.y(), used.width(), used.height())
 }

@@ -1,12 +1,11 @@
 use std::ops::Add;
 
-use log::{debug, info, warn};
+use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, Point, Rect};
 
-use crate::debug_rect;
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
@@ -84,13 +83,14 @@ impl<'i> Diagram<'i> {
       }
       Rule::container => Self::container_from(&pair, config, index, cursor, canvas),
       Rule::rectangle => Self::rectangle_from(&pair, config, index, cursor, canvas),
+      Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor, canvas),
+      Rule::cylinder => Self::cylinder_from(&pair, config, index, cursor, canvas),
       Rule::oval => Self::oval_from(&pair, config, index, cursor, canvas),
       Rule::dot => Self::dot_from(&pair, index),
       Rule::arrow => Self::arrow_from(pair, index, cursor, &config.flow),
       Rule::line => Self::line_from(pair, index, cursor, &config.flow),
       Rule::move_to => Self::move_from(&pair, cursor),
       Rule::circle => Self::circle_from(&pair, config, index, cursor, canvas),
-      Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor, canvas),
       Rule::text => Self::text_from(&pair, config, index, cursor, canvas),
       _ => {
         debug!("Unmatched {:?}", pair);
@@ -191,6 +191,54 @@ impl<'i> Diagram<'i> {
 
     let rectangle = Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location));
     Some((rect, rectangle))
+  }
+
+  fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+    let id = Conversion::rule_to_string(pair, Rule::id);
+    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let width = Conversion::width(&attributes).unwrap_or(config.ellipse.width);
+    let height = Conversion::height(&attributes).unwrap_or(config.ellipse.height);
+
+    let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
+    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let location = Conversion::location_from(&attributes, &config.flow.end);
+
+    let paragraph = Self::paragraph_height(title, width, canvas);
+    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
+
+    Self::adjust_topleft(&config.flow, &mut used);
+    index.position_rect(&location, &mut used);
+
+    index.insert(ShapeName::Circle, id, used);
+
+    let ellipse = Primitive(id, used, used, stroke, Shape::Ellipse(text_color, paragraph, fill, location));
+    Some((used, ellipse))
+  }
+
+  fn cylinder_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+    let id = Conversion::rule_to_string(pair, Rule::id);
+    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let width = Conversion::width(&attributes).unwrap_or(config.ellipse.width);
+    let height = Conversion::height(&attributes).unwrap_or(config.ellipse.height);
+
+    let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
+    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let location = Conversion::location_from(&attributes, &config.flow.end);
+
+    let paragraph = Self::paragraph_height(title, width, canvas);
+    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
+
+    Self::adjust_topleft(&config.flow, &mut used);
+    index.position_rect(&location, &mut used);
+
+    index.insert(ShapeName::Circle, id, used);
+
+    let cylinder = Primitive(id, used, used, stroke, Shape::Cylinder(text_color, paragraph, fill, location));
+    Some((used, cylinder))
   }
 
   fn config_shape(config: &mut ShapeConfig, pair: Pair<Rule>) {
@@ -321,31 +369,6 @@ impl<'i> Diagram<'i> {
       Paragraph { text: title, widths, height }
     })
   }
-
-  fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
-    let attributes = Rules::get_rule(pair, Rule::attributes);
-    let width = Conversion::width(&attributes).unwrap_or(config.ellipse.width);
-    let height = Conversion::height(&attributes).unwrap_or(config.ellipse.height);
-
-    let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
-    let title = Conversion::rule_to_string(&attributes, Rule::inner);
-    let location = Conversion::location_from(&attributes, &config.flow.end);
-
-    let paragraph = Self::paragraph_height(title, width, canvas);
-    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
-
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
-
-    Self::adjust_topleft(&config.flow, &mut used);
-    index.position_rect(&location, &mut used);
-
-    index.insert(ShapeName::Circle, id, used);
-
-    let ellipse = Primitive(id, used, used, stroke, Shape::Ellipse(text_color, paragraph, fill, location));
-    Some((used, ellipse))
-  }
-
 
   fn position_rect_on_edge(start: &Edge, location: &Option<(Edge, Vec<Displacement>, ObjectEdge)>, used: &mut Rect) {
     let start = match location {
