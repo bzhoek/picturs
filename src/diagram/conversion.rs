@@ -2,6 +2,7 @@
 
 use pest::iterators::{Pair, Pairs};
 use skia_safe::Color;
+use crate::diagram::index::ShapeName;
 
 use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
@@ -193,7 +194,7 @@ impl Conversion {
         };
         if let Some(displacement) = directions.first() {
           if let Some(object) = object.as_mut() {
-            if object.id.eq("box") {
+            if ShapeName::some(object.id.as_str()).is_some() {
               object.edge = displacement.edge.clone()
             }
           }

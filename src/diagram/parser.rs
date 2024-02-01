@@ -211,7 +211,7 @@ impl<'i> Diagram<'i> {
     Self::adjust_topleft(&config.flow, &mut used);
     index.position_rect(&location, &mut used);
 
-    index.insert(ShapeName::Circle, id, used);
+    index.insert(ShapeName::Ellipse, id, used);
 
     let ellipse = Primitive(id, used, used, stroke, Shape::Ellipse(text_color, paragraph, fill, location));
     Some((used, ellipse))
