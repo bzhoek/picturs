@@ -4,8 +4,9 @@ use std::ops::{Add, Sub};
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::index::Index;
-use crate::diagram::parser::{Node, Shape, TEXT_PADDING};
-use crate::diagram::parser::Node::{Container, Primitive};
+use crate::diagram::parser::TEXT_PADDING;
+use crate::diagram::types::{Node, Shape};
+use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
 pub struct Renderer {}

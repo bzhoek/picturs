@@ -1,10 +1,38 @@
 use std::ops::{Add, Mul};
 
-use skia_safe::{Point, Rect, Vector};
+use skia_safe::{Color, Point, Rect, Vector};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
 use crate::diagram::parser::BLOCK_PADDING;
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
+
+#[derive(Debug, PartialEq)]
+pub enum Node<'a> {
+  Container(Option<&'a str>, Radius, Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
+  Primitive(Option<&'a str>, Rect, Rect, Color, Shape<'a>),
+}
+
+type EdgeDisplacement = (Edge, Vec<Displacement>, ObjectEdge);
+
+#[derive(Debug, PartialEq)]
+pub enum Shape<'a> {
+  Move(),
+  Dot(ObjectEdge, Radius),
+  Arrow(Option<&'a str>, ObjectEdge, Option<Displacement>, ObjectEdge),
+  Line(Option<&'a str>, Point, Option<Displacement>, Point),
+  Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeDisplacement>),
+  Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
+  Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
+  Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
+  Text(&'a str, Option<EdgeDisplacement>),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Paragraph<'a> {
+  pub text: &'a str,
+  pub widths: Vec<f32>,
+  pub height: f32,
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Config {
@@ -176,6 +204,8 @@ impl From<&str> for Unit {
     }
   }
 }
+
+pub type Radius = Length;
 
 #[derive(Debug, Default, PartialEq)]
 pub struct Length {

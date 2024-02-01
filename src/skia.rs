@@ -4,6 +4,8 @@ use std::mem;
 
 use skia_safe::{Color, Data, EncodedImageFormat, Font, ISize, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Surface, surfaces, Typeface};
 
+pub static A5: (i32, i32) = (798, 562);
+
 pub struct Canvas {
   pub surface: Surface,
   path: Path,

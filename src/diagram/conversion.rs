@@ -3,9 +3,9 @@
 use pest::iterators::{Pair, Pairs};
 use skia_safe::Color;
 
-use crate::diagram::parser::{Radius, Rule};
+use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge};
+use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge, Radius};
 
 pub const WIDTH: f32 = 120.;
 pub const HEIGHT: f32 = 60.;

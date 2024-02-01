@@ -1,5 +1,6 @@
-use picturs::diagram::parser::{A5, Diagram};
+use picturs::diagram::parser::Diagram;
 use picturs::init_logging;
+use picturs::skia::A5;
 
 pub fn create_diagram(string: &str) -> Diagram {
   init_logging();

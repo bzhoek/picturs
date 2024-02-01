@@ -8,47 +8,16 @@ use skia_safe::{Color, ISize, Point, Rect};
 
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
-use crate::diagram::parser::Node::{Container, Primitive};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Config, Displacement, Edge, Flow, Length, ObjectEdge, ShapeConfig};
+use crate::diagram::types::{Config, Displacement, Flow, Node, ObjectEdge, Paragraph, Shape, ShapeConfig};
+use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
-
-pub static A5: (i32, i32) = (798, 562);
-
-pub type Radius = Length;
 
 #[derive(Parser)]
 #[grammar = "diagram.pest"]
 pub struct DiagramParser;
 
-#[derive(Debug, PartialEq)]
-pub enum Node<'a> {
-  Container(Option<&'a str>, Radius, Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
-  Primitive(Option<&'a str>, Rect, Rect, Color, Shape<'a>),
-}
-
-type EdgeDisplacement = (Edge, Vec<Displacement>, ObjectEdge);
-
-#[derive(Debug, PartialEq)]
-pub enum Shape<'a> {
-  Move(),
-  Dot(ObjectEdge, Radius),
-  Arrow(Option<&'a str>, ObjectEdge, Option<Displacement>, ObjectEdge),
-  Line(Option<&'a str>, Point, Option<Displacement>, Point),
-  Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeDisplacement>),
-  Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
-  Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
-  Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
-  Text(&'a str, Option<EdgeDisplacement>),
-}
-
-#[derive(Debug, PartialEq)]
-pub struct Paragraph<'a> {
-  pub text: &'a str,
-  pub widths: Vec<f32>,
-  pub height: f32,
-}
 
 #[derive(Debug)]
 pub struct Diagram<'a> {

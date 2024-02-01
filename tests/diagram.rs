@@ -8,17 +8,16 @@ mod tests {
   use skia_safe::{Color, Point, Rect, Vector};
 
   use picturs::diagram::index::Index;
-  use picturs::diagram::parser::{Node, Paragraph, Radius};
-  use picturs::diagram::parser::Node::{Container, Primitive};
-  use picturs::diagram::parser::Shape::Rectangle;
-  use picturs::diagram::types::{Displacement, Edge, Unit};
+  use picturs::diagram::types::{Displacement, Edge, Node, Paragraph, Radius, Shape, Unit};
+  use picturs::diagram::types::Node::{Container, Primitive};
+  use picturs::diagram::types::Shape::Rectangle;
   use picturs::test::assert_diagram;
 
   use crate::common::create_diagram;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
-  fn rectangle(title: Option<(&str, f32)>) -> picturs::diagram::parser::Shape {
+  fn rectangle(title: Option<(&str, f32)>) -> Shape {
     let paragraph = title.map(|(title, width)| {
       Paragraph { text: title, widths: vec!(width), height: 17. }
     });
