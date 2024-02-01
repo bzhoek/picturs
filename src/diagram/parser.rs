@@ -55,34 +55,7 @@ impl<'i> Diagram<'i> {
     let mut cursor = Point::new(offset.x, offset.y);
 
     for pair in pairs.into_iter() {
-      let result = match pair.as_rule() {
-        Rule::box_config => {
-          Self::config_shape(&mut config.rectangle, pair);
-          None
-        }
-        Rule::circle_config => {
-          Self::config_shape(&mut config.circle, pair);
-          None
-        }
-        Rule::flow => {
-          config.flow = Flow::new(pair.as_str());
-          None
-        }
-        Rule::container => Self::container_from(&pair, &config, index, cursor, canvas),
-        Rule::rectangle => Self::rectangle_from(&pair, &config, index, &cursor, canvas),
-        Rule::oval => Self::oval_from(&pair, &config, index, &cursor, canvas),
-        Rule::dot => Self::dot_from(&pair, index),
-        Rule::arrow => Self::arrow_from(pair, index, &cursor, &config.flow),
-        Rule::line => Self::line_from(pair, index, &cursor, &config.flow),
-        Rule::move_to => Self::move_from(&pair, cursor),
-        Rule::circle => Self::circle_from(&pair, &config, index, &cursor, canvas),
-        Rule::ellipse => Self::ellipse_from(&pair, &config, index, &cursor, canvas),
-        Rule::text => Self::text_from(&pair, &config, index, &cursor, canvas),
-        _ => {
-          debug!("Unmatched {:?}", pair);
-          None
-        }
-      };
+      let result = Self::node_from(pair, &mut config, index, &mut cursor, canvas);
 
       if let Some((rect, node)) = result {
         ast.push(node);
@@ -94,7 +67,39 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index, cursor: &mut Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+    let result = match pair.as_rule() {
+      Rule::box_config => {
+        Self::config_shape(&mut config.rectangle, pair);
+        None
+      }
+      Rule::circle_config => {
+        Self::config_shape(&mut config.circle, pair);
+        None
+      }
+      Rule::flow => {
+        config.flow = Flow::new(pair.as_str());
+        None
+      }
+      Rule::container => Self::container_from(&pair, config, index, cursor, canvas),
+      Rule::rectangle => Self::rectangle_from(&pair, config, index, cursor, canvas),
+      Rule::oval => Self::oval_from(&pair, config, index, cursor, canvas),
+      Rule::dot => Self::dot_from(&pair, index),
+      Rule::arrow => Self::arrow_from(pair, index, cursor, &config.flow),
+      Rule::line => Self::line_from(pair, index, cursor, &config.flow),
+      Rule::move_to => Self::move_from(&pair, cursor),
+      Rule::circle => Self::circle_from(&pair, config, index, cursor, canvas),
+      Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor, canvas),
+      Rule::text => Self::text_from(&pair, config, index, cursor, canvas),
+      _ => {
+        debug!("Unmatched {:?}", pair);
+        None
+      }
+    };
+    result
+  }
+
+  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let (_height, radius) = Conversion::dimensions_from(&attributes);
@@ -292,7 +297,7 @@ impl<'i> Diagram<'i> {
     Some((rect, dot))
   }
 
-  fn move_from<'a>(pair: &Pair<'a, Rule>, cursor: Point) -> Option<(Rect, Node<'a>)> {
+  fn move_from<'a>(pair: &Pair<'a, Rule>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     Conversion::displacements_from_pair(pair).map(|displacements| {
       let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
       Index::offset_rect(&mut used, &displacements);
@@ -368,9 +373,9 @@ impl<'i> Diagram<'i> {
   fn position_rect_on_edge(start: &Edge, location: &Option<(Edge, Vec<Displacement>, ObjectEdge)>, used: &mut Rect) {
     let start = match location {
       Some((edge, _, _)) => edge,
-      None => &start
+      None => start
     };
-    let offset = start.topleft_offset(&used);
+    let offset = start.topleft_offset(used);
     used.offset(offset);
   }
 
