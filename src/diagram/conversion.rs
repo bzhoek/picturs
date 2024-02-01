@@ -5,7 +5,7 @@ use skia_safe::Color;
 
 use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge, Radius};
+use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge};
 
 pub const WIDTH: f32 = 120.;
 pub const HEIGHT: f32 = 60.;
@@ -102,13 +102,6 @@ impl Conversion {
     let unit = Self::rule_to_string(&pair, Rule::unit)
       .unwrap_or("px");
     Length::new(length as f32, unit.into())
-  }
-
-  pub fn dimensions_from(attributes: &Pair<Rule>) -> (Option<f32>, Radius) {
-    let height = Conversion::height(attributes);
-    let radius = Conversion::radius(attributes).unwrap_or_default();
-
-    (height, radius)
   }
 
   pub fn radius(attributes: &Pair<Rule>) -> Option<Length> {

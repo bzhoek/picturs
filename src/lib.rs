@@ -3,10 +3,15 @@ use env_logger::Env;
 use log::warn;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
+use skia_safe::Rect;
 
 pub mod skia;
 pub mod diagram;
 pub mod test;
+
+fn debug_rect(used: &Rect) -> String {
+  format!("x: {} y: {}, w: {}, h: {}", used.x(), used.y(), used.width(), used.height())
+}
 
 #[derive(Parser)]
 #[grammar = "pic.pest"] // relative to project `src`

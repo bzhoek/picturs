@@ -1,16 +1,17 @@
 use std::ops::Add;
 
-use log::{debug, warn};
+use log::{debug, info, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, Point, Rect};
 
+use crate::debug_rect;
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Config, Displacement, Edge, Flow, Node, ObjectEdge, Paragraph, Shape, ShapeConfig};
+use crate::diagram::types::{BLOCK_PADDING, Config, Displacement, Edge, Flow, Node, ObjectEdge, Paragraph, Shape, ShapeConfig};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -102,7 +103,7 @@ impl<'i> Diagram<'i> {
   fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::get_rule(pair, Rule::attributes);
-    let (_height, radius) = Conversion::dimensions_from(&attributes);
+    let radius = Conversion::radius(&attributes).unwrap_or_default();
     let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.start);
@@ -141,24 +142,16 @@ impl<'i> Diagram<'i> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let width = Conversion::width(&attributes).unwrap_or(config.oval.width);
-    let height = Conversion::width(&attributes);
+    let height = Conversion::height(&attributes).unwrap_or(config.oval.height);
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
-    let mut para_height = None;
-    let paragraph = title.map(|title| {
-      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
-      para_height = Some(height);
-      Paragraph { text: title, widths, height }
-    });
+    let paragraph = Self::paragraph_height(title, width, canvas);
+    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
 
-    let height = height.unwrap_or_else(|| {
-      para_height.unwrap_or(config.oval.height)
-    });
-
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.oval.height));
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
 
     Self::position_rect_on_edge(&config.flow.start, &location, &mut used);
     index.position_rect(&location, &mut used);
@@ -173,25 +166,18 @@ impl<'i> Diagram<'i> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
 
-    let (height, radius) = Conversion::dimensions_from(&attributes);
+    let radius = Conversion::radius(&attributes).unwrap_or_default();
     let width = Conversion::width(&attributes).unwrap_or(config.rectangle.width);
+    let height = Conversion::height(&attributes).unwrap_or(config.rectangle.height);
     let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.start);
 
-    let mut para_height = None;
-    let paragraph = title.map(|title| {
-      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
-      para_height = Some(height);
-      Paragraph { text: title, widths, height }
-    });
+    let paragraph = Self::paragraph_height(title, width, canvas);
+    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
 
-    let height = height.unwrap_or_else(|| {
-      para_height.unwrap_or(config.rectangle.height)
-    });
-
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.rectangle.height));
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
     used.bottom += padding;
     Self::adjust_topleft(&config.flow, &mut used);
     index.position_rect(&location, &mut used);
@@ -309,24 +295,16 @@ impl<'i> Diagram<'i> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let width = Conversion::width(&attributes).unwrap_or(config.circle.height);
-    let height = Conversion::width(&attributes);
+    let height = Conversion::height(&attributes).unwrap_or(config.circle.height);
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
-    let mut para_height = None;
-    let paragraph = title.map(|title| {
-      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
-      para_height = Some(height);
-      Paragraph { text: title, widths, height }
-    });
+    let paragraph = Self::paragraph_height(title, width, canvas);
+    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
 
-    let height = height.unwrap_or_else(|| {
-      para_height.unwrap_or(config.circle.height)
-    });
-
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.circle.height));
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
 
     Self::adjust_topleft(&config.flow, &mut used);
     index.position_rect(&location, &mut used);
@@ -337,36 +315,35 @@ impl<'i> Diagram<'i> {
     Some((used, circle))
   }
 
+  fn paragraph_height<'a>(title: Option<&'a str>, width: f32, canvas: &mut Canvas) -> Option<Paragraph<'a>> {
+    title.map(|title| {
+      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+      Paragraph { text: title, widths, height }
+    })
+  }
+
   fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(pair, Rule::id);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let width = Conversion::width(&attributes).unwrap_or(config.ellipse.width);
-    let height = Conversion::width(&attributes);
+    let height = Conversion::height(&attributes).unwrap_or(config.ellipse.height);
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
-    let mut para_height = None;
-    let paragraph = title.map(|title| {
-      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
-      para_height = Some(height);
-      Paragraph { text: title, widths, height }
-    });
+    let paragraph = Self::paragraph_height(title, width, canvas);
+    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
 
-    let height = height.unwrap_or_else(|| {
-      para_height.unwrap_or(config.ellipse.height)
-    });
-
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.ellipse.height));
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
 
     Self::adjust_topleft(&config.flow, &mut used);
     index.position_rect(&location, &mut used);
 
     index.insert(ShapeName::Circle, id, used);
 
-    let circle = Primitive(id, used, used, stroke, Shape::Ellipse(text_color, paragraph, fill, location));
-    Some((used, circle))
+    let ellipse = Primitive(id, used, used, stroke, Shape::Ellipse(text_color, paragraph, fill, location));
+    Some((used, ellipse))
   }
 
 
@@ -478,7 +455,6 @@ impl<'i> Diagram<'i> {
   }
 }
 
-pub const BLOCK_PADDING: f32 = 8.;
 pub const TEXT_PADDING: f32 = 4.;
 
 #[allow(dead_code)]

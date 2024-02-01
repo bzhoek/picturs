@@ -3,8 +3,9 @@ use std::ops::{Add, Mul};
 use skia_safe::{Color, Point, Rect, Vector};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
-use crate::diagram::parser::BLOCK_PADDING;
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
+
+pub const BLOCK_PADDING: f32 = 8.;
 
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
