@@ -99,48 +99,12 @@ impl<'i> Diagram<'i> {
           config.flow = Flow::new(pair.as_str());
           None
         }
-        Rule::container => {
-          let id = Conversion::rule_to_string(&pair, Rule::id);
-          let attributes = Rules::get_rule(&pair, Rule::attributes);
-          let (_height, radius) = Conversion::dimensions_from(&attributes);
-          let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
-          let title = Conversion::rule_to_string(&attributes, Rule::inner);
-          let location = Conversion::location_from(&attributes, &config.flow.start);
-
-          let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-          index.position_rect(&location, &mut used);
-
-          let mut inset = Point::new(used.left, used.bottom);
-          inset.offset((padding, padding));
-          let (nodes, inner) = {
-            let mut config = config.clone();
-            Conversion::flow(&attributes).iter().for_each(|flow| {
-              config.flow = *flow;
-            });
-            Self::pairs_to_nodes(pair.into_inner(), vec![], canvas, &inset, config, index)
-          };
-          used.top = inner.top - padding;
-          used.left = inner.left - padding;
-          used.bottom = inner.bottom + padding;
-          used.right = inner.right + 2. * padding;
-
-          if let Some(title) = title {
-            let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
-            let (_widths, down) = canvas.paragraph(title, (0., 0.), text_inset.width());
-            used.bottom = inner.bottom + down + TEXT_PADDING;
-          }
-
-          index.insert(ShapeName::Container, id, used);
-
-          let mut rect = used;
-          rect.bottom += padding;
-          Some((rect, Container(id, radius, title, rect, used, nodes)))
-        }
+        Rule::container => Self::container_from(&pair, &config, index, cursor, canvas),
+        Rule::rectangle => Self::rectangle_from(&pair, &config, index, &cursor, canvas),
         Rule::dot => Self::dot_from_pair(index, &pair),
         Rule::arrow => Self::arrow_from_pair(index, &cursor, &config.flow, pair),
         Rule::line => Self::line_from_pair(index, &cursor, &config.flow, pair),
         Rule::move_to => Self::move_from_pair(&pair, cursor),
-        Rule::rectangle => Self::rectangle_from_pair(canvas, index, &cursor, &config, &pair),
         Rule::circle => Self::circle_from_pair(canvas, index, &cursor, &config, &pair),
         Rule::ellipse => Self::ellipse_from_pair(canvas, index, &cursor, &config, &pair),
         Rule::oval => Self::oval_from_pair(canvas, index, &cursor, &config, &pair),
@@ -159,6 +123,82 @@ impl<'i> Diagram<'i> {
       }
     }
     (ast, bounds)
+  }
+
+  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+    let id = Conversion::rule_to_string(pair, Rule::id);
+    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let (_height, radius) = Conversion::dimensions_from(&attributes);
+    let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
+    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let location = Conversion::location_from(&attributes, &config.flow.start);
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+    index.position_rect(&location, &mut used);
+
+    let mut inset = Point::new(used.left, used.bottom);
+    inset.offset((padding, padding));
+    let (nodes, inner) = {
+      let mut config = config.clone();
+      Conversion::flow(&attributes).iter().for_each(|flow| {
+        config.flow = *flow;
+      });
+      Self::pairs_to_nodes(pair.clone().into_inner(), vec![], canvas, &inset, config, index)
+    };
+    used.top = inner.top - padding;
+    used.left = inner.left - padding;
+    used.bottom = inner.bottom + padding;
+    used.right = inner.right + 2. * padding;
+
+    if let Some(title) = title {
+      let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
+      let (_widths, down) = canvas.paragraph(title, (0., 0.), text_inset.width());
+      used.bottom = inner.bottom + down + TEXT_PADDING;
+    }
+
+    index.insert(ShapeName::Container, id, used);
+
+    let mut rect = used;
+    rect.bottom += padding;
+    Some((rect, Container(id, radius, title, rect, used, nodes)))
+  }
+
+  fn rectangle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+    let id = Conversion::rule_to_string(pair, Rule::id);
+    let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
+
+    let (height, radius) = Conversion::dimensions_from(&attributes);
+    let width = Conversion::width(&attributes).unwrap_or(config.rectangle.width);
+    let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
+    let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
+    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let location = Conversion::location_from(&attributes, &config.flow.start);
+
+    let mut para_height = None;
+    let paragraph = title.map(|title| {
+      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+      para_height = Some(height);
+      Paragraph { text: title, widths, height }
+    });
+
+    let height = height.unwrap_or_else(|| {
+      para_height.unwrap_or(config.rectangle.height)
+    });
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.rectangle.height));
+    used.bottom += padding;
+    Self::adjust_topleft(&config.flow, &mut used);
+    index.position_rect(&location, &mut used);
+
+    index.insert(ShapeName::Rectangle, id, used);
+
+    let mut rect = used;
+    if config.flow.end.x <= 0. {
+      rect.bottom += padding;
+    }
+
+    let rectangle = Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location));
+    Some((rect, rectangle))
   }
 
   fn config_shape(config: &mut ShapeConfig, pair: Pair<Rule>) {
@@ -257,44 +297,6 @@ impl<'i> Diagram<'i> {
       Index::offset_rect(&mut used, &displacements);
       (used, Primitive(None, used, used, Color::BLACK, Shape::Move()))
     })
-  }
-
-  fn rectangle_from_pair<'a>(canvas: &mut Canvas, index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
-    let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
-
-    let (height, radius) = Conversion::dimensions_from(&attributes);
-    let width = Conversion::width(&attributes).unwrap_or(config.rectangle.width);
-    let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
-    let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
-    let title = Conversion::rule_to_string(&attributes, Rule::inner);
-    let location = Conversion::location_from(&attributes, &config.flow.start);
-
-    let mut para_height = None;
-    let paragraph = title.map(|title| {
-      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
-      para_height = Some(height);
-      Paragraph { text: title, widths, height }
-    });
-
-    let height = height.unwrap_or_else(|| {
-      para_height.unwrap_or(config.rectangle.height)
-    });
-
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height.max(config.rectangle.height));
-    used.bottom += padding;
-    Self::adjust_topleft(&config.flow, &mut used);
-    index.position_rect(&location, &mut used);
-
-    index.insert(ShapeName::Rectangle, id, used);
-
-    let mut rect = used;
-    if config.flow.end.x <= 0. {
-      rect.bottom += padding;
-    }
-
-    let rectangle = Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location));
-    Some((rect, rectangle))
   }
 
   fn circle_from_pair<'a>(canvas: &mut Canvas, index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<'a, Rule>) -> Option<(Rect, Node<'a>)> {
