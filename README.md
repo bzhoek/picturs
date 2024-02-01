@@ -1,4 +1,3 @@
-
 # picturs: pic grammar in Rust
 
 * https://pikchr.org/home/doc/trunk/homepage.md
@@ -13,11 +12,14 @@ ellipse "ellipse" 1 right
 oval "oval" 1 below first box
 ```
 
-The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the direction is `right`, the polar opposite `west` is used. For `oval` the polar opposite `north` is assumed, because the placement is `below`.
+The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the direction is `right`, the polar
+opposite `west` is used. For `oval` the polar opposite `north` is assumed, because the placement is `below`.
 
-The first relative component determines direction, `circle 1 right 1 down` will be horizontal, and `oval 1 down` will be vertical.
+The first relative component determines direction, `circle 1 right 1 down` will be horizontal, and `oval 1 down` will be
+vertical.
 
 ## Diagram
+
 1. ~Render all rectangles~
 2. ~Wrap the text in a rectangle~
 3. ~Save primitive bounds in AST on parsing first pass~
@@ -46,13 +48,15 @@ The first relative component determines direction, `circle 1 right 1 down` will 
 18. Oval shape
 18. File shape
 
-De topleft wordt het nieuwe centrum voor een rechter rij, waardoor er overlap ontstaat. De oplossing is om de container te positioneren nadat de inhoud is bepaald en de grootte bekend is.
+De topleft wordt het nieuwe centrum voor een rechter rij, waardoor er overlap ontstaat. De oplossing is om de container
+te positioneren nadat de inhoud is bepaald en de grootte bekend is.
 
 Daarvoor moet de inhoud van de container relatief gepositioneerd worden.
 
-Dat heeft wel gevolgen voor lookups, omdat de positie niet meer absoluut bekend is. 
+Dat heeft wel gevolgen voor lookups, omdat de positie niet meer absoluut bekend is.
 
-Een tweede pass lost het probleem niet op, omdat hier element relatief geplaatst kunnen zijn die weer gevolgen hebben voor andere elementen.
+Een tweede pass lost het probleem niet op, omdat hier element relatief geplaatst kunnen zijn die weer gevolgen hebben
+voor andere elementen.
 
 Een tweede pass kan werken als alleen wordt verwezen naar items die al hun absolute positie hebben.
 
@@ -62,7 +66,7 @@ Het makkelijkste is misschien om top alignment te houden.
 `.nw=left.ne 1cr 2cd`
 
 ## pest
- 
+
 * https://docs.rs/pest/latest/pest/
 * https://pest.rs/book/intro.html
 * https://github.com/pest-parser/pest
@@ -85,14 +89,18 @@ line from now.n to future.n
 
 balloon
 list
-
 ```
 
-
+## Setup
 
 ```sh
 cargo add skia-safe --features metal
 ```
+
+## Drawing
+
+How to [draw an arrow](https://stackoverflow.com/questions/72714333/flutter-how-do-i-make-arrow-lines-with-canvas) with
+Rust [trigonometry](https://rust-lang-nursery.github.io/rust-cookbook/science/mathematics/trigonometry.html).
 
 ### Timeline
 
