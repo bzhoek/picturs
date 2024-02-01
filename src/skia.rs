@@ -129,6 +129,19 @@ impl Canvas {
     self.surface.canvas().draw_oval(rect, &self.paint);
   }
 
+  pub fn cylinder(&mut self, rect: &Rect) {
+    let top = Rect::from_xywh(rect.left, rect.top, rect.width(), rect.height() / 3.);
+    let bottom = Rect::from_xywh(rect.left, rect.bottom - top.height(), rect.width(), top.height());
+    let height = top.height() / 2.;
+
+    self.path.arc_to(top, 180., 359., true);
+    self.path.line_to((rect.left, bottom.top + height));
+    self.path.arc_to(bottom, 180., -180., false);
+    self.path.move_to((bottom.right, bottom.top + height));
+    self.path.line_to((top.right, top.top + height));
+    self.stroke();
+  }
+
   pub fn oval(&mut self, rect: &Rect) {
     let left = Rect::from_xywh(rect.left, rect.top, rect.height(), rect.height());
     let right = Rect::from_xywh(rect.right - rect.height(), rect.top, rect.height(), rect.height());

@@ -127,14 +127,10 @@ impl Renderer {
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
-      Shape::Cylinder(text_color, paragraph, fill, _) => {
+      Shape::Cylinder(text_color, paragraph, _fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
-        canvas.ellipse(used);
-
-        canvas.paint.set_style(PaintStyle::Fill);
-        canvas.paint.set_color(*fill);
-        canvas.ellipse(used);
+        canvas.cylinder(used);
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
