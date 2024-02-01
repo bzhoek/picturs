@@ -27,6 +27,7 @@ pub enum Shape<'a> {
   Cylinder(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
   Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
   Text(&'a str, Option<EdgeDisplacement>),
+  File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -45,6 +46,7 @@ pub struct Config {
   pub(crate) ellipse: ShapeConfig,
   pub(crate) oval: ShapeConfig,
   pub(crate) rectangle: ShapeConfig,
+  pub(crate) file: ShapeConfig,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -70,6 +72,11 @@ impl Config {
       ellipse: ShapeConfig::default(),
       oval: ShapeConfig::default(),
       rectangle: ShapeConfig::default(),
+      file: ShapeConfig {
+        padding: 0.0,
+        width: width * 0.666,
+        height: width,
+      },
     }
   }
 }

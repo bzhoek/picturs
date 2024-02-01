@@ -105,6 +105,17 @@ impl Renderer {
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
+      Shape::File(text_color, paragraph, radius, fill, _) => {
+        canvas.paint.set_style(PaintStyle::Stroke);
+        canvas.paint.set_color(*color);
+        canvas.rectangle(used, radius.pixels());
+
+        canvas.paint.set_style(PaintStyle::Fill);
+        canvas.paint.set_color(*fill);
+        canvas.rectangle(used, radius.pixels());
+
+        Self::draw_paragraph(canvas, used, text_color, paragraph);
+      }
       Shape::Circle(text_color, paragraph, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);

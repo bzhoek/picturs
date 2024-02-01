@@ -83,6 +83,7 @@ impl<'i> Diagram<'i> {
       }
       Rule::container => Self::container_from(&pair, config, index, cursor, canvas),
       Rule::rectangle => Self::rectangle_from(&pair, config, index, cursor, canvas),
+      Rule::file => Self::file_from(&pair, config, index, cursor, canvas),
       Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor, canvas),
       Rule::cylinder => Self::cylinder_from(&pair, config, index, cursor, canvas),
       Rule::oval => Self::oval_from(&pair, config, index, cursor, canvas),
@@ -191,6 +192,37 @@ impl<'i> Diagram<'i> {
 
     let rectangle = Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location));
     Some((rect, rectangle))
+  }
+
+  fn file_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+    let id = Conversion::rule_to_string(pair, Rule::id);
+    let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
+
+    let radius = Conversion::radius(&attributes).unwrap_or_default();
+    let width = Conversion::width(&attributes).unwrap_or(config.file.width);
+    let height = Conversion::height(&attributes).unwrap_or(config.file.height);
+    let padding = Conversion::padding(&attributes).unwrap_or(config.file.padding);
+    let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
+    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let location = Conversion::location_from(&attributes, &config.flow.start);
+
+    let paragraph = Self::paragraph_height(title, width, canvas);
+    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
+    used.bottom += padding;
+    Self::adjust_topleft(&config.flow, &mut used);
+    index.position_rect(&location, &mut used);
+
+    index.insert(ShapeName::File, id, used);
+
+    let mut rect = used;
+    if config.flow.end.x <= 0. {
+      rect.bottom += padding;
+    }
+
+    let file = Primitive(id, rect, used, stroke, Shape::File(text_color, paragraph, radius, fill, location));
+    Some((rect, file))
   }
 
   fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
