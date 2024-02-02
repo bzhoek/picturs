@@ -111,7 +111,7 @@ pub struct Flow {
 impl Flow {
   pub fn new(string: &str) -> Self {
     match string.into() {
-      Direction::NE => Flow::edges("nw", "ne"),
+      Direction::NE => Flow::edges("wn", "en"),
       Direction::E => Flow::edges("w", "e"),
       Direction::S => Flow::edges("n", "s"),
       _ => Flow::edges("nw", "sw"),
@@ -152,12 +152,14 @@ impl Edge {
     match dot_removed.to_lowercase().as_str() {
       "n" | "up" => Self { direction: Vertical, x: 0., y: -0.5 },
       "ne" => Self { direction: Vertical, x: 0.5, y: -0.5 },
+      "en" => Self { direction: Horizontal, x: 0.5, y: -0.5 },
       "e" | "right" => Self { direction: Horizontal, x: 0.5, y: 0. },
       "se" => Self { direction: Vertical, x: 0.5, y: 0.5 },
       "s" | "down" => Self { direction: Vertical, x: 0., y: 0.5 },
       "sw" => Self { direction: Vertical, x: -0.5, y: 0.5 },
       "w" | "left" => Self { direction: Horizontal, x: -0.5, y: 0. },
       "nw" => Self { direction: Vertical, x: -0.5, y: -0.5 },
+      "wn" => Self { direction: Horizontal, x: -0.5, y: -0.5 },
       _ => Self { direction: Horizontal, x: 0., y: 0. }
     }
   }

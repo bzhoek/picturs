@@ -116,7 +116,8 @@ impl<'i> Diagram<'i> {
     inset.offset((padding, padding));
     let (nodes, inner) = {
       let mut config = config.clone();
-      Conversion::flow(&attributes).into_iter().for_each(|flow| {
+      let option = Conversion::flow(&attributes);
+      option.into_iter().for_each(|flow| {
         config.flow = flow;
       });
       Self::pairs_to_nodes(pair.clone().into_inner(), vec![], canvas, &inset, config, index)
@@ -417,6 +418,8 @@ impl<'i> Diagram<'i> {
 
   fn adjust_topleft(flow: &Flow, used: &mut Rect) {
     let offset = flow.start.topleft_offset(used);
+    let edge = Edge::new("center");
+    let offset = edge.topleft_offset(used);
     used.offset(offset);
   }
 

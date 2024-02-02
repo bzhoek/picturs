@@ -175,7 +175,7 @@ impl Conversion {
   }
 
   pub fn location_from(pair: &Pair<Rule>, end: &Edge) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
-    Rules::dig_rule(pair, Rule::location)
+    Option::from(Rules::dig_rule(pair, Rule::location)
       .map(|p| {
         let mut object: Option<ObjectEdge> = None;
         let mut directions: Vec<Displacement> = vec![];
@@ -188,7 +188,7 @@ impl Conversion {
               let displacement = Self::pair_to_displacement(rule);
               directions.push(displacement);
             }
-            Rule::object_edge => { object = Some(Self::object_edge_from(rule, end)); }
+            Rule::object_edge => { object = Some(Self::object_edge_from(rule, &Edge::new("center"))); }
             _ => {}
           }
         };
@@ -199,14 +199,14 @@ impl Conversion {
             }
           }
           if object.is_none() {
-            object = Some(ObjectEdge::edge("#last", displacement.edge.clone()))
+            object = Some(ObjectEdge::edge("#last", Edge::new("center")))
           }
           if edge.is_none() {
-            edge = Some(displacement.edge.flip())
+            edge = Some(Edge::new("center"))
           }
         }
 
         (edge.unwrap(), directions, object.unwrap())
-      })
+      }).unwrap_or_else(|| (end.flip(), vec![], ObjectEdge::edge("#last", end.clone()))))
   }
 }

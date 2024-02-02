@@ -69,7 +69,7 @@ mod tests {
   #[test]
   fn double_box() {
     let string = "box
-                         box";
+                        box";
     let diagram = create_diagram(string);
 
     assert_eq!(vec![
@@ -368,6 +368,12 @@ mod tests {
     assert_eq!((0.5, 0.5), factors);
     let se = edge.topleft_offset(&rect);
     assert_eq!(Point::new(-10., -20.), se);
+
+    let edge = Edge::new("c");
+    let factors = edge.tuple();
+    assert_eq!((0.0, 0.0), factors);
+    let se = edge.topleft_offset(&rect);
+    assert_eq!(Point::new(-5., -10.), se);
   }
 
   #[test]

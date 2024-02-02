@@ -24,6 +24,23 @@ mod tests {
   }
 
   #[test]
+  fn visual_hello_statements_center() -> anyhow::Result<()> {
+    let string = r#"
+      set box pd 0
+      right
+      box "box"
+      circle "circle" 4cm right
+      ellipse "ellipse" 4cm right
+      oval "oval" 2cm down last box
+      cylinder "cylinder" 4cm right
+      file "file" 4cm right
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram(diagram, "target/visual_hello_statements_center")?;
+    Ok(())
+  }
+
+  #[test]
   fn visual_hello_world_right() -> anyhow::Result<()> {
     let string = r#"
       right
