@@ -14,15 +14,8 @@ pub const HEIGHT: f32 = 60.;
 pub struct Conversion;
 
 impl Conversion {
-  pub fn length_from(pair: Pair<Rule>) -> Length {
-    let mut width = pair.into_inner();
-    let length = Self::next_to_usize(&mut width).unwrap();
-    let unit = Self::next_to_string(&mut width).unwrap_or("px");
-    Length::new(length as f32, unit.into())
-  }
-
-  fn next_to_usize(iter: &mut Pairs<Rule>) -> Option<usize> {
-    iter.next().and_then(|p| p.as_str().parse::<usize>().ok())
+  fn next_to_f32(iter: &mut Pairs<Rule>) -> Option<f32> {
+    iter.next().and_then(|p| p.as_str().parse::<f32>().ok())
   }
 
   fn next_to_string<'a>(iter: &mut Pairs<'a, Rule>) -> Option<&'a str> {
@@ -96,34 +89,32 @@ impl Conversion {
       .map(|p| p.into_inner().next().unwrap().as_str())
   }
 
-  pub fn rule_to_length(pair: &Pair<Rule>, rule: Rule) -> Option<Length> {
+  pub fn length_dig(pair: &Pair<Rule>, rule: Rule) -> Option<Length> {
     Rules::dig_rule(pair, rule)
-      .map(Self::pair_to_length)
+      .map(Self::length_from)
   }
 
-  fn pair_to_length(pair: Pair<Rule>) -> Length {
-    let length = Rules::find_rule(&pair, Rule::length)
-      .and_then(|p| p.as_str().parse::<usize>().ok())
-      .unwrap();
-    let unit = Self::rule_to_string(&pair, Rule::unit)
-      .unwrap_or("px");
-    Length::new(length as f32, unit.into())
+  pub fn length_from(pair: Pair<Rule>) -> Length {
+    let mut width = pair.into_inner();
+    let length = Self::next_to_f32(&mut width).unwrap();
+    let unit = Self::next_to_string(&mut width).unwrap_or("px");
+    Length::new(length, unit.into())
   }
 
   pub fn radius(attributes: &Pair<Rule>) -> Option<Length> {
-    Conversion::rule_to_length(attributes, Rule::radius)
+    Conversion::length_dig(attributes, Rule::radius)
   }
 
   pub fn width(attributes: &Pair<Rule>) -> Option<f32> {
-    Conversion::rule_to_length(attributes, Rule::width).map(|length| length.pixels())
+    Conversion::length_dig(attributes, Rule::width).map(|length| length.pixels())
   }
 
   pub fn height(attributes: &Pair<Rule>) -> Option<f32> {
-    Conversion::rule_to_length(attributes, Rule::height).map(|length| length.pixels())
+    Conversion::length_dig(attributes, Rule::height).map(|length| length.pixels())
   }
 
   pub fn padding(attributes: &Pair<Rule>) -> Option<f32> {
-    Conversion::rule_to_length(attributes, Rule::padding).map(|length| length.pixels())
+    Conversion::length_dig(attributes, Rule::padding).map(|length| length.pixels())
   }
 
   pub fn object_edge_from_pair(pair: &Pair<Rule>) -> Option<ObjectEdge> {

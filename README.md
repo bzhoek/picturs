@@ -1,4 +1,4 @@
-# picturs: pic grammar in Rust
+# picturs: A PIC like grammar in Rust
 
 * https://pikchr.org/home/doc/trunk/homepage.md
 * https://pikchr.org/home/doc/trunk/doc/grammar.md
@@ -12,11 +12,13 @@ ellipse "ellipse" 1 right
 oval "oval" 1 below first box
 ```
 
-The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the direction is `right`, the polar
-opposite `west` is used. For `oval` the polar opposite `north` is assumed, because the placement is `below`.
+The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the direction is `right`, the polar opposite `west` is used. For `oval` the polar opposite `north` is assumed, because the placement is `below`.
 
-The first relative component determines direction, `circle 1 right 1 down` will be horizontal, and `oval 1 down` will be
-vertical.
+The first relative component determines direction, `circle 1 right 1 down` will be horizontal, and `oval 1 down` will be vertical.
+
+### Containers
+
+Containers are always positioned relative to their top-left corner, because their size is determined by the content and thus not known in advance.
 
 ## Diagram
 
@@ -32,31 +34,31 @@ vertical.
 10. ~Lijn met pijlpunt~
 11. ~Move met meerdere offsets~
 12. ~Tekst centreren in een rechthoek~
-12. ~dot at edge~
-13. ~Automatisch topleft bepalen~
-14. ~Renderer uitsplitsen~
-15. ~Index als type met #last~
-14. ~Circle shape~
-16. ~Ellipse shape~
-15. Tekstgrootte zonder canvas bepalen
-14. Arc
-13. Automatisch grootte bepalen
-13. `arrow` met offset
-14. `nnw` en uren op de klok, met horizontal en vertical
-15. Richting binnen container, zoals flex
-17. Cylinder shape
-18. Oval shape
-18. File shape
+13. ~dot at edge~
+14. ~Automatisch topleft bepalen~
+15. ~Renderer uitsplitsen~
+16. ~Index als type met #last~
+17. ~Circle shape~
+18. ~Ellipse shape~
+19. ~Cylinder shape~
+20. ~Oval shape~
+21. ~Units met decimalen~
 
-De topleft wordt het nieuwe centrum voor een rechter rij, waardoor er overlap ontstaat. De oplossing is om de container
-te positioneren nadat de inhoud is bepaald en de grootte bekend is.
+22. File shape
+23. Tekstgrootte zonder canvas bepalen
+24. Arc
+25. Automatisch grootte bepalen
+26. `arrow` met offset
+27. `nnw` en uren op de klok, met horizontal en vertical
+28. Richting binnen container, zoals flex
+
+De topleft wordt het nieuwe centrum voor een rechter rij, waardoor er overlap ontstaat. De oplossing is om de container te positioneren nadat de inhoud is bepaald en de grootte bekend is.
 
 Daarvoor moet de inhoud van de container relatief gepositioneerd worden.
 
 Dat heeft wel gevolgen voor lookups, omdat de positie niet meer absoluut bekend is.
 
-Een tweede pass lost het probleem niet op, omdat hier element relatief geplaatst kunnen zijn die weer gevolgen hebben
-voor andere elementen.
+Een tweede pass lost het probleem niet op, omdat hier element relatief geplaatst kunnen zijn die weer gevolgen hebben voor andere elementen.
 
 Een tweede pass kan werken als alleen wordt verwezen naar items die al hun absolute positie hebben.
 

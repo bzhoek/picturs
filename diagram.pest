@@ -36,7 +36,7 @@ location = { edge? ~ displacement+ ~ (last_object | from_object)? }
 last_object = _{ "last" ~ object_edge }
 from_object = _{ "from" ~ object_edge }
 displacement = { length ~ unit ~ direction }
-length = { ASCII_DIGIT* }
+length = @{ ASCII_DIGIT* ~ ("." ~ ASCII_DIGIT+)? }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
 direction = { "up" | "down" | "left" | "right" }
 
