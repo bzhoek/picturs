@@ -1,10 +1,9 @@
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
-use log::warn;
 
+use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
-use crate::diagram::index::Index;
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::{Node, Paragraph, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
@@ -39,8 +38,8 @@ impl Renderer {
   }
   fn render_shape(canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape) {
     match shape {
-      Shape::Dot(edge, radius) => {
-        let point = Index::point_from_rect(used, &edge.edge, &[]);
+      Shape::Dot(_, radius) => {
+        let point = Point::new(used.left, used.top);
         canvas.paint.set_style(PaintStyle::Fill);
         canvas.paint.set_color(*color);
         canvas.circle(&point, radius.pixels());

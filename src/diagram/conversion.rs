@@ -91,6 +91,11 @@ impl Conversion {
       .map(|p| p.as_str())
   }
 
+  pub fn identified<'a>(pair: &Pair<'a, Rule>) -> Option<&'a str> {
+    Rules::dig_rule(pair, Rule::identified)
+      .map(|p| p.into_inner().next().unwrap().as_str())
+  }
+
   pub fn rule_to_length(pair: &Pair<Rule>, rule: Rule) -> Option<Length> {
     Rules::dig_rule(pair, rule)
       .map(Self::pair_to_length)

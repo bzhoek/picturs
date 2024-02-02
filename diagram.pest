@@ -23,7 +23,7 @@ text_attribute = { string | color | fill | width | location }
 color = { "color" ~ id }
 fill = { "fill" ~ id }
 text_color = { "text" ~ id }
-identified = _{ "." ~ id }
+identified = { "." ~ id }
 id = @{ ASCII_ALPHANUMERIC* }
 
 radius = { ("rd" | "rad" | "radius") ~ size }
