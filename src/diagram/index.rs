@@ -17,6 +17,8 @@ pub enum ShapeName {
   Text,
   Oval,
   File,
+  Arrow,
+  Line,
 }
 
 impl ShapeName {

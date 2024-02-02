@@ -107,7 +107,7 @@ impl<'i> Diagram<'i> {
     let radius = Conversion::radius(&attributes).unwrap_or_default();
     let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
-    let location = Conversion::location_from(&attributes, &config.flow.start);
+    let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
     index.position_rect(&location, &mut used);
@@ -173,7 +173,7 @@ impl<'i> Diagram<'i> {
     let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
-    let location = Conversion::location_from(&attributes, &config.flow.start);
+    let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let paragraph = Self::paragraph_height(title, width, canvas);
     let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
@@ -204,7 +204,7 @@ impl<'i> Diagram<'i> {
     let padding = Conversion::padding(&attributes).unwrap_or(config.file.padding);
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
     let title = Conversion::rule_to_string(&attributes, Rule::inner);
-    let location = Conversion::location_from(&attributes, &config.flow.start);
+    let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let paragraph = Self::paragraph_height(title, width, canvas);
     let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
@@ -304,6 +304,8 @@ impl<'i> Diagram<'i> {
       .unwrap_or(Self::displace_from_start(start, &displacement, flow));
 
     let (rect, used) = Self::rect_from_points(start, &displacement, end);
+    index.insert(ShapeName::Arrow, id, used);
+
     let node = Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(id, source, displacement, target));
     Some((used, node))
   }
@@ -329,7 +331,9 @@ impl<'i> Diagram<'i> {
   fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, flow: &Flow) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::rule_to_string(&pair, Rule::id);
     let (start, distance, end) = Self::points_from_pair(index, cursor, flow, &pair);
-    let (rect, used) = Self::rect_from_points(start, &distance, end);
+    let (rect, mut used) = Self::rect_from_points(start, &distance, end);
+    index.insert(ShapeName::Line, id, used);
+
     let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, start, distance, end));
     Some((used, node))
   }
@@ -421,7 +425,7 @@ impl<'i> Diagram<'i> {
     let title = Conversion::rule_to_string(pair, Rule::inner).unwrap();
     let attributes = Rules::find_rule(pair, Rule::text_attributes).unwrap();
     let width = Conversion::width(&attributes).unwrap_or(config.width);
-    let location = Conversion::location_from(pair, &config.flow.start);
+    let location = Conversion::location_from(pair, &config.flow.end);
     let (_widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);

@@ -131,11 +131,11 @@ impl Conversion {
     ObjectEdge::new(id, edge)
   }
 
-  fn object_edge_from(pair: Pair<Rule>, edge: &Edge) -> ObjectEdge {
+  fn object_edge_from(pair: Pair<Rule>, default: &Edge) -> ObjectEdge {
     let id = Self::rule_to_string(&pair, Rule::id).unwrap();
     let edge = Self::rule_to_string(&pair, Rule::edge)
       .map(Edge::new)
-      .unwrap_or(edge.clone());
+      .unwrap_or(default.clone());
     ObjectEdge::edge(id, edge)
   }
 
@@ -151,8 +151,8 @@ impl Conversion {
     let unit = Self::rule_to_string(&pair, Rule::unit)
       .unwrap();
     let direction = Self::rule_to_string(&pair, Rule::direction).unwrap();
-    let edge = Edge::new(direction);
-    Displacement::new(length as f32, unit.into(), edge)
+    let direction = Edge::new(direction);
+    Displacement::new(length as f32, unit.into(), direction)
   }
 
   pub fn location_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
