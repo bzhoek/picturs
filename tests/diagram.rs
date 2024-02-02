@@ -93,8 +93,8 @@ mod tests {
 
     assert_eq!(vec![
       Container(Some("parent"), Radius::default(), None,
-                Rect::from_xywh(0., 0., 144., 100.),
-                Rect::from_xywh(0., 0., 144., 92.),
+                Rect::from_xywh(0., 0., 136., 100.),
+                Rect::from_xywh(0., 0., 136., 92.),
                 vec![
                   Primitive(None,
                             Rect::from_xywh(8., 8., 120., 76.),
@@ -112,8 +112,8 @@ mod tests {
 
     assert_eq!(vec![
       Container(None, Radius::default(), Some("parent"),
-                Rect::from_xywh(0., 0., 144., 113.),
-                Rect::from_xywh(0., 0., 144., 105.),
+                Rect::from_xywh(0., 0., 136., 113.),
+                Rect::from_xywh(0., 0., 136., 105.),
                 vec![
                   Primitive(None,
                             Rect::from_xywh(8., 8., 120., 76.),

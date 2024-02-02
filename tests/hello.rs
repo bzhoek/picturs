@@ -65,6 +65,17 @@ mod tests {
   }
 
   #[test]
+  fn visual_box_box() -> anyhow::Result<()> {
+    let string = r#"
+      box { box "A" }
+      box { box "B" }
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram(diagram, "target/visual_box_box")?;
+    Ok(())
+  }
+
+  #[test]
   fn visual_box_box_box() -> anyhow::Result<()> {
     let string = r#"
       box pd 0 topright color green{

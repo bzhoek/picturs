@@ -114,6 +114,7 @@ impl<'i> Diagram<'i> {
 
     let mut inset = Point::new(used.left, used.bottom);
     inset.offset((padding, padding));
+
     let (nodes, inner) = {
       let mut config = config.clone();
       Conversion::flow(&attributes).into_iter().for_each(|flow| {
@@ -121,10 +122,8 @@ impl<'i> Diagram<'i> {
       });
       Self::pairs_to_nodes(pair.clone().into_inner(), vec![], canvas, &inset, config, index)
     };
-    used.top = inner.top - padding;
-    used.left = inner.left - padding;
-    used.bottom = inner.bottom + padding;
-    used.right = inner.right + 2. * padding;
+
+    used = inner.with_outset((padding, padding));
 
     if let Some(title) = title {
       let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
