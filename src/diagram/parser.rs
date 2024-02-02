@@ -106,7 +106,7 @@ impl<'i> Diagram<'i> {
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let radius = Conversion::radius(&attributes).unwrap_or_default();
     let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
-    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let title = Conversion::string_dig(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
@@ -145,7 +145,7 @@ impl<'i> Diagram<'i> {
     let height = Conversion::height(&attributes).unwrap_or(config.oval.height);
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
-    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let title = Conversion::string_dig(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let paragraph = Self::paragraph_height(title, width, canvas);
@@ -171,7 +171,7 @@ impl<'i> Diagram<'i> {
     let height = Conversion::height(&attributes).unwrap_or(config.rectangle.height);
     let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
-    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let title = Conversion::string_dig(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let paragraph = Self::paragraph_height(title, width, canvas);
@@ -202,7 +202,7 @@ impl<'i> Diagram<'i> {
     let height = Conversion::height(&attributes).unwrap_or(config.file.height);
     let padding = Conversion::padding(&attributes).unwrap_or(config.file.padding);
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
-    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let title = Conversion::string_dig(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let paragraph = Self::paragraph_height(title, width, canvas);
@@ -231,7 +231,7 @@ impl<'i> Diagram<'i> {
     let height = Conversion::height(&attributes).unwrap_or(config.ellipse.height);
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
-    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let title = Conversion::string_dig(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let paragraph = Self::paragraph_height(title, width, canvas);
@@ -255,7 +255,7 @@ impl<'i> Diagram<'i> {
     let height = Conversion::height(&attributes).unwrap_or(config.ellipse.height);
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
-    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let title = Conversion::string_dig(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let paragraph = Self::paragraph_height(title, width, canvas);
@@ -382,7 +382,7 @@ impl<'i> Diagram<'i> {
     let height = Conversion::height(&attributes).unwrap_or(config.circle.height);
 
     let (stroke, fill, text_color) = Conversion::colors_from(&attributes);
-    let title = Conversion::rule_to_string(&attributes, Rule::inner);
+    let title = Conversion::string_dig(&attributes, Rule::inner);
     let location = Conversion::location_from(&attributes, &config.flow.end);
 
     let paragraph = Self::paragraph_height(title, width, canvas);
@@ -422,7 +422,7 @@ impl<'i> Diagram<'i> {
 
   fn text_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(pair);
-    let title = Conversion::rule_to_string(pair, Rule::inner).unwrap();
+    let title = Conversion::string_dig(pair, Rule::inner).unwrap();
     let attributes = Rules::find_rule(pair, Rule::text_attributes).unwrap();
     let width = Conversion::width(&attributes).unwrap_or(config.width);
     let location = Conversion::location_from(pair, &config.flow.end);

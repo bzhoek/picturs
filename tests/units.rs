@@ -9,7 +9,9 @@ mod tests {
   #[test]
   fn visual_units() -> anyhow::Result<()> {
     let string = r#"
-      box "box" wd 1in ht 0.5in
+      down
+      box "A" wd 1in ht 0.5in
+      box "B" 40 right
       "#;
     let diagram = create_diagram(string);
     assert_diagram(diagram, "target/visual_units")?;

@@ -79,7 +79,7 @@ impl Conversion {
       })
   }
 
-  pub fn rule_to_string<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
+  pub fn string_dig<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
     Rules::dig_rule(pair, rule)
       .map(|p| p.as_str())
   }
@@ -87,6 +87,17 @@ impl Conversion {
   pub fn identified<'a>(pair: &Pair<'a, Rule>) -> Option<&'a str> {
     Rules::dig_rule(pair, Rule::identified)
       .map(|p| p.into_inner().next().unwrap().as_str())
+  }
+
+  fn displacement_from(pair: Pair<Rule>) -> Displacement {
+    let length = Rules::find_rule(&pair, Rule::length)
+      .and_then(|p| p.as_str().parse::<f32>().ok())
+      .unwrap();
+    let unit = Self::string_dig(&pair, Rule::unit)
+      .unwrap_or("px");
+    let direction = Self::string_dig(&pair, Rule::direction).unwrap();
+    let direction = Edge::new(direction);
+    Displacement::new(length, unit.into(), direction)
   }
 
   pub fn length_dig(pair: &Pair<Rule>, rule: Rule) -> Option<Length> {
@@ -122,14 +133,14 @@ impl Conversion {
   }
 
   fn pair_to_object_edge(pair: Pair<Rule>) -> ObjectEdge {
-    let id = Self::rule_to_string(&pair, Rule::id).unwrap();
-    let edge = Self::rule_to_string(&pair, Rule::edge).unwrap();
+    let id = Self::string_dig(&pair, Rule::id).unwrap();
+    let edge = Self::string_dig(&pair, Rule::edge).unwrap();
     ObjectEdge::new(id, edge)
   }
 
   fn object_edge_from(pair: Pair<Rule>, default: &Edge) -> ObjectEdge {
-    let id = Self::rule_to_string(&pair, Rule::id).unwrap();
-    let edge = Self::rule_to_string(&pair, Rule::edge)
+    let id = Self::string_dig(&pair, Rule::id).unwrap();
+    let edge = Self::string_dig(&pair, Rule::edge)
       .map(Edge::new)
       .unwrap_or(default.clone());
     ObjectEdge::edge(id, edge)
@@ -140,17 +151,6 @@ impl Conversion {
       .map(|pair| Flow::new(pair.as_str()))
   }
 
-  fn pair_to_displacement(pair: Pair<Rule>) -> Displacement {
-    let length = Rules::find_rule(&pair, Rule::length)
-      .and_then(|p| p.as_str().parse::<usize>().ok())
-      .unwrap();
-    let unit = Self::rule_to_string(&pair, Rule::unit)
-      .unwrap();
-    let direction = Self::rule_to_string(&pair, Rule::direction).unwrap();
-    let direction = Edge::new(direction);
-    Displacement::new(length as f32, unit.into(), direction)
-  }
-
   pub fn location_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
     Rules::find_rule(pair, rule)
       .and_then(|pair| Rules::find_rule(&pair, Rule::object_edge))
@@ -158,14 +158,14 @@ impl Conversion {
   }
 
   pub fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Displacement> {
-    Rules::find_rule(pair, rule).map(Self::pair_to_displacement)
+    Rules::find_rule(pair, rule).map(Self::displacement_from)
   }
 
   pub fn displacements_from_pair(pair: &Pair<Rule>) -> Option<Vec<Displacement>> {
     Rules::find_rule(pair, Rule::displacements)
       .map(|pair| {
         pair.into_inner()
-          .map(|inner| Self::pair_to_displacement(inner))
+          .map(|inner| Self::displacement_from(inner))
           .collect::<Vec<_>>()
       })
   }
@@ -181,7 +181,7 @@ impl Conversion {
           match rule.as_rule() {
             Rule::edge => { edge = Some(Edge::new(rule.as_str())); }
             Rule::displacement => {
-              let displacement = Self::pair_to_displacement(rule);
+              let displacement = Self::displacement_from(rule);
               directions.push(displacement);
             }
             Rule::object_edge => { object = Some(Self::object_edge_from(rule, end)); }
