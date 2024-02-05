@@ -356,7 +356,7 @@ impl<'i> Diagram<'i> {
 
   fn dot_from<'a>(pair: &Pair<'a, Rule>, index: &mut Index) -> Option<(Rect, Node<'a>)> {
     let attributes = Rules::find_rule(pair, Rule::dot_attributes).unwrap();
-    let color = Conversion::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
+    let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
     let radius = Conversion::radius(&attributes).unwrap_or_default();
 
     let object = Conversion::object_edge_from_pair(pair).unwrap();

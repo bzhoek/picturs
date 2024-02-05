@@ -42,27 +42,7 @@ impl Conversion {
   }
 
   fn color(pair: Pair<Rule>) -> Option<Color> {
-    Rules::find_rule(&pair, Rule::id)
-      .map(|p| p.as_str())
-      .map(|color| match color {
-        "white" => Color::WHITE,
-        "lgray" => Color::LIGHT_GRAY,
-        "dgray" => Color::DARK_GRAY,
-        "black" => Color::BLACK,
-        "yellow" => Color::YELLOW,
-        "red" => Color::RED,
-        "green" => Color::GREEN,
-        "blue" => Color::BLUE,
-        "gray" => Color::GRAY,
-        "cyan" => Color::CYAN,
-        "magenta" => Color::MAGENTA,
-        _ => panic!("unknown color {}", color)
-      })
-  }
-  pub fn rule_to_color(pair: &Pair<Rule>, rule: Rule) -> Option<Color> {
-    Rules::dig_rule(pair, rule)
-      .and_then(|pair| Rules::find_rule(&pair, Rule::id))
-      .map(|p| p.as_str())
+    Self::string_find(&pair, Rule::id)
       .map(|color| match color {
         "white" => Color::WHITE,
         "lgray" => Color::LIGHT_GRAY,
