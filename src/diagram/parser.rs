@@ -102,7 +102,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
+    let id = Conversion::identified(pair);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let radius = Conversion::radius(&attributes).unwrap_or_default();
     let padding = Conversion::padding(&attributes).unwrap_or(config.rectangle.padding);
@@ -111,7 +111,7 @@ impl<'i> Diagram<'i> {
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
     index.position_rect(&location, &mut used);
-    dbg!(index.object_rect("now"));
+    dbg!(id);
     index.last = used;
 
     let mut offset = Point::new(used.left, used.bottom);
@@ -144,7 +144,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn oval_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
+    let id = Conversion::identified(pair);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let width = Conversion::width(&attributes).unwrap_or(config.oval.width);
     let height = Conversion::height(&attributes).unwrap_or(config.oval.height);
@@ -168,7 +168,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn rectangle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
+    let id = Conversion::identified(pair);
     let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
 
     let radius = Conversion::radius(&attributes).unwrap_or_default();
@@ -200,7 +200,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn file_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
+    let id = Conversion::identified(pair);
     let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
 
     let radius = Conversion::radius(&attributes).unwrap_or_default();
@@ -231,7 +231,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
+    let id = Conversion::identified(pair);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let width = Conversion::width(&attributes).unwrap_or(config.ellipse.width);
     let height = Conversion::height(&attributes).unwrap_or(config.ellipse.height);
@@ -255,7 +255,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn cylinder_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
+    let id = Conversion::identified(pair);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let width = Conversion::width(&attributes).unwrap_or(config.ellipse.width);
     let height = Conversion::height(&attributes).unwrap_or(config.ellipse.height);
@@ -301,7 +301,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, flow: &Flow) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(&pair, Rule::id);
+    let id = Conversion::identified(&pair);
 
     let (source, displacement, target) = Self::source_displacement_target_from_pair(&pair);
     let start = index.point_index(&source, &[]).unwrap_or(*cursor);
@@ -334,9 +334,9 @@ impl<'i> Diagram<'i> {
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, flow: &Flow) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(&pair, Rule::id);
+    let id = Conversion::identified(&pair);
     let (start, distance, end) = Self::points_from_pair(index, cursor, flow, &pair);
-    let (rect, mut used) = Self::rect_from_points(start, &distance, end);
+    let (rect, used) = Self::rect_from_points(start, &distance, end);
     index.insert(ShapeName::Line, id, used);
 
     let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, start, distance, end));
@@ -365,10 +365,11 @@ impl<'i> Diagram<'i> {
     let color = Conversion::rule_to_color(&attributes, Rule::color).unwrap_or(Color::BLUE);
     let radius = Conversion::radius(&attributes).unwrap_or_default();
 
-    let target = Conversion::object_edge_from_pair(pair).unwrap();
-    let point = index.point_index(&target, &[]).unwrap();
+    let object = Conversion::object_edge_from_pair(pair).unwrap();
+    let point = index.point_index(&object, &[]).unwrap();
     let rect = Rect::from_xywh(point.x, point.y, 0., 0.);
-    let dot = Primitive(None, rect, rect, color, Shape::Dot(target, radius));
+
+    let dot = Primitive(None, rect, rect, color, Shape::Dot(object, radius));
     Some((rect, dot))
   }
 
@@ -381,7 +382,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn circle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
+    let id = Conversion::identified(pair);
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let width = Conversion::width(&attributes).unwrap_or(config.circle.height);
     let height = Conversion::height(&attributes).unwrap_or(config.circle.height);
@@ -428,7 +429,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn text_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::rule_to_string(pair, Rule::id);
+    let id = Conversion::identified(pair);
     let title = Conversion::rule_to_string(pair, Rule::inner).unwrap();
     let attributes = Rules::find_rule(pair, Rule::text_attributes).unwrap();
     let width = Conversion::width(&attributes).unwrap_or(config.width);
