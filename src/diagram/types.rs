@@ -240,7 +240,7 @@ impl Length {
 
 #[derive(Debug, Default, PartialEq)]
 pub struct Displacement {
-  length: Length,
+  pub(crate) length: Length,
   pub edge: Edge,
 }
 

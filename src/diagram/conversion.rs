@@ -84,20 +84,21 @@ impl Conversion {
       .map(|p| p.as_str())
   }
 
+  pub fn string_find<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
+    Rules::find_rule(pair, rule)
+      .map(|p| p.as_str())
+  }
+
   pub fn identified<'a>(pair: &Pair<'a, Rule>) -> Option<&'a str> {
     Rules::dig_rule(pair, Rule::identified)
       .map(|p| p.into_inner().next().unwrap().as_str())
   }
 
   fn displacement_from(pair: Pair<Rule>) -> Displacement {
-    let length = Rules::find_rule(&pair, Rule::length)
-      .and_then(|p| p.as_str().parse::<f32>().ok())
-      .unwrap();
-    let unit = Self::string_dig(&pair, Rule::unit)
-      .unwrap_or("px");
-    let direction = Self::string_dig(&pair, Rule::direction).unwrap();
+    let length = Rules::find_rule(&pair, Rule::offset).map(Self::length_from).unwrap();
+    let direction = Self::string_find(&pair, Rule::direction).unwrap();
     let direction = Edge::new(direction);
-    Displacement::new(length, unit.into(), direction)
+    Displacement { length, edge: direction }
   }
 
   pub fn length_dig(pair: &Pair<Rule>, rule: Rule) -> Option<Length> {
