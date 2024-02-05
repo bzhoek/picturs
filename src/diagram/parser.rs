@@ -435,6 +435,7 @@ impl<'i> Diagram<'i> {
     let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
     used.bottom += BLOCK_PADDING;
 
+    Self::adjust_topleft(&config.flow, &mut used);
     index.position_rect(&location, &mut used);
 
     index.insert(ShapeName::Text, id, used);

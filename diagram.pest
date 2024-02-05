@@ -23,7 +23,7 @@ text_attributes = { text_attribute* }
 text_attribute = { string | color | fill | width | location }
 color = { "color" ~ id }
 fill = { "fill" ~ id }
-text_color = { "text" ~ id }
+text_color = { "text_color" ~ id }
 identified = { "." ~ id }
 id = @{ ASCII_ALPHANUMERIC* }
 
