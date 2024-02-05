@@ -46,6 +46,7 @@ impl From<&str> for ShapeName {
 pub struct Index {
   ids: HashMap<String, Rect>,
   shapes: Vec<(ShapeName, Rect)>,
+  pub(crate) last: Rect,
 }
 
 impl Index {
@@ -54,6 +55,7 @@ impl Index {
       self.ids.insert(id.into(), rect);
     }
     self.shapes.push((name, rect));
+    self.last = rect;
   }
 
   pub fn position_rect(&self, location: &Option<(Edge, Vec<Displacement>, ObjectEdge)>, used: &mut Rect) {
@@ -66,9 +68,17 @@ impl Index {
     }
   }
 
+  pub fn object_rect(&self, id: &str) -> Option<&Rect> {
+    match id {
+      "#last" => Some(&self.last),
+      id if ShapeName::some(id).is_some() => self.last(ShapeName::some(id).unwrap()).map(|(_shape, rect)| rect),
+      id => self.ids.get(id)
+    }
+  }
+
   fn offset_index(&self, object: &ObjectEdge, distances: &[Displacement]) -> Option<Rect> {
     match &*object.id {
-      "#last" => self.shapes.last().map(|(_shape, rect)| rect),
+      "#last" => Some(&self.last),
       id if ShapeName::some(id).is_some() => self.last(ShapeName::some(id).unwrap()).map(|(_shape, rect)| rect),
       id => self.ids.get(id)
     }.map(|rect| {

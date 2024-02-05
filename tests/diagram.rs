@@ -215,8 +215,9 @@ mod tests {
 
   #[test]
   fn visual_remember_the_future() -> Result<()> {
-    let string =
-      r#"box.now "Now" {
+    let string = r#"
+      down
+      box.now "Now" {
         box.step3 "What do we need to start doing now"
       }
       box.future "March" .nw 8cm right from now.ne {

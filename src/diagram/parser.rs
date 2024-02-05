@@ -111,21 +111,24 @@ impl<'i> Diagram<'i> {
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
     index.position_rect(&location, &mut used);
+    dbg!(index.object_rect("now"));
+    index.last = used;
 
-    let mut inset = Point::new(used.left, used.bottom);
-    inset.offset((padding, padding));
+    let mut offset = Point::new(used.left, used.bottom);
+    offset.offset((padding, padding));
     let (nodes, inner) = {
       let mut config = config.clone();
       let option = Conversion::flow(&attributes);
       option.into_iter().for_each(|flow| {
         config.flow = flow;
       });
-      Self::pairs_to_nodes(pair.clone().into_inner(), vec![], canvas, &inset, config, index)
+      Self::pairs_to_nodes(pair.clone().into_inner(), vec![], canvas, &offset, config, index)
     };
+
     used.top = inner.top - padding;
     used.left = inner.left - padding;
     used.bottom = inner.bottom + padding;
-    used.right = inner.right + 2. * padding;
+    used.right = inner.right + padding;
 
     if let Some(title) = title {
       let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
@@ -184,12 +187,13 @@ impl<'i> Diagram<'i> {
     Self::adjust_topleft(&config.flow, &mut used);
     index.position_rect(&location, &mut used);
 
-    index.insert(ShapeName::Rectangle, id, used);
 
     let mut rect = used;
     if config.flow.end.x <= 0. {
       rect.bottom += padding;
     }
+
+    index.insert(ShapeName::Rectangle, id, rect);
 
     let rectangle = Primitive(id, rect, used, stroke, Shape::Rectangle(text_color, paragraph, radius, fill, location));
     Some((rect, rectangle))
