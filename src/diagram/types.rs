@@ -40,6 +40,7 @@ pub struct Paragraph<'a> {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Config {
   pub(crate) flow: Flow,
+  pub(crate) unit: Unit,
   pub(crate) width: f32,
   pub(crate) height: f32,
   pub(crate) circle: ShapeConfig,
@@ -68,6 +69,7 @@ impl Config {
       flow,
       width,
       height,
+      unit: Unit::default(),
       circle: ShapeConfig::default(),
       ellipse: ShapeConfig::default(),
       oval: ShapeConfig::default(),
@@ -191,13 +193,13 @@ impl Edge {
   }
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum Unit {
-  #[default]
   Pt,
   Pc,
   Cm,
   In,
+  #[default]
   Px,
 }
 

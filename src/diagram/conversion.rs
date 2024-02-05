@@ -6,7 +6,7 @@ use crate::diagram::index::ShapeName;
 
 use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge};
+use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge, Unit};
 
 pub const WIDTH: f32 = 120.;
 pub const HEIGHT: f32 = 60.;
@@ -74,39 +74,40 @@ impl Conversion {
       .map(|p| p.into_inner().next().unwrap().as_str())
   }
 
-  fn displacement_from(pair: Pair<Rule>) -> Displacement {
-    let length = Rules::find_rule(&pair, Rule::offset).map(Self::length_from).unwrap();
+  fn displacement_from(pair: Pair<Rule>, unit: &Unit) -> Displacement {
+    let length = Rules::find_rule(&pair, Rule::offset)
+      .map(|pair| Self::length_from(pair, unit)).unwrap();
     let direction = Self::string_find(&pair, Rule::direction).unwrap();
     let direction = Edge::new(direction);
     Displacement { length, edge: direction }
   }
 
-  pub fn length_dig(pair: &Pair<Rule>, rule: Rule) -> Option<Length> {
+  pub fn length_dig(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Length> {
     Rules::dig_rule(pair, rule)
-      .map(Self::length_from)
+      .map(|pair| Self::length_from(pair, unit))
   }
 
-  pub fn length_from(pair: Pair<Rule>) -> Length {
+  pub fn length_from(pair: Pair<Rule>, unit: &Unit) -> Length {
     let mut width = pair.into_inner();
     let length = Self::next_to_f32(&mut width).unwrap();
-    let unit = Self::next_to_string(&mut width).unwrap_or("px");
-    Length::new(length, unit.into())
+    let unit = Self::next_to_string(&mut width).map(|str| str.into()).unwrap_or(unit.clone());
+    Length::new(length, unit)
   }
 
-  pub fn radius(attributes: &Pair<Rule>) -> Option<Length> {
-    Conversion::length_dig(attributes, Rule::radius)
+  pub fn radius(attributes: &Pair<Rule>, unit: &Unit) -> Option<Length> {
+    Conversion::length_dig(attributes, Rule::radius, unit)
   }
 
-  pub fn width(attributes: &Pair<Rule>) -> Option<f32> {
-    Conversion::length_dig(attributes, Rule::width).map(|length| length.pixels())
+  pub fn width(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
+    Conversion::length_dig(attributes, Rule::width, unit).map(|length| length.pixels())
   }
 
-  pub fn height(attributes: &Pair<Rule>) -> Option<f32> {
-    Conversion::length_dig(attributes, Rule::height).map(|length| length.pixels())
+  pub fn height(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
+    Conversion::length_dig(attributes, Rule::height, unit).map(|length| length.pixels())
   }
 
-  pub fn padding(attributes: &Pair<Rule>) -> Option<f32> {
-    Conversion::length_dig(attributes, Rule::padding).map(|length| length.pixels())
+  pub fn padding(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
+    Conversion::length_dig(attributes, Rule::padding, unit).map(|length| length.pixels())
   }
 
   pub fn object_edge_from_pair(pair: &Pair<Rule>) -> Option<ObjectEdge> {
@@ -138,20 +139,20 @@ impl Conversion {
       .map(Self::pair_to_object_edge)
   }
 
-  pub fn rule_to_distance(pair: &Pair<Rule>, rule: Rule) -> Option<Displacement> {
-    Rules::find_rule(pair, rule).map(Self::displacement_from)
+  pub fn rule_to_distance(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Displacement> {
+    Rules::find_rule(pair, rule).map(|pair| Self::displacement_from(pair, unit))
   }
 
-  pub fn displacements_from_pair(pair: &Pair<Rule>) -> Option<Vec<Displacement>> {
+  pub fn displacements_from_pair(pair: &Pair<Rule>, unit: &Unit) -> Option<Vec<Displacement>> {
     Rules::find_rule(pair, Rule::displacements)
       .map(|pair| {
         pair.into_inner()
-          .map(|inner| Self::displacement_from(inner))
+          .map(|inner| Self::displacement_from(inner, unit))
           .collect::<Vec<_>>()
       })
   }
 
-  pub fn location_from(pair: &Pair<Rule>, end: &Edge) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
+  pub fn location_from(pair: &Pair<Rule>, end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
     Rules::dig_rule(pair, Rule::location)
       .map(|p| {
         let mut object: Option<ObjectEdge> = None;
@@ -162,7 +163,7 @@ impl Conversion {
           match rule.as_rule() {
             Rule::edge => { edge = Some(Edge::new(rule.as_str())); }
             Rule::displacement => {
-              let displacement = Self::displacement_from(rule);
+              let displacement = Self::displacement_from(rule, unit);
               directions.push(displacement);
             }
             Rule::object_edge => { object = Some(Self::object_edge_from(rule, end)); }
