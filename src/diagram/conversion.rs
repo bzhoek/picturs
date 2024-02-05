@@ -78,8 +78,7 @@ impl Conversion {
     let length = Rules::find_rule(&pair, Rule::offset)
       .map(|pair| Self::length_from(pair, unit)).unwrap();
     let direction = Self::string_find(&pair, Rule::direction).unwrap();
-    let direction = Edge::new(direction);
-    Displacement { length, edge: direction }
+    Displacement { length, edge: direction.into() }
   }
 
   pub fn length_dig(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Length> {
@@ -123,7 +122,7 @@ impl Conversion {
   fn object_edge_from(pair: Pair<Rule>, default: &Edge) -> ObjectEdge {
     let id = Self::string_dig(&pair, Rule::id).unwrap();
     let edge = Self::string_dig(&pair, Rule::edge)
-      .map(Edge::new)
+      .map(Edge::from)
       .unwrap_or(default.clone());
     ObjectEdge::edge(id, edge)
   }
@@ -161,7 +160,7 @@ impl Conversion {
 
         for rule in p.into_inner() {
           match rule.as_rule() {
-            Rule::edge => { edge = Some(Edge::new(rule.as_str())); }
+            Rule::edge => { edge = Some(Edge::from(rule.as_str())); }
             Rule::displacement => {
               let displacement = Self::displacement_from(rule, unit);
               directions.push(displacement);

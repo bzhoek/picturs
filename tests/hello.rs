@@ -78,12 +78,12 @@ mod tests {
   #[test]
   fn visual_box_box_box() -> anyhow::Result<()> {
     let string = r#"
-      box pd 0 topright color green{
+      box pd 0 top color green{
         box pd 0
         box pd 0
         box pd 0
       }
-      box pd 0 topright color blue {
+      box pd 0 top color blue {
         box pd 0
         box pd 0
         box pd 0
@@ -98,27 +98,27 @@ mod tests {
   fn visual_direction_start_end() -> anyhow::Result<()> {
     let string = r#"
       set box pd 0 ht 32 wd 64
-      box topright color green {
+      box top color green {
         box "Layout Direction" wd 160
         box ".start"
         box ".end"
       }
-      box topright color blue {
+      box top color blue {
         box "right" wd 160
         box ".w"
         box ".e"
       }
-      box topright color blue {
+      box top color blue {
         box "down" wd 160
         box ".n"
         box ".s"
       }
-      box topright color blue {
+      box top color blue {
         box "left" wd 160
         box ".e"
         box ".w"
       }
-      box topright color blue {
+      box top color blue {
         box "up" wd 160
         box ".s"
         box ".n"

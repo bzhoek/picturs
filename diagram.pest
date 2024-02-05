@@ -4,7 +4,7 @@ picture = _{ SOI ~ statements* ~ EOI }
 statements = _{ comment | container | shape | unit_config | box_config | circle_config | flow | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ dot | arrow | line | rectangle | file | circle | ellipse | cylinder | oval | text }
-flow = { "down" | "right" | "topright" | "topleft" }
+flow = { "down" | "right" | "top" | "left" }
 
 unit_config = { "set unit" ~ unit }
 box_config = { "set box" ~ (padding | width| height)* }

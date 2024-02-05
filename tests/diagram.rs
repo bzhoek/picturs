@@ -321,14 +321,14 @@ mod tests {
   fn to_edge() {
     let rect = Rect::from_xywh(40., 40., 100., 200.);
 
-    let edge = Edge::new("nw");
+    let edge = Edge::from("nw");
     let center = rect.center();
     assert_eq!(Point::new(90., 140.), center);
 
     let nw = edge.edge_point(&rect);
     assert_eq!(Point::new(40., 40.), nw);
 
-    let edge = Edge::new("se");
+    let edge = Edge::from("se");
     let se = edge.edge_point(&rect);
     assert_eq!(Point::new(140., 240.), se);
   }
@@ -337,7 +337,7 @@ mod tests {
   fn to_edge_from_negative() {
     let rect = Rect { left: 0.0, top: -30.0, right: 360.0, bottom: 30.0 };
 
-    let edge = Edge::new("sw");
+    let edge = Edge::from("sw");
     let center = rect.center();
     assert_eq!(Point::new(180., 0.), center);
 
@@ -351,19 +351,19 @@ mod tests {
     /*
     het verschil moet van topleft worden afgetrokken
      */
-    let edge = Edge::new("nw");
+    let edge = Edge::from("nw");
     let factors = edge.tuple();
     assert_eq!((-0.5, -0.5), factors);
     let nw = edge.topleft_offset(&rect);
     assert_eq!(Point::new(-0., -0.), nw);
 
-    let edge = Edge::new("ne");
+    let edge = Edge::from("ne");
     let factors = edge.tuple();
     assert_eq!((0.5, -0.5), factors);
     let ne = edge.topleft_offset(&rect);
     assert_eq!(Point::new(-10., -0.), ne);
 
-    let edge = Edge::new("se");
+    let edge = Edge::from("se");
     let factors = edge.tuple();
     assert_eq!((0.5, 0.5), factors);
     let se = edge.topleft_offset(&rect);
@@ -390,10 +390,10 @@ mod tests {
   fn offset_from_rect() {
     let rect = Rect::from_xywh(40., 40., 40., 40.);
     let distances = vec![
-      Displacement::new(2., Unit::Cm, Edge::new("e")),
-      Displacement::new(1., Unit::Cm, Edge::new("s")),
+      Displacement::new(2., Unit::Cm, Edge::from("e")),
+      Displacement::new(1., Unit::Cm, Edge::from("s")),
     ];
-    let result = Index::offset_from_rect(&rect, &Edge::new("nw"), &distances);
+    let result = Index::offset_from_rect(&rect, &Edge::from("nw"), &distances);
     let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };
     assert_eq!(expected, result);
   }

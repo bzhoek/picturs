@@ -87,7 +87,7 @@ impl Config {
 pub enum Direction {
   #[default]
   S,
-  NE,
+  EN,
   E,
   SW,
 }
@@ -95,11 +95,11 @@ pub enum Direction {
 impl From<&str> for Direction {
   fn from(item: &str) -> Self {
     match item {
-      "ne" | "topright" => Direction::NE,
+      "ne" | "top" => Direction::EN,
       "e" | "right" => Direction::E,
       "s" | "down" => Direction::S,
-      "sw" => Direction::SW,
-      _ => panic!("unknown unit {}", item)
+      "sw" | "left" => Direction::SW,
+      _ => panic!("Unknown direction {}", item)
     }
   }
 }
@@ -113,7 +113,7 @@ pub struct Flow {
 impl Flow {
   pub fn new(string: &str) -> Self {
     match string.into() {
-      Direction::NE => Flow::edges("nw", "ne"),
+      Direction::EN => Flow::edges("nw", "ne"),
       Direction::E => Flow::edges("w", "e"),
       Direction::S => Flow::edges("n", "s"),
       _ => Flow::edges("nw", "sw"),
@@ -121,7 +121,11 @@ impl Flow {
   }
 
   pub fn edges(start: &str, end: &str) -> Self {
-    Self { start: Edge::new(start), end: Edge::new(end) }
+    Self { start: start.into(), end: end.into() }
+  }
+
+  pub fn edge(start: &Edge) -> Self {
+    Self { start: start.clone(), end: start.flip() }
   }
 }
 
@@ -148,9 +152,9 @@ impl Edge {
   }
 }
 
-impl Edge {
-  pub fn new(string: &str) -> Self {
-    let dot_removed = string.trim_start_matches('.');
+impl From<&str> for Edge {
+  fn from(item: &str) -> Self {
+    let dot_removed = item.trim_start_matches('.');
     match dot_removed.to_lowercase().as_str() {
       "n" | "up" => Self { direction: Vertical, x: 0., y: -0.5 },
       "ne" => Self { direction: Vertical, x: 0.5, y: -0.5 },
@@ -163,6 +167,9 @@ impl Edge {
       _ => Self { direction: Horizontal, x: 0., y: 0. }
     }
   }
+}
+
+impl Edge {
 
   pub fn tuple(&self) -> (f32, f32) {
     (self.x, self.y)
@@ -273,7 +280,7 @@ pub struct ObjectEdge {
 
 impl ObjectEdge {
   pub fn new(id: &str, edge: &str) -> Self {
-    Self { id: id.into(), edge: Edge::new(edge) }
+    Self { id: id.into(), edge: edge.into() }
   }
 
   pub fn edge(id: &str, edge: Edge) -> Self {
