@@ -10,6 +10,20 @@ mod tests {
   use crate::common::create_diagram;
 
   #[test]
+  fn visual_edge_top_right() -> anyhow::Result<()> {
+    let string = r#"
+      top
+      box "A" wd 1in
+      box "B" wd 2in
+      "#;
+    let diagram = create_diagram(string);
+    assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0. && rect.y() == 0.);
+    assert_matches!(diagram.nodes[1], Primitive(_, rect, ..) if rect.y() == 0.);
+    assert_diagram(diagram, "target/visual_edge_top_right")?;
+    Ok(())
+  }
+
+  #[test]
   fn visual_edge_bottom_left() -> anyhow::Result<()> {
     let string = r#"
       box "A" wd 1in

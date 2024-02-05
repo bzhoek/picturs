@@ -95,10 +95,10 @@ pub enum Direction {
 impl From<&str> for Direction {
   fn from(item: &str) -> Self {
     match item {
-      "ne" | "top" => Direction::EN,
-      "e" | "right" => Direction::E,
-      "s" | "down" => Direction::S,
-      "sw" | "left" => Direction::SW,
+      "top" => Direction::EN,
+      "right" => Direction::E,
+      "down" => Direction::S,
+      "left" => Direction::SW,
       _ => panic!("Unknown direction {}", item)
     }
   }
@@ -111,21 +111,18 @@ pub struct Flow {
 }
 
 impl Flow {
-  pub fn new(string: &str) -> Self {
-    match string.into() {
-      Direction::EN => Flow::edges("nw", "ne"),
-      Direction::E => Flow::edges("w", "e"),
-      Direction::S => Flow::edges("n", "s"),
-      _ => Flow::edges("nw", "sw"),
+  pub fn new(dir: impl Into<Direction>) -> Self {
+    match dir.into() {
+      Direction::EN => Flow::start("en"),
+      Direction::E => Flow::start("e"),
+      Direction::S => Flow::start("s"),
+      _ => Flow::start("sw"),
     }
   }
 
-  pub fn edges(start: &str, end: &str) -> Self {
-    Self { start: start.into(), end: end.into() }
-  }
-
-  pub fn edge(start: &Edge) -> Self {
-    Self { start: start.clone(), end: start.flip() }
+  pub fn start(start: impl Into<Edge>) -> Self {
+    let end = start.into();
+    Self { start: end.flip(), end }
   }
 }
 
@@ -152,25 +149,27 @@ impl Edge {
   }
 }
 
+// first character determines the direction (horizontal or vertical)
 impl From<&str> for Edge {
   fn from(item: &str) -> Self {
     let dot_removed = item.trim_start_matches('.');
     match dot_removed.to_lowercase().as_str() {
       "n" | "up" => Self { direction: Vertical, x: 0., y: -0.5 },
       "ne" => Self { direction: Vertical, x: 0.5, y: -0.5 },
+      "en" => Self { direction: Horizontal, x: 0.5, y: -0.5 },
       "e" | "right" => Self { direction: Horizontal, x: 0.5, y: 0. },
       "se" => Self { direction: Vertical, x: 0.5, y: 0.5 },
       "s" | "down" => Self { direction: Vertical, x: 0., y: 0.5 },
       "sw" => Self { direction: Vertical, x: -0.5, y: 0.5 },
       "w" | "left" => Self { direction: Horizontal, x: -0.5, y: 0. },
       "nw" => Self { direction: Vertical, x: -0.5, y: -0.5 },
+      "wn" => Self { direction: Horizontal, x: -0.5, y: -0.5 },
       _ => Self { direction: Horizontal, x: 0., y: 0. }
     }
   }
 }
 
 impl Edge {
-
   pub fn tuple(&self) -> (f32, f32) {
     (self.x, self.y)
   }

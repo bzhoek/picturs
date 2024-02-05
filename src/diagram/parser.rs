@@ -40,7 +40,7 @@ impl<'i> Diagram<'i> {
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
     let top = DiagramParser::parse(Rule::picture, string).unwrap();
     let mut canvas = Canvas::new(self.size);
-    let flow = Flow::new("sw");
+    let flow = Flow::new("left");
     let config = Config::new(flow, 120., 60.);
     let mut index = Index::default();
     let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), config, &mut index);
