@@ -45,9 +45,12 @@ mod edges {
     let string = r#"
       down
       box.a "A" wd 1in
-      move 2cm down
+      flow 2cm
       box.b "B" wd 2in
-      arrow from a.s to b.n "Align center"
+      flow 2cm
+      box.c "C" wd 3in
+      arrow from a.s to b.n "Arrow center"
+      line from b.s to c.n "Line center"
       "#;
     let diagram = create_diagram(string);
     assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() < 0.);

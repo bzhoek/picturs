@@ -300,7 +300,7 @@ impl<'i> Diagram<'i> {
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
-    let title = Conversion::string_dig(&pair, Rule::inner);
+    let caption = Conversion::string_dig(&pair, Rule::inner);
 
     let (source, displacement, target) = Self::source_displacement_target_from_pair(&pair, &config.unit);
     let start = index.point_index(&source, &[]).unwrap_or(*cursor);
@@ -310,7 +310,7 @@ impl<'i> Diagram<'i> {
     let (rect, used) = Self::rect_from_points(start, &displacement, end);
     index.insert(ShapeName::Arrow, id, used);
 
-    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(title, source, displacement, target));
+    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(caption, source, displacement, target));
     Some((used, node))
   }
 
@@ -334,11 +334,12 @@ impl<'i> Diagram<'i> {
 
   fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
+    let caption = Conversion::string_dig(&pair, Rule::inner);
     let (start, distance, end) = Self::points_from_pair(index, cursor, config, &pair);
     let (rect, used) = Self::rect_from_points(start, &distance, end);
     index.insert(ShapeName::Line, id, used);
 
-    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(id, start, distance, end));
+    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(caption, start, distance, end));
     Some((used, node))
   }
 

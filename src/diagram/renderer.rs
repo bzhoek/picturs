@@ -44,7 +44,7 @@ impl Renderer {
         canvas.paint.set_color(*color);
         canvas.circle(&point, radius.pixels());
       }
-      Shape::Arrow(title, from, distance, to) => {
+      Shape::Arrow(caption, from, distance, to) => {
         canvas.move_to(used.left, used.top);
         let mut point = Point::new(used.left, used.top);
         if let Some(distance) = distance {
@@ -71,26 +71,13 @@ impl Renderer {
           canvas.line_to(p2.x, p2.y);
           canvas.stroke();
 
-          if let Some(title) = title {
-            let bounds = canvas.measure_str(title);
-            let bounds = Rect::from_size(bounds);
-
-            let edge = Edge::from("c");
-            let offset = edge.topleft_offset(&bounds);
-
-            let mut topleft = used.center();
-            topleft.offset(offset);
-            topleft.offset((0., bounds.height() / 2.));
-
-            canvas.paint.set_style(PaintStyle::Fill);
-            canvas.text(title, topleft);
-          }
+          Self::draw_caption(canvas, used, caption);
 
           let direction = p2.sub(p1);
           Self::draw_arrow_head(canvas, p2, direction);
         }
       }
-      Shape::Line(_, _, displacement, _) => {
+      Shape::Line(caption, _, displacement, _) => {
         canvas.move_to(used.left, used.top);
         let mut point = Point::new(used.left, used.top);
         if let Some(displacement) = displacement {
@@ -107,6 +94,8 @@ impl Renderer {
 
         canvas.line_to(used.right, used.bottom);
         canvas.stroke();
+
+        Self::draw_caption(canvas, used, caption);
       }
       Shape::Rectangle(text_color, paragraph, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
@@ -171,6 +160,23 @@ impl Renderer {
         Self::render_paragraph(canvas, used, title);
       }
       _ => warn!("unmatched shape {:?}", shape)
+    }
+  }
+
+  fn draw_caption(canvas: &mut Canvas, used: &Rect, caption: &Option<&str>) {
+    if let Some(caption) = caption {
+      let bounds = canvas.measure_str(caption);
+      let bounds = Rect::from_size(bounds);
+
+      let edge = Edge::from("c");
+      let offset = edge.topleft_offset(&bounds);
+
+      let mut topleft = used.center();
+      topleft.offset(offset);
+      topleft.offset((0., bounds.height() / 2.));
+
+      canvas.paint.set_style(PaintStyle::Fill);
+      canvas.text(caption, topleft);
     }
   }
 
