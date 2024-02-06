@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-  use skia_safe::{Font, PaintStyle, Rect, Size, Typeface};
+  use skia_safe::{Font, PaintStyle, Point, Rect, Size, Typeface};
+  use picturs::diagram::types::Edge;
 
   use picturs::skia::Canvas;
   use picturs::test::assert_canvas;
@@ -17,9 +18,23 @@ mod tests {
 
   #[test]
   fn measure_str() {
-    let mut canvas = Canvas::new((1024, 1024));
+    let canvas = Canvas::new((1024, 1024));
     let bounds = canvas.measure_str(TQBF);
     assert_eq!(bounds, Size::new(333., 19.));
+  }
+
+  #[test]
+  fn center_str() {
+    let canvas = Canvas::new((1024, 1024));
+    let rect = Rect::from_xywh(40., 40., 10., 20.);
+    let bounds = canvas.measure_str("Title");
+    let edge = Edge::from("c");
+    let bounds = Rect::from_size(bounds);
+    let offset = edge.topleft_offset(&bounds);
+    let center = rect.center();
+    let topleft = center + offset;
+
+    assert_eq!(Point::from((28.,42.)), topleft);
   }
 
   #[test]

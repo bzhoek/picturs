@@ -47,9 +47,9 @@ mod tests {
     let string = r#"
       down
       box.a "A" wd 1in
-      text "Align center"
+      move 2cm down
       box.b "B" wd 2in
-      arrow from a.s to b.n
+      arrow from a.s to b.n "Align center"
       "#;
     let diagram = create_diagram(string);
     assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() < 0.);

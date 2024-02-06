@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Node, Paragraph, Shape};
+use crate::diagram::types::{Edge, Node, Paragraph, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -70,6 +70,21 @@ impl Renderer {
           canvas.line_to(p1.x, p1.y);
           canvas.line_to(p2.x, p2.y);
           canvas.stroke();
+
+          if let Some(title) = title {
+            let bounds = canvas.measure_str(title);
+            let bounds = Rect::from_size(bounds);
+
+            let edge = Edge::from("c");
+            let offset = edge.topleft_offset(&bounds);
+
+            let mut topleft = used.center();
+            topleft.offset(offset);
+            topleft.offset((0., bounds.height() / 2.));
+
+            canvas.paint.set_style(PaintStyle::Fill);
+            canvas.text(title, topleft);
+          }
 
           let direction = p2.sub(p1);
           Self::draw_arrow_head(canvas, p2, direction);

@@ -184,6 +184,7 @@ impl Edge {
     point
   }
 
+  /// Returns the offset to the top-left corner of the rectangle
   pub fn topleft_offset(&self, rect: &Rect) -> Point {
     let point = Point::new(self.x, self.y);
     let point = point.add(Vector::new(0.5, 0.5));

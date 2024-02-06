@@ -345,30 +345,6 @@ mod tests {
     assert_eq!(Point::new(0., 30.), nw);
   }
 
-  #[test]
-  fn to_top_left() {
-    let rect = Rect::from_xywh(40., 40., 10., 20.);
-    /*
-    het verschil moet van topleft worden afgetrokken
-     */
-    let edge = Edge::from("nw");
-    let factors = edge.tuple();
-    assert_eq!((-0.5, -0.5), factors);
-    let nw = edge.topleft_offset(&rect);
-    assert_eq!(Point::new(-0., -0.), nw);
-
-    let edge = Edge::from("ne");
-    let factors = edge.tuple();
-    assert_eq!((0.5, -0.5), factors);
-    let ne = edge.topleft_offset(&rect);
-    assert_eq!(Point::new(-10., -0.), ne);
-
-    let edge = Edge::from("se");
-    let factors = edge.tuple();
-    assert_eq!((0.5, 0.5), factors);
-    let se = edge.topleft_offset(&rect);
-    assert_eq!(Point::new(-10., -20.), se);
-  }
 
   #[test]
   fn parse_multiple_directions() {

@@ -45,7 +45,7 @@ direction = { "up" | "down" | "left" | "right" }
 move_to = { "move" ~ displacements }
 displacements = { displacement* }
 
-arrow = { "arrow" ~ source? ~ displacement? ~ target? }
+arrow = { "arrow" ~ source? ~ displacement? ~ target? ~ string? }
 line = { "line" ~ source? ~ displacement? ~ target? }
 dot = { "dot" ~ object_edge ~ dot_attributes }
 dot_attributes = { dot_attribute* }
