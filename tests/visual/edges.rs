@@ -1,7 +1,5 @@
-mod common;
-
 #[cfg(test)]
-mod tests {
+mod edges {
   use assert_matches::assert_matches;
 
   use picturs::diagram::types::Node::Primitive;

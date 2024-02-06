@@ -1,7 +1,5 @@
-mod common;
-
 #[cfg(test)]
-mod tests {
+mod units {
   use picturs::test::assert_diagram;
 
   use crate::common::create_diagram;
