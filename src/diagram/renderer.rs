@@ -44,7 +44,7 @@ impl Renderer {
         canvas.paint.set_color(*color);
         canvas.circle(&point, radius.pixels());
       }
-      Shape::Arrow(_, from, distance, to) => {
+      Shape::Arrow(title, from, distance, to) => {
         canvas.move_to(used.left, used.top);
         let mut point = Point::new(used.left, used.top);
         if let Some(distance) = distance {
@@ -165,7 +165,7 @@ impl Renderer {
       canvas.paint.set_color(*text_color);
       let mut rect = *used;
       if paragraph.widths.len() == 1 {
-        rect.top += (used.height() - paragraph.height) / 2. - Canvas::get_font_descent();
+        rect.top += (used.height() - paragraph.height) / 2. - canvas.get_font_descent();
         rect.left += (used.width() - paragraph.widths.first().unwrap()) / 2.;
       } else {
         rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));

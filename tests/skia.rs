@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-  use skia_safe::{Font, PaintStyle, Rect, Typeface};
+  use skia_safe::{Font, PaintStyle, Rect, Size, Typeface};
 
   use picturs::skia::Canvas;
   use picturs::test::assert_canvas;
@@ -13,6 +13,13 @@ mod tests {
     for word in TQBF.split_whitespace() {
       println!("{} {:?}", word, font.measure_str(word, None).0);
     }
+  }
+
+  #[test]
+  fn measure_str() {
+    let mut canvas = Canvas::new((1024, 1024));
+    let bounds = canvas.measure_str(TQBF);
+    assert_eq!(bounds, Size::new(333., 19.));
   }
 
   #[test]

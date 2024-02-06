@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::mem;
 
-use skia_safe::{Color, Data, EncodedImageFormat, Font, ISize, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Surface, surfaces, Typeface};
+use skia_safe::{Color, Data, EncodedImageFormat, Font, ISize, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Size, Surface, surfaces, Typeface};
 
 pub static A5: (i32, i32) = (798, 562);
 
@@ -10,6 +10,14 @@ pub struct Canvas {
   pub surface: Surface,
   path: Path,
   pub paint: Paint,
+  font: Font,
+}
+
+impl Canvas {
+  pub fn measure_str(&self, str: &str) -> Size {
+    let (_width, bounds) = self.font.measure_str(str, None);
+    Size::new(bounds.width().ceil(), bounds.height().ceil())
+  }
 }
 
 impl Canvas {
@@ -21,11 +29,13 @@ impl Canvas {
     paint.set_anti_alias(true);
     paint.set_stroke_width(1.0);
     surface.canvas().clear(Color::LIGHT_GRAY);
+    let font = Font::from_typeface_with_params(Typeface::default(), 17.0, 1.0, 0.0);
 
     Canvas {
       surface,
       path,
       paint,
+      font,
     }
   }
 
@@ -90,13 +100,11 @@ impl Canvas {
   }
 
   pub fn text(&mut self, text: &str, origin: impl Into<Point>) {
-    let font = Font::from_typeface_with_params(Typeface::default(), 17.0, 1.0, 0.0);
-    self.surface.canvas().draw_str(text, origin, &font, &self.paint);
+    self.surface.canvas().draw_str(text, origin, &self.font, &self.paint);
   }
 
   pub fn paragraph(&mut self, text: &str, origin: impl Into<Point>, width: f32) -> (Vec<scalar>, scalar) {
-    let font = Font::from_typeface_with_params(Typeface::default(), 17.0, 1.0, 0.0);
-    let (font_height, _font_metrics) = font.metrics();
+    let (font_height, _font_metrics) = self.font.metrics();
     let advance = font_height / 4.;
 
     let origin = origin.into();
@@ -104,13 +112,13 @@ impl Canvas {
     let mut widths: Vec<scalar> = vec!();
 
     for word in text.split_whitespace() {
-      let (word_width, _word_rect) = font.measure_str(word, None);
+      let (word_width, _word_rect) = self.font.measure_str(word, None);
       if x + word_width > width {
         y += font_height;
         widths.push(x.ceil());
         x = 0.;
       }
-      self.surface.canvas().draw_str(word, (origin.x + x, origin.y + y), &font, &self.paint);
+      self.surface.canvas().draw_str(word, (origin.x + x, origin.y + y), &self.font, &self.paint);
       x += word_width + advance;
     }
     widths.push(x.ceil());
@@ -171,9 +179,8 @@ impl Canvas {
     self.surface.canvas()
   }
 
-  pub fn get_font_descent() -> scalar {
-    let font = Font::from_typeface_with_params(Typeface::default(), 17.0, 1.0, 0.0);
-    let (_font_height, font_metrics) = font.metrics();
+  pub fn get_font_descent(&self) -> scalar {
+    let (_font_height, font_metrics) = self.font.metrics();
     font_metrics.descent
   }
 }
