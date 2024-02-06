@@ -5,7 +5,7 @@ mod edges {
   use picturs::diagram::types::Node::Primitive;
   use picturs::test::assert_diagram;
 
-  use crate::common::create_diagram;
+  use crate::create_diagram;
 
   #[test]
   fn visual_edge_top_right() -> anyhow::Result<()> {

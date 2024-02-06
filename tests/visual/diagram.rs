@@ -1,7 +1,5 @@
-mod common;
-
 #[cfg(test)]
-mod tests {
+mod diagram {
   use std::ops::{Mul, Sub};
 
   use anyhow::Result;
@@ -13,7 +11,7 @@ mod tests {
   use picturs::diagram::types::Shape::Rectangle;
   use picturs::test::assert_diagram;
 
-  use crate::common::create_diagram;
+  use crate::create_diagram;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
