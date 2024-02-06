@@ -513,6 +513,17 @@ impl<'i> Diagram<'i> {
 
   pub fn render_to_file(&mut self, filepath: &str) {
     let mut canvas = Canvas::new(self.size);
+    self.write_to_file(filepath, &mut canvas);
+  }
+
+  pub fn shrink_to_file(&mut self, filepath: &str) {
+    let size = self.bounds.with_outset(self.inset);
+    let size = ISize::new(size.width() as i32, size.height() as i32);
+    let mut canvas = Canvas::new(size);
+    self.write_to_file(filepath, &mut canvas);
+  }
+
+  fn write_to_file(&mut self, filepath: &str, mut canvas: &mut Canvas) {
     canvas.translate(-self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
     Renderer::render_to_canvas(&mut canvas, &self.nodes);
     canvas.write_png(filepath);

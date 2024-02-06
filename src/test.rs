@@ -13,7 +13,7 @@ pub fn assert_canvas(mut canvas: Canvas, prefix: &str) -> anyhow::Result<()> {
 
 pub fn assert_diagram(mut diagram: Diagram, prefix: &str) -> anyhow::Result<()> {
   let last_file = format!("{}-last.png", prefix);
-  diagram.render_to_file(&last_file);
+  diagram.shrink_to_file(&last_file);
   assert_png(prefix, &last_file)
 }
 
