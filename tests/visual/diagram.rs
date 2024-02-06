@@ -193,6 +193,8 @@ mod tests {
       r#"
       box "Top"
       move 1cm right 1cm down
+      box "Middle"
+      flow 1cm
       box "Bottom"
       "#;
     let diagram = create_diagram(string);

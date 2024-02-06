@@ -18,7 +18,6 @@ use crate::skia::Canvas;
 #[grammar = "diagram.pest"]
 pub struct DiagramParser;
 
-
 #[derive(Debug)]
 pub struct Diagram<'a> {
   pub nodes: Vec<Node<'a>>,
@@ -43,14 +42,14 @@ impl<'i> Diagram<'i> {
     let flow = Flow::new("left");
     let config = Config::new(flow, 120., 60.);
     let mut index = Index::default();
-    let (ast, bounds) = Self::pairs_to_nodes(top.clone(), vec![], &mut canvas, &Point::default(), config, &mut index);
+    let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &mut canvas, &Point::default(), config, &mut index);
     self.nodes = ast;
     self.bounds = bounds;
     top
   }
 
-  pub fn pairs_to_nodes<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, mut config: Config, index: &mut Index)
-                            -> (Vec<Node<'a>>, Rect) {
+  pub fn nodes_from<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, mut config: Config, index: &mut Index)
+                        -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
     let mut cursor = Point::new(offset.x, offset.y);
 
@@ -95,6 +94,7 @@ impl<'i> Diagram<'i> {
       Rule::arrow => Self::arrow_from(pair, index, cursor, config),
       Rule::line => Self::line_from(pair, index, cursor, config),
       Rule::move_to => Self::move_from(&pair, cursor, &config.unit),
+      Rule::flow_to => Self::flow_from(pair, cursor, config),
       Rule::circle => Self::circle_from(&pair, config, index, cursor, canvas),
       Rule::text => Self::text_from(&pair, config, index, cursor, canvas),
       _ => {
@@ -124,7 +124,7 @@ impl<'i> Diagram<'i> {
       Conversion::flow(&attributes).into_iter().for_each(|flow| {
         config.flow = flow;
       });
-      Self::pairs_to_nodes(pair.clone().into_inner(), vec![], canvas, &inset, config, index)
+      Self::nodes_from(pair.clone().into_inner(), vec![], canvas, &inset, config, index)
     };
 
     used = inner.with_outset((padding, padding));
@@ -372,6 +372,18 @@ impl<'i> Diagram<'i> {
     Some((rect, dot))
   }
 
+  fn flow_from<'a>(pair: Pair<'a, Rule>, cursor: &Point, config: &mut Config) -> Option<(Rect, Node<'a>)> {
+    let length = Conversion::length_from(pair, &config.unit);
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+    if config.flow.end.horizontal() {
+      used.right += length.pixels();
+    } else {
+      used.bottom += length.pixels();
+    }
+    let node = Primitive(None, used, used, Color::BLACK, Shape::Move());
+    Some((used, node))
+  }
+
   fn move_from<'a>(pair: &Pair<'a, Rule>, cursor: &Point, unit: &Unit) -> Option<(Rect, Node<'a>)> {
     Conversion::displacements_from_pair(pair, unit).map(|displacements| {
       let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
@@ -523,9 +535,9 @@ impl<'i> Diagram<'i> {
     self.write_to_file(filepath, &mut canvas);
   }
 
-  fn write_to_file(&mut self, filepath: &str, mut canvas: &mut Canvas) {
+  fn write_to_file(&mut self, filepath: &str, canvas: &mut Canvas) {
     canvas.translate(-self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
-    Renderer::render_to_canvas(&mut canvas, &self.nodes);
+    Renderer::render_to_canvas(canvas, &self.nodes);
     canvas.write_png(filepath);
   }
 }
