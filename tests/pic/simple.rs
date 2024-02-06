@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod homepage {
   use std::fs;
 
   use pest::Parser;
@@ -10,14 +10,14 @@ mod tests {
 
   #[test]
   fn it_dumps_homepage() {
-    let string = fs::read_to_string("tests/homepage.pic").unwrap();
+    let string = fs::read_to_string("tests/pic/homepage.pic").unwrap();
     let pair = PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap();
     dump_pic(1, pair);
   }
 
   #[test]
   fn it_parses_attributes() {
-    let string = fs::read_to_string("tests/homepage.pic").unwrap();
+    let string = fs::read_to_string("tests/pic/homepage.pic").unwrap();
     let pair = PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap();
     let nodes = parse_nodes(pair, vec![]);
 

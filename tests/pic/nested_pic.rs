@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod tests {
+mod nested {
   use std::fs;
 
   use pest::iterators::Pair;
@@ -15,14 +15,14 @@ mod tests {
 
   #[test]
   fn it_dumps_hierarchy() {
-    let string = fs::read_to_string("tests/nested.pic").unwrap();
+    let string = fs::read_to_string("tests/pic/nested.pic").unwrap();
     let pair = parse_pic(&*string);
     dump_pic(1, pair);
   }
 
   #[test]
   fn it_parses_containers() {
-    let string = fs::read_to_string("tests/nested.pic").unwrap();
+    let string = fs::read_to_string("tests/pic/nested.pic").unwrap();
     let pair = parse_pic(&*string);
     let nodes = parse_nodes(pair, vec![]);
 
