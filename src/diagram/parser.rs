@@ -10,7 +10,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, Config, Displacement, Edge, Flow, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{BLOCK_PADDING, Config, Movement, Edge, Flow, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -302,60 +302,60 @@ impl<'i> Diagram<'i> {
     let id = Conversion::identified(&pair);
     let caption = Conversion::caption(&pair);
 
-    let (source, displacement, target) = Self::source_displacement_target_from_pair(&pair, &config.unit);
+    let (source, movement, target) = Self::source_movement_target_from_pair(&pair, &config.unit);
     let start = index.point_index(&source, &[]).unwrap_or(*cursor);
     let end = index.point_index(&target, &[])
-      .unwrap_or(Self::displace_from_start(start, &displacement, &config.flow));
+      .unwrap_or(Self::displace_from_start(start, &movement, &config.flow));
+    let (rect, used) = Self::rect_from_points(start, &movement, end);
 
-    let (rect, used) = Self::rect_from_points(start, &displacement, end);
     index.insert(ShapeName::Arrow, id, used);
-
-    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(caption, source, displacement, target));
+    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(caption, source, movement, target));
     Some((used, node))
-  }
-
-  fn source_displacement_target_from_pair(pair: &Pair<Rule>, unit: &Unit) -> (ObjectEdge, Option<Displacement>, ObjectEdge) {
-    let source = Conversion::location_to_edge(pair, Rule::source)
-      .unwrap_or(ObjectEdge::new("source", "e"));
-    let distance = Conversion::rule_to_distance(pair, Rule::displacement, unit);
-    let target = Conversion::location_to_edge(pair, Rule::target)
-      .unwrap_or(ObjectEdge::new("source", "w"));
-    (source, distance, target)
-  }
-
-  fn displace_from_start(start: Point, displacement: &Option<Displacement>, flow: &Flow) -> Point {
-    displacement.as_ref()
-      .map(|displacement| start.add(displacement.offset()))
-      .unwrap_or_else(|| {
-        let distance = Displacement::new(2., "cm".into(), flow.end.clone());
-        start.add(distance.offset())
-      })
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
     let caption = Conversion::caption(&pair);
-    let (start, distance, end) = Self::points_from_pair(index, cursor, config, &pair);
-    let (rect, used) = Self::rect_from_points(start, &distance, end);
-    index.insert(ShapeName::Line, id, used);
 
-    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(caption, start, distance, end));
+    let (start, movement, end) = Self::points_from_pair(index, cursor, config, &pair);
+    let (rect, used) = Self::rect_from_points(start, &movement, end);
+
+    index.insert(ShapeName::Line, id, used);
+    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(caption, start, movement, end));
     Some((used, node))
   }
 
-  fn points_from_pair(index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<Rule>) -> (Point, Option<Displacement>, Point) {
-    let (source, displacement, target) = Self::source_displacement_target_from_pair(pair, &config.unit);
-    let start = index.point_index(&source, &[]).unwrap_or(*cursor);
-    let end = index.point_index(&target, &[])
-      .unwrap_or(Self::displace_from_start(start, &displacement, &config.flow));
-    (start, displacement, end)
+  fn source_movement_target_from_pair(pair: &Pair<Rule>, unit: &Unit) -> (ObjectEdge, Option<Movement>, ObjectEdge) {
+    let source = Conversion::location_to_edge(pair, Rule::source)
+      .unwrap_or(ObjectEdge::new("source", "e"));
+    let movement = Conversion::rule_to_movement(pair, Rule::movement, unit);
+    let target = Conversion::location_to_edge(pair, Rule::target)
+      .unwrap_or(ObjectEdge::new("source", "w"));
+    (source, movement, target)
   }
 
-  fn rect_from_points(start: Point, distance: &Option<Displacement>, end: Point) -> (Rect, Rect) {
+  fn displace_from_start(start: Point, movement: &Option<Movement>, flow: &Flow) -> Point {
+    movement.as_ref()
+      .map(|movement| start.add(movement.offset()))
+      .unwrap_or_else(|| {
+        let movement = Movement::new(2., "cm".into(), flow.end.clone());
+        start.add(movement.offset())
+      })
+  }
+
+  fn points_from_pair(index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<Rule>) -> (Point, Option<Movement>, Point) {
+    let (source, movement, target) = Self::source_movement_target_from_pair(pair, &config.unit);
+    let start = index.point_index(&source, &[]).unwrap_or(*cursor);
+    let end = index.point_index(&target, &[])
+      .unwrap_or(Self::displace_from_start(start, &movement, &config.flow));
+    (start, movement, end)
+  }
+
+  fn rect_from_points(start: Point, movement: &Option<Movement>, end: Point) -> (Rect, Rect) {
     let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
     let mut used = rect;
-    if let Some(displacement) = &distance {
-      used.offset(displacement.offset());
+    if let Some(movement) = &movement {
+      used.offset(movement.offset());
     }
     (rect, used)
   }
@@ -386,9 +386,9 @@ impl<'i> Diagram<'i> {
   }
 
   fn move_from<'a>(pair: &Pair<'a, Rule>, cursor: &Point, unit: &Unit) -> Option<(Rect, Node<'a>)> {
-    Conversion::displacements_from_pair(pair, unit).map(|displacements| {
+    Conversion::movements_from_pair(pair, unit).map(|movements| {
       let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-      Index::offset_rect(&mut used, &displacements);
+      Index::offset_rect(&mut used, &movements);
       (used, Primitive(None, used, used, Color::BLACK, Shape::Move()))
     })
   }
@@ -424,7 +424,7 @@ impl<'i> Diagram<'i> {
     })
   }
 
-  fn position_rect_on_edge(start: &Edge, location: &Option<(Edge, Vec<Displacement>, ObjectEdge)>, used: &mut Rect) {
+  fn position_rect_on_edge(start: &Edge, location: &Option<(Edge, Vec<Movement>, ObjectEdge)>, used: &mut Rect) {
     let start = match location {
       Some((edge, _, _)) => edge,
       None => start
@@ -497,10 +497,10 @@ impl<'i> Diagram<'i> {
     })
   }
 
-  pub fn node_mut(&mut self, id: &str, distances: Vec<Displacement>) {
+  pub fn node_mut(&mut self, id: &str, movements: Vec<Movement>) {
     if let Primitive(_, _, ref mut rect, _, _) = Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
-      for distance in distances.iter() {
-        rect.offset(distance.offset());
+      for movement in movements.iter() {
+        rect.offset(movement.offset());
       }
     }
   }

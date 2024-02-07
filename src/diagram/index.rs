@@ -4,7 +4,7 @@ use std::ops::Add;
 use log::error;
 use skia_safe::{Point, Rect};
 
-use crate::diagram::types::{Displacement, Edge, ObjectEdge};
+use crate::diagram::types::{Movement, Edge, ObjectEdge};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -56,9 +56,9 @@ impl Index {
     self.shapes.push((name, rect));
   }
 
-  pub fn position_rect(&self, location: &Option<(Edge, Vec<Displacement>, ObjectEdge)>, used: &mut Rect) {
-    if let Some((edge, distances, object)) = &location {
-      if let Some(rect) = self.offset_index(object, distances) {
+  pub fn position_rect(&self, location: &Option<(Edge, Vec<Movement>, ObjectEdge)>, used: &mut Rect) {
+    if let Some((edge, movements, object)) = &location {
+      if let Some(rect) = self.offset_index(object, movements) {
         *used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
         let offset = edge.topleft_offset(used);
         used.offset(offset);
@@ -66,13 +66,13 @@ impl Index {
     }
   }
 
-  fn offset_index(&self, object: &ObjectEdge, distances: &[Displacement]) -> Option<Rect> {
+  fn offset_index(&self, object: &ObjectEdge, movements: &[Movement]) -> Option<Rect> {
     match &*object.id {
       "#last" => self.shapes.last().map(|(_shape, rect)| rect),
       id if ShapeName::some(id).is_some() => self.last(ShapeName::some(id).unwrap()).map(|(_shape, rect)| rect),
       id => self.ids.get(id)
     }.map(|rect| {
-      Self::offset_from_rect(rect, &object.edge, distances)
+      Self::offset_from_rect(rect, &object.edge, movements)
     })
   }
 
@@ -82,32 +82,32 @@ impl Index {
     }).last()
   }
 
-  pub fn offset_from_rect(rect: &Rect, edge: &Edge, distances: &[Displacement]) -> Rect {
+  pub fn offset_from_rect(rect: &Rect, edge: &Edge, movements: &[Movement]) -> Rect {
     let point = edge.edge_point(rect);
     let mut rect = Rect::from_xywh(point.x, point.y, rect.width(), rect.height());
-    Self::offset_rect(&mut rect, distances);
+    Self::offset_rect(&mut rect, movements);
     rect
   }
 
-  pub fn offset_rect(rect: &mut Rect, distances: &[Displacement]) {
-    for distance in distances.iter() {
-      rect.offset(distance.offset());
+  pub fn offset_rect(rect: &mut Rect, movements: &[Movement]) {
+    for movement in movements.iter() {
+      rect.offset(movement.offset());
     }
   }
 
-  pub fn point_index(&self, edge: &ObjectEdge, distances: &[Displacement]) -> Option<Point> {
+  pub fn point_index(&self, edge: &ObjectEdge, movements: &[Movement]) -> Option<Point> {
     self.ids.get(&edge.id).map(|rect| {
-      Self::point_from_rect(rect, &edge.edge, distances)
+      Self::point_from_rect(rect, &edge.edge, movements)
     }).or_else(|| {
       error!("{} edge id not found", edge.id);
       None
     })
   }
 
-  pub fn point_from_rect(rect: &Rect, edge: &Edge, distances: &[Displacement]) -> Point {
+  pub fn point_from_rect(rect: &Rect, edge: &Edge, movements: &[Movement]) -> Point {
     let point = edge.edge_point(rect);
-    for distance in distances.iter() {
-      let _ = point.add(distance.offset());
+    for movement in movements.iter() {
+      let _ = point.add(movement.offset());
     }
     point
   }

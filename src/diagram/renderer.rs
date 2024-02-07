@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Caption, Node, Paragraph, Shape};
+use crate::diagram::types::{Caption, Movement, Node, ObjectEdge, Paragraph, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -44,59 +44,10 @@ impl Renderer {
         canvas.paint.set_color(*color);
         canvas.circle(&point, radius.pixels());
       }
-      Shape::Arrow(caption, from, distance, to) => {
-        canvas.move_to(used.left, used.top);
-        let mut point = Point::new(used.left, used.top);
-        if let Some(distance) = distance {
-          point = point.add(distance.offset());
-
-          if distance.is_horizontal() {
-            canvas.line_to(point.x, point.y);
-            canvas.line_to(point.x, used.bottom);
-          } else {
-            canvas.line_to(point.x, point.y);
-            canvas.line_to(used.right, point.y);
-          }
-        } else {
-          let p1 = if from.edge.vertical() && to.edge.horizontal() {
-            Point::new(used.left, used.bottom)
-          } else if from.edge.horizontal() && to.edge.vertical() {
-            Point::new(used.right, used.top)
-          } else {
-            Point::new(used.left, used.top)
-          };
-
-          let p2 = Point::new(used.right, used.bottom);
-          canvas.line_to(p1.x, p1.y);
-          canvas.line_to(p2.x, p2.y);
-          canvas.stroke();
-
-          Self::draw_caption(canvas, used, caption);
-
-          let direction = p2.sub(p1);
-          Self::draw_arrow_head(canvas, p2, direction);
-        }
-      }
-      Shape::Line(caption, _, displacement, _) => {
-        canvas.move_to(used.left, used.top);
-        let mut point = Point::new(used.left, used.top);
-        if let Some(displacement) = displacement {
-          point = point.add(displacement.offset());
-
-          if displacement.is_horizontal() {
-            canvas.line_to(point.x, point.y);
-            canvas.line_to(point.x, used.bottom);
-          } else {
-            canvas.line_to(point.x, point.y);
-            canvas.line_to(used.right, point.y);
-          }
-        }
-
-        canvas.line_to(used.right, used.bottom);
-        canvas.stroke();
-
-        Self::draw_caption(canvas, used, caption);
-      }
+      Shape::Arrow(caption, from, movement, to) =>
+        Self::render_arrow(canvas, used, caption, from, movement, to),
+      Shape::Line(caption, _, movement, _) =>
+        Self::render_line(canvas, used, caption, movement),
       Shape::Rectangle(text_color, paragraph, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
@@ -160,6 +111,61 @@ impl Renderer {
         Self::render_paragraph(canvas, used, title);
       }
       _ => warn!("unmatched shape {:?}", shape)
+    }
+  }
+
+  fn render_line(canvas: &mut Canvas, used: &Rect, caption: &Option<Caption>, movement: &Option<Movement>) {
+    canvas.move_to(used.left, used.top);
+    let mut point = Point::new(used.left, used.top);
+    if let Some(movement) = movement {
+      point = point.add(movement.offset());
+
+      if movement.is_horizontal() {
+        canvas.line_to(point.x, point.y);
+        canvas.line_to(point.x, used.bottom);
+      } else {
+        canvas.line_to(point.x, point.y);
+        canvas.line_to(used.right, point.y);
+      }
+    }
+
+    canvas.line_to(used.right, used.bottom);
+    canvas.stroke();
+
+    Self::draw_caption(canvas, used, caption);
+  }
+
+  fn render_arrow(canvas: &mut Canvas, used: &Rect, caption: &Option<Caption>, from: &ObjectEdge, movement: &Option<Movement>, to: &ObjectEdge) {
+    canvas.move_to(used.left, used.top);
+    let mut point = Point::new(used.left, used.top);
+    if let Some(movement) = movement {
+      point = point.add(movement.offset());
+
+      if movement.is_horizontal() {
+        canvas.line_to(point.x, point.y);
+        canvas.line_to(point.x, used.bottom);
+      } else {
+        canvas.line_to(point.x, point.y);
+        canvas.line_to(used.right, point.y);
+      }
+    } else {
+      let p1 = if from.edge.vertical() && to.edge.horizontal() {
+        Point::new(used.left, used.bottom)
+      } else if from.edge.horizontal() && to.edge.vertical() {
+        Point::new(used.right, used.top)
+      } else {
+        Point::new(used.left, used.top)
+      };
+
+      let p2 = Point::new(used.right, used.bottom);
+      canvas.line_to(p1.x, p1.y);
+      canvas.line_to(p2.x, p2.y);
+      canvas.stroke();
+
+      Self::draw_caption(canvas, used, caption);
+
+      let direction = p2.sub(p1);
+      Self::draw_arrow_head(canvas, p2, direction);
     }
   }
 

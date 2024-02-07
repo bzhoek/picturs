@@ -6,7 +6,7 @@ mod diagram {
   use skia_safe::{Color, Point, Rect, Vector};
 
   use picturs::diagram::index::Index;
-  use picturs::diagram::types::{Displacement, Edge, Node, Paragraph, Radius, Shape, Unit};
+  use picturs::diagram::types::{Movement, Edge, Node, Paragraph, Radius, Shape, Unit};
   use picturs::diagram::types::Node::{Container, Primitive};
   use picturs::diagram::types::Shape::Rectangle;
   use picturs::test::assert_diagram;
@@ -365,11 +365,11 @@ mod diagram {
   #[test]
   fn offset_from_rect() {
     let rect = Rect::from_xywh(40., 40., 40., 40.);
-    let distances = vec![
-      Displacement::new(2., Unit::Cm, Edge::from("e")),
-      Displacement::new(1., Unit::Cm, Edge::from("s")),
+    let movements = vec![
+      Movement::new(2., Unit::Cm, Edge::from("e")),
+      Movement::new(1., Unit::Cm, Edge::from("s")),
     ];
-    let result = Index::offset_from_rect(&rect, &Edge::from("nw"), &distances);
+    let result = Index::offset_from_rect(&rect, &Edge::from("nw"), &movements);
     let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };
     assert_eq!(expected, result);
   }

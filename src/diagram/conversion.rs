@@ -6,7 +6,7 @@ use crate::diagram::index::ShapeName;
 
 use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Caption, Displacement, Edge, Flow, Length, ObjectEdge, Unit};
+use crate::diagram::types::{Caption, Movement, Edge, Flow, Length, ObjectEdge, Unit};
 
 pub const WIDTH: f32 = 120.;
 pub const HEIGHT: f32 = 60.;
@@ -87,11 +87,11 @@ impl Conversion {
       })
   }
 
-  fn displacement_from(pair: Pair<Rule>, unit: &Unit) -> Displacement {
+  fn movement_from(pair: Pair<Rule>, unit: &Unit) -> Movement {
     let length = Rules::find_rule(&pair, Rule::offset)
       .map(|pair| Self::length_from(pair, unit)).unwrap();
     let direction = Self::string_find(&pair, Rule::direction).unwrap();
-    Displacement { length, edge: direction.into() }
+    Movement { length, edge: direction.into() }
   }
 
   pub fn length_dig(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Length> {
@@ -137,7 +137,7 @@ impl Conversion {
     let edge = Self::string_dig(&pair, Rule::edge)
       .map(Edge::from)
       .unwrap_or(default.clone());
-    ObjectEdge::edge(id, edge)
+    ObjectEdge::new(id, edge)
   }
 
   pub fn flow(pair: &Pair<Rule>) -> Option<Flow> {
@@ -151,48 +151,48 @@ impl Conversion {
       .map(Self::pair_to_object_edge)
   }
 
-  pub fn rule_to_distance(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Displacement> {
-    Rules::find_rule(pair, rule).map(|pair| Self::displacement_from(pair, unit))
+  pub fn rule_to_movement(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Movement> {
+    Rules::find_rule(pair, rule).map(|pair| Self::movement_from(pair, unit))
   }
 
-  pub fn displacements_from_pair(pair: &Pair<Rule>, unit: &Unit) -> Option<Vec<Displacement>> {
-    Rules::find_rule(pair, Rule::displacements)
+  pub fn movements_from_pair(pair: &Pair<Rule>, unit: &Unit) -> Option<Vec<Movement>> {
+    Rules::find_rule(pair, Rule::movements)
       .map(|pair| {
         pair.into_inner()
-          .map(|inner| Self::displacement_from(inner, unit))
+          .map(|inner| Self::movement_from(inner, unit))
           .collect::<Vec<_>>()
       })
   }
 
-  pub fn location_from(pair: &Pair<Rule>, end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
+  pub fn location_from(pair: &Pair<Rule>, end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Movement>, ObjectEdge)> {
     Rules::dig_rule(pair, Rule::location)
       .map(|p| {
         let mut object: Option<ObjectEdge> = None;
-        let mut directions: Vec<Displacement> = vec![];
+        let mut directions: Vec<Movement> = vec![];
         let mut edge: Option<Edge> = None;
 
         for rule in p.into_inner() {
           match rule.as_rule() {
             Rule::edge => { edge = Some(Edge::from(rule.as_str())); }
-            Rule::displacement => {
-              let displacement = Self::displacement_from(rule, unit);
-              directions.push(displacement);
+            Rule::movement => {
+              let movement = Self::movement_from(rule, unit);
+              directions.push(movement);
             }
             Rule::object_edge => { object = Some(Self::object_edge_from(rule, end)); }
             _ => {}
           }
         };
-        if let Some(displacement) = directions.first() {
+        if let Some(movement) = directions.first() {
           if let Some(object) = object.as_mut() {
             if ShapeName::some(object.id.as_str()).is_some() {
-              object.edge = displacement.edge.clone()
+              object.edge = movement.edge.clone()
             }
           }
           if object.is_none() {
-            object = Some(ObjectEdge::edge("#last", displacement.edge.clone()))
+            object = Some(ObjectEdge::new("#last", movement.edge.clone()))
           }
           if edge.is_none() {
-            edge = Some(displacement.edge.flip())
+            edge = Some(movement.edge.flip())
           }
         }
 

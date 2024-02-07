@@ -13,21 +13,21 @@ pub enum Node<'a> {
   Primitive(Option<&'a str>, Rect, Rect, Color, Shape<'a>),
 }
 
-type EdgeDisplacement = (Edge, Vec<Displacement>, ObjectEdge);
+type EdgeMovement = (Edge, Vec<Movement>, ObjectEdge);
 
 #[derive(Debug, PartialEq)]
 pub enum Shape<'a> {
   Move(),
   Dot(ObjectEdge, Radius),
-  Arrow(Option<Caption<'a>>, ObjectEdge, Option<Displacement>, ObjectEdge),
-  Line(Option<Caption<'a>>, Point, Option<Displacement>, Point),
-  Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeDisplacement>),
-  Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
-  Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
-  Cylinder(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
-  Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
-  Text(&'a str, Option<EdgeDisplacement>),
-  File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
+  Arrow(Option<Caption<'a>>, ObjectEdge, Option<Movement>, ObjectEdge),
+  Line(Option<Caption<'a>>, Point, Option<Movement>, Point),
+  Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),
+  Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
+  Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
+  Cylinder(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
+  Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
+  Text(&'a str, Option<EdgeMovement>),
+  File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Movement>, ObjectEdge)>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -254,12 +254,12 @@ impl Length {
 }
 
 #[derive(Debug, Default, PartialEq)]
-pub struct Displacement {
+pub struct Movement {
   pub(crate) length: Length,
   pub edge: Edge,
 }
 
-impl Displacement {
+impl Movement {
   pub fn new(length: f32, unit: Unit, edge: Edge) -> Self {
     let length = Length::new(length, unit);
     Self { length, edge }
@@ -285,11 +285,7 @@ pub struct ObjectEdge {
 }
 
 impl ObjectEdge {
-  pub fn new(id: &str, edge: &str) -> Self {
+  pub fn new(id: &str, edge: impl Into<Edge>) -> Self {
     Self { id: id.into(), edge: edge.into() }
-  }
-
-  pub fn edge(id: &str, edge: Edge) -> Self {
-    Self { id: id.into(), edge }
   }
 }
