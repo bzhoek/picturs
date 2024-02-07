@@ -118,6 +118,10 @@ impl Conversion {
     Conversion::length_dig(attributes, Rule::height, unit).map(|length| length.pixels())
   }
 
+  pub fn length(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
+    Conversion::length_dig(attributes, Rule::length, unit).map(|length| length.pixels())
+  }
+
   pub fn padding(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_dig(attributes, Rule::padding, unit).map(|length| length.pixels())
   }

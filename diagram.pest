@@ -30,15 +30,16 @@ id = @{ ASCII_ALPHANUMERIC* }
 radius = { ("rd" | "rad" | "radius") ~ size }
 width = { ("wd" | "wid" | "width") ~ size }
 height = { ("ht" | "height") ~ size }
+length = { ("ln" | "length") ~ size }
 padding = { ("pd" | "padding") ~ size }
-size = _{ length ~ unit? }
+size = _{ number ~ unit? }
 
 location = { edge? ~ movement+ ~ (last_object | from_object)? }
 last_object = _{ "last" ~ object_edge }
 from_object = _{ "from" ~ object_edge }
 movement = { offset ~ direction }
 offset = { size }
-length = @{ ASCII_DIGIT* ~ ("." ~ ASCII_DIGIT+)? }
+number = @{ ASCII_DIGIT* ~ ("." ~ ASCII_DIGIT+)? }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
 direction = { "up" | "down" | "left" | "right" }
 
@@ -46,9 +47,9 @@ flow_to = { "flow" ~ size }
 move_to = { "move" ~ movements }
 movements = { movement* }
 
-arrow = { "arrow" ~ line_attributes }
-line = { "line" ~ line_attributes }
-line_attributes = _{ source? ~ movement? ~ target? ~ caption? }
+arrow = { "arrow" ~ (length | line_attributes) ~ caption? }
+line = { "line" ~ (length | line_attributes) ~ caption? }
+line_attributes = _{ source? ~ movement? ~ target? }
 caption = { string ~ alignment? }
 alignment = { "left" | "right" | "above" | "below" }
 dot = { "dot" ~ object_edge ~ dot_attributes }

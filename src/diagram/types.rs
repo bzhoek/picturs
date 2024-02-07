@@ -49,6 +49,7 @@ pub struct Config {
   pub(crate) unit: Unit,
   pub(crate) width: f32,
   pub(crate) height: f32,
+  pub(crate) line: Length,
   pub(crate) circle: ShapeConfig,
   pub(crate) ellipse: ShapeConfig,
   pub(crate) oval: ShapeConfig,
@@ -75,6 +76,7 @@ impl Config {
       flow,
       width,
       height,
+      line: Length::new(2., Unit::Cm),
       unit: Unit::default(),
       circle: ShapeConfig::default(),
       ellipse: ShapeConfig::default(),
@@ -231,7 +233,7 @@ impl From<&str> for Unit {
 
 pub type Radius = Length;
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Length {
   length: f32,
   unit: Unit,

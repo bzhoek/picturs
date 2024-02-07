@@ -301,11 +301,12 @@ impl<'i> Diagram<'i> {
   fn arrow_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
     let caption = Conversion::caption(&pair);
+    let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
     let (source, movement, target) = Self::source_movement_target_from_pair(&pair, &config.unit);
     let start = index.point_index(&source, &[]).unwrap_or(*cursor);
     let end = index.point_index(&target, &[])
-      .unwrap_or(Self::displace_from_start(start, &movement, &config.flow));
+      .unwrap_or(Self::displace_from_start(start, &movement, &config.flow, length));
     let (rect, used) = Self::rect_from_points(start, &movement, end);
 
     index.insert(ShapeName::Arrow, id, used);
@@ -316,8 +317,9 @@ impl<'i> Diagram<'i> {
   fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
     let caption = Conversion::caption(&pair);
+    let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
-    let (start, movement, end) = Self::points_from_pair(index, cursor, config, &pair);
+    let (start, movement, end) = Self::points_from_pair(index, cursor, config, &pair, length);
     let (rect, used) = Self::rect_from_points(start, &movement, end);
 
     index.insert(ShapeName::Line, id, used);
@@ -334,20 +336,20 @@ impl<'i> Diagram<'i> {
     (source, movement, target)
   }
 
-  fn displace_from_start(start: Point, movement: &Option<Movement>, flow: &Flow) -> Point {
+  fn displace_from_start(start: Point, movement: &Option<Movement>, flow: &Flow, default: f32) -> Point {
     movement.as_ref()
       .map(|movement| start.add(movement.offset()))
       .unwrap_or_else(|| {
-        let movement = Movement::new(2., "cm".into(), flow.end.clone());
+        let movement = Movement::new(default, Unit::Px, flow.end.clone());
         start.add(movement.offset())
       })
   }
 
-  fn points_from_pair(index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<Rule>) -> (Point, Option<Movement>, Point) {
+  fn points_from_pair(index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<Rule>, default: f32) -> (Point, Option<Movement>, Point) {
     let (source, movement, target) = Self::source_movement_target_from_pair(pair, &config.unit);
     let start = index.point_index(&source, &[]).unwrap_or(*cursor);
     let end = index.point_index(&target, &[])
-      .unwrap_or(Self::displace_from_start(start, &movement, &config.flow));
+      .unwrap_or(Self::displace_from_start(start, &movement, &config.flow, default));
     (start, movement, end)
   }
 
