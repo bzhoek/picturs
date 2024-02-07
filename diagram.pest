@@ -1,7 +1,7 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 // WHITESPACE = { ( " "* ~ "\\" ~ NEWLINE ~ " "* ) }
 picture = _{ SOI ~ statements* ~ EOI }
-statements = _{ comment | container | shape | unit_config | box_config | circle_config | flow | flow_to | move_to }
+statements = _{ comment | container | shape | unit_config | box_config | circle_config | line_config | flow | flow_to | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ dot | arrow | line | rectangle | file | circle | ellipse | cylinder | oval | text }
 flow = { "down" | "right" | "top" | "left" }
@@ -9,6 +9,7 @@ flow = { "down" | "right" | "top" | "left" }
 unit_config = { "set unit" ~ unit }
 box_config = { "set box" ~ (padding | width| height)* }
 circle_config = { "set circle" ~ (height) }
+line_config = { "set line" ~ length }
 container = { "box" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
 file = { "file" ~ identified? ~ attributes }

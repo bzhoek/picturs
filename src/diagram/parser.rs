@@ -80,6 +80,11 @@ impl<'i> Diagram<'i> {
         Self::config_shape(&mut config.circle, pair, &config.unit);
         None
       }
+      Rule::line_config => {
+        let length = Conversion::length_dig(&pair, Rule::length, &config.unit).unwrap();
+        config.line = length;
+        None
+      }
       Rule::flow => {
         config.flow = Flow::new(pair.as_str());
         None

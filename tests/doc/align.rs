@@ -8,11 +8,12 @@ mod align {
   fn doc_above_below() -> anyhow::Result<()> {
     let string = r#"
       right
-      arrow ln 3cm "above" above
+      set line ln 3cm
+      arrow "above" above
       flow 1cm
-      line ln 3cm "center"
+      line "center"
       flow 1cm
-      arrow ln 3cm "below" below
+      arrow "below" below
       "#;
     let diagram = create_diagram(string);
     assert_diagram(diagram, "doc/above_below")?;
