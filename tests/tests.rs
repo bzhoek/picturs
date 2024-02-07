@@ -14,6 +14,10 @@ mod visual {
   mod units;
 }
 
+mod doc {
+  mod align;
+}
+
 pub fn create_diagram(string: &str) -> Diagram {
   init_logging();
   let mut diagram = Diagram::inset(A5, (16., 16.));

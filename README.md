@@ -22,6 +22,16 @@ The first relative component determines direction, `circle 1 right 1 down` will 
 
 Containers are always positioned relative to their top-left corner, because their size is determined by the content and thus not known in advance.
 
+### Alignment
+
+The position of captions on lines and arrows is determined by the alignment suffix, like `above` and `below` for horizontal lines.
+
+![Alignment above and below](doc/above_below.png)
+
+For vertical lines the alignment is `left` and `right`. The default is `center`.
+
+![Alignment left and right](doc/left_right.png)
+
 ## Diagram
 
 1. ~Render all rectangles~
