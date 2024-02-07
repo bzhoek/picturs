@@ -49,8 +49,8 @@ mod edges {
       box.b "B" wd 2in
       flow 2cm
       box.c "C" wd 3in
-      arrow from a.s to b.n "Arrow center"
-      line from b.s to c.n "Line center"
+      arrow from a.s to b.n "Caption left" left
+      line from b.s to c.n "Caption right" right
       "#;
     let diagram = create_diagram(string);
     assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() < 0.);

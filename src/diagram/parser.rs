@@ -300,7 +300,7 @@ impl<'i> Diagram<'i> {
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
-    let caption = Conversion::string_dig(&pair, Rule::inner);
+    let caption = Conversion::caption(&pair);
 
     let (source, displacement, target) = Self::source_displacement_target_from_pair(&pair, &config.unit);
     let start = index.point_index(&source, &[]).unwrap_or(*cursor);
@@ -334,7 +334,7 @@ impl<'i> Diagram<'i> {
 
   fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
-    let caption = Conversion::string_dig(&pair, Rule::inner);
+    let caption = Conversion::caption(&pair);
     let (start, distance, end) = Self::points_from_pair(index, cursor, config, &pair);
     let (rect, used) = Self::rect_from_points(start, &distance, end);
     index.insert(ShapeName::Line, id, used);

@@ -19,8 +19,8 @@ type EdgeDisplacement = (Edge, Vec<Displacement>, ObjectEdge);
 pub enum Shape<'a> {
   Move(),
   Dot(ObjectEdge, Radius),
-  Arrow(Option<&'a str>, ObjectEdge, Option<Displacement>, ObjectEdge),
-  Line(Option<&'a str>, Point, Option<Displacement>, Point),
+  Arrow(Option<Caption<'a>>, ObjectEdge, Option<Displacement>, ObjectEdge),
+  Line(Option<Caption<'a>>, Point, Option<Displacement>, Point),
   Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeDisplacement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeDisplacement>),
@@ -35,6 +35,12 @@ pub struct Paragraph<'a> {
   pub text: &'a str,
   pub widths: Vec<f32>,
   pub height: f32,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Caption<'a> {
+  pub text: &'a str,
+  pub edge: Edge,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -154,12 +160,12 @@ impl From<&str> for Edge {
   fn from(item: &str) -> Self {
     let dot_removed = item.trim_start_matches('.');
     match dot_removed.to_lowercase().as_str() {
-      "n" | "up" => Self { direction: Vertical, x: 0., y: -0.5 },
+      "n" | "up" | "above" => Self { direction: Vertical, x: 0., y: -0.5 },
       "ne" => Self { direction: Vertical, x: 0.5, y: -0.5 },
       "en" => Self { direction: Horizontal, x: 0.5, y: -0.5 },
       "e" | "right" => Self { direction: Horizontal, x: 0.5, y: 0. },
       "se" => Self { direction: Vertical, x: 0.5, y: 0.5 },
-      "s" | "down" => Self { direction: Vertical, x: 0., y: 0.5 },
+      "s" | "down" | "below" => Self { direction: Vertical, x: 0., y: 0.5 },
       "sw" => Self { direction: Vertical, x: -0.5, y: 0.5 },
       "w" | "left" => Self { direction: Horizontal, x: -0.5, y: 0. },
       "nw" => Self { direction: Vertical, x: -0.5, y: -0.5 },

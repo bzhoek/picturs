@@ -6,7 +6,7 @@ use crate::diagram::index::ShapeName;
 
 use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Displacement, Edge, Flow, Length, ObjectEdge, Unit};
+use crate::diagram::types::{Caption, Displacement, Edge, Flow, Length, ObjectEdge, Unit};
 
 pub const WIDTH: f32 = 120.;
 pub const HEIGHT: f32 = 60.;
@@ -72,6 +72,19 @@ impl Conversion {
   pub fn identified<'a>(pair: &Pair<'a, Rule>) -> Option<&'a str> {
     Rules::dig_rule(pair, Rule::identified)
       .map(|p| p.into_inner().next().unwrap().as_str())
+  }
+
+  pub fn caption<'a>(pair: &Pair<'a, Rule>) -> Option<Caption<'a>> {
+    Rules::find_rule(pair, Rule::caption)
+      .map(|caption| {
+        let mut pairs = caption.clone().into_inner();
+        let text = Self::next_to_string(&mut pairs).unwrap();
+        let edge = Self::next_to_string(&mut pairs)
+          .map(|str| str.into())
+          .unwrap_or(Edge::default())
+          .flip();
+        Caption { text, edge }
+      })
   }
 
   fn displacement_from(pair: Pair<Rule>, unit: &Unit) -> Displacement {

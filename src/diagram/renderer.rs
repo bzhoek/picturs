@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Edge, Node, Paragraph, Shape};
+use crate::diagram::types::{Caption, Node, Paragraph, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -163,20 +163,19 @@ impl Renderer {
     }
   }
 
-  fn draw_caption(canvas: &mut Canvas, used: &Rect, caption: &Option<&str>) {
+  fn draw_caption(canvas: &mut Canvas, used: &Rect, caption: &Option<Caption>) {
     if let Some(caption) = caption {
-      let bounds = canvas.measure_str(caption);
-      let bounds = Rect::from_size(bounds);
-
-      let edge = Edge::from("c");
-      let offset = edge.topleft_offset(&bounds);
+      let bounds = canvas.measure_str(caption.text);
+      let mut bounds = Rect::from_size(bounds);
+      bounds.outset((TEXT_PADDING, TEXT_PADDING));
+      let offset = caption.edge.topleft_offset(&bounds);
 
       let mut topleft = used.center();
       topleft.offset(offset);
-      topleft.offset((0., bounds.height() / 2.));
+      topleft.offset((TEXT_PADDING, TEXT_PADDING + bounds.height() / 2.));
 
       canvas.paint.set_style(PaintStyle::Fill);
-      canvas.text(caption, topleft);
+      canvas.text(caption.text, topleft);
     }
   }
 
