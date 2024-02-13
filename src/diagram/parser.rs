@@ -1,6 +1,6 @@
 use std::ops::Add;
 
-use log::{debug, warn};
+use log::{debug, info, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
@@ -104,8 +104,8 @@ impl<'i> Diagram<'i> {
       Rule::cylinder => Self::cylinder_from(&pair, config, index, cursor, canvas),
       Rule::oval => Self::oval_from(&pair, config, index, cursor, canvas),
       Rule::dot => Self::dot_from(&pair, config, index),
-      Rule::arrow => Self::arrow_from(pair, index, cursor, config),
-      Rule::line => Self::line_from(pair, index, cursor, config),
+      Rule::arrow => Self::arrow_from(pair, index, cursor, config, canvas),
+      Rule::line => Self::line_from(pair, index, cursor, config, canvas),
       Rule::move_to => Self::move_from(&pair, cursor, &config.unit),
       Rule::flow_to => Self::flow_from(pair, cursor, config),
       Rule::circle => Self::circle_from(&pair, config, index, cursor, canvas),
@@ -311,11 +311,18 @@ impl<'i> Diagram<'i> {
     });
   }
 
-  fn arrow_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config) -> Option<(Rect, Node<'a>)> {
+  fn arrow_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
     let caption = Conversion::caption(&pair);
     let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
+    if let Some(caption) = &caption {
+      if caption.edge.horizontal() && config.flow.end.horizontal() {
+        let size = canvas.measure_str(caption.text);
+
+        info!("HORIZONTAL! {:?}", size);
+      }
+    }
     let (source, movement, target) = Self::source_movement_target_from_pair(&pair, &config.unit);
     let start = index.point_index(&source, &[]).unwrap_or(*cursor);
     let end = index.point_index(&target, &[])
@@ -327,13 +334,22 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config) -> Option<(Rect, Node<'a>)> {
+  fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
     let caption = Conversion::caption(&pair);
     let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
     let (start, movement, end) = Self::points_from_pair(index, cursor, config, &pair, length);
     let (rect, used) = Self::rect_from_points(start, &movement, end);
+
+    if let Some((caption, movement)) = caption.as_ref().zip(movement.as_ref()) {
+      if caption.edge.vertical() && movement.edge.vertical() {
+        let size = canvas.measure_str(caption.text);
+
+        info!("VERTICAL! {:?}", size);
+      }
+    }
+
 
     index.insert(ShapeName::Line, id, used);
     let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(caption, start, movement, end));

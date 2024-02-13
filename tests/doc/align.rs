@@ -14,6 +14,8 @@ mod align {
       line "center"
       flow 1cm
       arrow "below" below
+      flow 1cm
+      arrow ln 2cm "left" left
       "#;
     let diagram = create_diagram(string);
     assert_diagram(diagram, "doc/above_below")?;
