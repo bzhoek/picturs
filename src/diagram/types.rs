@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul};
 
-use skia_safe::{Color, Point, Rect, Vector};
+use skia_safe::{Color, Font, Point, Rect, Size, Vector};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
@@ -26,7 +26,8 @@ pub enum Shape<'a> {
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Cylinder(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
-  Text(&'a str, Option<EdgeMovement>),
+  Font(Font),
+  Text(Paragraph<'a>, Option<EdgeMovement>),
   File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Movement>, ObjectEdge)>),
 }
 
@@ -35,6 +36,7 @@ pub struct Paragraph<'a> {
   pub text: &'a str,
   pub widths: Vec<f32>,
   pub height: f32,
+  pub size: Size,
 }
 
 #[derive(Debug, PartialEq)]

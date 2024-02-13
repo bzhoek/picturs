@@ -22,6 +22,12 @@ impl Conversion {
     iter.next().map(|p| p.as_str())
   }
 
+  fn into_string<'a>(iter: &mut Pairs<'a, Rule>) -> Option<&'a str> {
+    let mut pairs = iter.next().unwrap().into_inner();
+    pairs.next();
+    pairs.next().map(|p| p.as_str())
+  }
+
   pub fn colors_from(pair: &Pair<Rule>) -> (Color, Color, Color) {
     let stroke = Conversion::stroke_color(pair).unwrap_or(Color::BLUE);
     let fill = Conversion::fill_color(pair).unwrap_or(Color::TRANSPARENT);
@@ -79,6 +85,7 @@ impl Conversion {
       .map(|caption| {
         let mut pairs = caption.clone().into_inner();
         let text = Self::next_to_string(&mut pairs).unwrap();
+        let text = &text[1..text.len() - 1];
         let edge = Self::next_to_string(&mut pairs)
           .map(|str| str.into())
           .unwrap_or(Edge::default())

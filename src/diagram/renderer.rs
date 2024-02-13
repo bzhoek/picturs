@@ -38,6 +38,9 @@ impl Renderer {
   }
   fn render_shape(canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape) {
     match shape {
+      Shape::Font(font) => {
+        canvas.font = font.clone();
+      }
       Shape::Dot(_, radius) => {
         let point = Point::new(used.left, used.top);
         canvas.paint.set_style(PaintStyle::Fill);
@@ -107,8 +110,12 @@ impl Renderer {
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
-      Shape::Text(title, _) => {
-        Self::render_paragraph(canvas, used, title);
+      Shape::Text(paragraph, _) => {
+        if paragraph.widths.len() > 1 {
+          Self::render_paragraph(canvas, used, &paragraph.text);
+        } else {
+          canvas.text(paragraph.text, (used.left, used.top + canvas.font.metrics().0));
+        }
       }
       _ => warn!("unmatched shape {:?}", shape)
     }

@@ -3,7 +3,7 @@ mod diagram {
   use std::ops::{Mul, Sub};
 
   use anyhow::Result;
-  use skia_safe::{Color, Point, Rect, Vector};
+  use skia_safe::{Color, Point, Rect, Size, Vector};
 
   use picturs::diagram::index::Index;
   use picturs::diagram::types::{Movement, Edge, Node, Paragraph, Radius, Shape, Unit};
@@ -17,7 +17,8 @@ mod diagram {
 
   fn rectangle(title: Option<(&str, f32)>) -> Shape {
     let paragraph = title.map(|(title, width)| {
-      Paragraph { text: title, widths: vec!(width), height: 17. }
+      let size = Size::new(120., 17.);
+      Paragraph { text: title, widths: vec!(width), height: size.height, size }
     });
     Rectangle(Color::BLACK, paragraph, Radius::default(), Color::TRANSPARENT, None)
   }
@@ -128,8 +129,9 @@ mod diagram {
     let diagram = create_diagram(&string);
     let paragraph1_rect = Rect::from_xywh(0., 0., 120., 84.);
     let paragraph2_rect = Rect::from_xywh(0., 0., 120., 76.);
+    let size = Size::new(120., 68.);
 
-    let tqbf = Rectangle(Color::BLACK, Some(Paragraph { text: TQBF, widths: vec!(72., 78., 115., 68.), height: 68. }), Radius::default(), Color::TRANSPARENT, None);
+    let tqbf = Rectangle(Color::BLACK, Some(Paragraph { text: TQBF, widths: vec!(72., 78., 115., 68.), height: 68., size }), Radius::default(), Color::TRANSPARENT, None);
 
     assert_eq!(vec![
       Primitive(None,

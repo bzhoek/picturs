@@ -10,16 +10,7 @@ pub struct Canvas {
   pub surface: Surface,
   path: Path,
   pub paint: Paint,
-  font: Font,
-}
-
-impl Canvas {
-  pub fn measure_str(&self, str: &str) -> Size {
-    let (_width, bounds) = self.font.measure_str(str, None);
-    let (font_height, _font_metrics) = self.font.metrics();
-    // let height = metrics.top.abs() + metrics.bottom.abs();
-    Size::new(bounds.width().ceil(), font_height.ceil())
-  }
+  pub font: Font,
 }
 
 impl Canvas {
@@ -186,5 +177,13 @@ impl Canvas {
     let (_font_height, font_metrics) = self.font.metrics();
     font_metrics.descent
   }
+
+  pub fn measure_str(&self, str: &str) -> Size {
+    let (width_with_whitespace, _bounds) = self.font.measure_str(str, None);
+    let (font_height, _font_metrics) = self.font.metrics();
+    // let height = metrics.top.abs() + metrics.bottom.abs();
+    Size::new(width_with_whitespace.ceil(), font_height.ceil())
+  }
+
 }
 

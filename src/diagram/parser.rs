@@ -4,7 +4,7 @@ use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
-use skia_safe::{Color, ISize, Point, Rect, Size};
+use skia_safe::{Color, Font, FontMgr, FontStyle, ISize, Point, Rect, Size};
 
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
@@ -68,6 +68,14 @@ impl<'i> Diagram<'i> {
 
   fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index, cursor: &mut Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let result = match pair.as_rule() {
+      Rule::font_config => {
+        let name = Conversion::string_dig(&pair, Rule::inner).unwrap();
+        let typeface = FontMgr::default().match_family_style(name, FontStyle::default()).unwrap();
+        canvas.font = Font::from_typeface(typeface, 17.0);
+        let rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+        let node = Primitive(None, rect, rect, Color::BLACK, Shape::Font(canvas.font.clone()));
+        Some((rect, node))
+      }
       Rule::unit_config => {
         config.unit = Unit::from(pair.into_inner().as_str());
         None
@@ -427,7 +435,8 @@ impl<'i> Diagram<'i> {
   fn paragraph_height<'a>(title: Option<&'a str>, width: f32, canvas: &mut Canvas) -> Option<Paragraph<'a>> {
     title.map(|title| {
       let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
-      Paragraph { text: title, widths, height }
+      let size = Size::new(width, height);
+      Paragraph { text: title, widths, height, size }
     })
   }
 
@@ -452,16 +461,20 @@ impl<'i> Diagram<'i> {
     let location = Conversion::location_from(pair, &config.flow.end, &config.unit);
 
     let fit = Rules::dig_rule(&attributes, Rule::fit);
-    let bounds = match fit {
-      Some(_) => canvas.measure_str(title),
+    let paragraph = match fit {
+      Some(_) => {
+        let size = canvas.measure_str(title);
+        Paragraph { text: title, widths: vec![size.width], height: size.height, size }
+      }
       None => {
         let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.width);
-        let (_widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
-        Size::new(width, height)
+        let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+        let size = Size::new(width, height);
+        Paragraph { text: title, widths, height, size }
       }
     };
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, bounds.width, bounds.height);
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, paragraph.size.width, paragraph.size.height);
     used.bottom += BLOCK_PADDING;
 
     Self::adjust_topleft(&config.flow, &mut used);
@@ -469,7 +482,7 @@ impl<'i> Diagram<'i> {
 
     index.insert(ShapeName::Text, id, used);
 
-    let text = Primitive(id, used, used, Color::BLACK, Shape::Text(title, location));
+    let text = Primitive(id, used, used, Color::BLACK, Shape::Text(paragraph, location));
     Some((used, text))
   }
 
