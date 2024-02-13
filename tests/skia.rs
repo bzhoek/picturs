@@ -1,19 +1,19 @@
 #[cfg(test)]
 mod tests {
-  use skia_safe::{Font, PaintStyle, Point, Rect, Size, Typeface};
-  use picturs::diagram::types::Edge;
+  use skia_safe::{Font, FontMgr, FontStyle, PaintStyle, Point, Rect, Size};
 
+  use picturs::diagram::types::Edge;
   use picturs::skia::Canvas;
   use picturs::test::assert_canvas;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
   #[test]
-  fn font_metrics() {
-    let font = Font::from_typeface_with_params(Typeface::default(), 28.0, 1.0, 0.0);
-    for word in TQBF.split_whitespace() {
-      println!("{} {:?}", word, font.measure_str(word, None).0);
-    }
+  fn typeface() {
+    let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
+    let font = Font::from_typeface(typeface, 17.0);
+    let (height, _metrics) = font.metrics();
+    assert_eq!(17., height)
   }
 
   #[test]
@@ -34,7 +34,7 @@ mod tests {
     let center = rect.center();
     let topleft = center + offset;
 
-    assert_eq!(Point::from((28.,41.5)), topleft);
+    assert_eq!(Point::from((28., 41.5)), topleft);
   }
 
   #[test]

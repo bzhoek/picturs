@@ -11,4 +11,4 @@ env_logger = "0.11.0"
 log = "0.4"
 pest = "2.7"
 pest_derive = "2.7"
-skia-safe = { version = "0.68", features = ["metal"] }
+skia-safe = { version = "0.70.0", features = ["metal"] }

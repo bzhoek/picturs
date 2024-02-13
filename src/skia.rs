@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::Write;
 use std::mem;
 
-use skia_safe::{Color, Data, EncodedImageFormat, Font, ISize, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Size, Surface, surfaces, Typeface};
+use skia_safe::{Color, Data, EncodedImageFormat, Font, FontMgr, FontStyle, ISize, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Size, Surface, surfaces};
 
 pub static A5: (i32, i32) = (798, 562);
 
@@ -31,7 +31,8 @@ impl Canvas {
     paint.set_anti_alias(true);
     paint.set_stroke_width(1.0);
     surface.canvas().clear(Color::LIGHT_GRAY);
-    let font = Font::from_typeface_with_params(Typeface::default(), 17.0, 1.0, 0.0);
+    let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
+    let font = Font::from_typeface(typeface, 17.0);
 
     Canvas {
       surface,
