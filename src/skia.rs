@@ -16,7 +16,9 @@ pub struct Canvas {
 impl Canvas {
   pub fn measure_str(&self, str: &str) -> Size {
     let (_width, bounds) = self.font.measure_str(str, None);
-    Size::new(bounds.width().ceil(), bounds.height().ceil())
+    let (font_height, _font_metrics) = self.font.metrics();
+    // let height = metrics.top.abs() + metrics.bottom.abs();
+    Size::new(bounds.width().ceil(), font_height.ceil())
   }
 }
 

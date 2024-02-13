@@ -4,7 +4,7 @@ use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
-use skia_safe::{Color, ISize, Point, Rect};
+use skia_safe::{Color, ISize, Point, Rect, Size};
 
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
@@ -449,11 +449,19 @@ impl<'i> Diagram<'i> {
     let id = Conversion::identified(pair);
     let title = Conversion::string_dig(pair, Rule::inner).unwrap();
     let attributes = Rules::find_rule(pair, Rule::text_attributes).unwrap();
-    let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.width);
     let location = Conversion::location_from(pair, &config.flow.end, &config.unit);
-    let (_widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
+    let fit = Rules::dig_rule(&attributes, Rule::fit);
+    let bounds = match fit {
+      Some(_) => canvas.measure_str(title),
+      None => {
+        let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.width);
+        let (_widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+        Size::new(width, height)
+      }
+    };
+
+    let mut used = Rect::from_xywh(cursor.x, cursor.y, bounds.width, bounds.height);
     used.bottom += BLOCK_PADDING;
 
     Self::adjust_topleft(&config.flow, &mut used);

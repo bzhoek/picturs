@@ -20,7 +20,7 @@ mod tests {
   fn measure_str() {
     let canvas = Canvas::new((1024, 1024));
     let bounds = canvas.measure_str(TQBF);
-    assert_eq!(bounds, Size::new(333., 19.));
+    assert_eq!(bounds, Size::new(333., 17.));
   }
 
   #[test]
@@ -34,7 +34,7 @@ mod tests {
     let center = rect.center();
     let topleft = center + offset;
 
-    assert_eq!(Point::from((28.,42.)), topleft);
+    assert_eq!(Point::from((28.,41.5)), topleft);
   }
 
   #[test]
