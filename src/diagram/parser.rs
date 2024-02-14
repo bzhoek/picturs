@@ -10,7 +10,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, Config, Movement, Edge, Flow, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -175,8 +175,8 @@ impl<'i> Diagram<'i> {
 
     index.insert(ShapeName::Oval, id, used);
 
-    let oval = Primitive(id, used, used, stroke, Shape::Oval(text_color, paragraph, fill, location));
-    Some((used, oval))
+    let node = Primitive(id, used, used, stroke, Shape::Oval(text_color, paragraph, fill, location));
+    Some((used, node))
   }
 
   fn rectangle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
@@ -392,8 +392,9 @@ impl<'i> Diagram<'i> {
   fn dot_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let caption = Conversion::caption(pair, canvas);
     let attributes = Rules::find_rule(pair, Rule::dot_attributes).unwrap();
+    let _same = Rules::dig_rule(&attributes, Rule::same);
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
-    let radius = Conversion::radius(&attributes, &config.unit).unwrap_or_default();
+    let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot.clone());
 
     let point = match Conversion::object_edge_from_pair(pair) {
       Some(_) => {

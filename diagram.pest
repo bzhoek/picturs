@@ -11,6 +11,7 @@ font_config = { "set font" ~ string }
 box_config = { "set box" ~ (padding | width| height)* }
 circle_config = { "set circle" ~ (height) }
 line_config = { "set line" ~ length }
+
 container = { "box" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
 file = { "file" ~ identified? ~ attributes }
@@ -58,7 +59,8 @@ alignment = { "left" | "right" | "above" | "below" | "nw" | "ne" | "sw" | "se" }
 dot = { "dot" ~ at_object_edge? ~ dot_attributes ~ caption? }
 at_object_edge = { "at" ~ object_edge }
 dot_attributes = { dot_attribute* }
-dot_attribute = { color | radius }
+dot_attribute = { color | radius | same }
+same = { "same" }
 
 source = { "from" ~ object_edge }
 target = { "to" ~ object_edge }
