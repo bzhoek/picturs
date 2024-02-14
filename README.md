@@ -14,7 +14,7 @@ oval "oval" 1 below first box
 
 The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the direction is `right`, the polar opposite `west` is used. For `oval` the polar opposite `north` is assumed, because the placement is `below`.
 
-![Relative placement](target/visual_direction_start_end.png)
+![Relative placement](tests/visual/hello-direction_start_end.png)
 
 The first relative component determines direction, `circle 1 right 1 down` will be horizontal, and `oval 1 down` will be vertical.
 
@@ -26,11 +26,11 @@ Containers are always positioned relative to their top-left corner, because thei
 
 The position of captions on lines and arrows is determined by the alignment suffix, like `above` and `below` for horizontal lines.
 
-![Alignment above and below](doc/above_below.png)
+![Alignment above and below](tests/doc/align-above_below.png)
 
 For vertical lines the alignment is `left` and `right`. The default is `center`.
 
-![Alignment left and right](doc/left_right.png)
+![Alignment left and right](tests/doc/align-left_right.png)
 
 ## Diagram
 

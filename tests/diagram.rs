@@ -148,7 +148,6 @@ mod diagram {
     assert_eq!(45., angle.to_degrees())
   }
 
-
   #[test]
   fn layout_node() {
     let string =
