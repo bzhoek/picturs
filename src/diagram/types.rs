@@ -19,8 +19,8 @@ type EdgeMovement = (Edge, Vec<Movement>, ObjectEdge);
 pub enum Shape<'a> {
   Move(),
   Dot(Point, Radius, Option<Caption<'a>>),
-  Arrow(Option<Caption<'a>>, ObjectEdge, Option<Movement>, ObjectEdge),
-  Line(Option<Caption<'a>>, Point, Option<Movement>, Point),
+  Arrow(ObjectEdge, Option<Movement>, ObjectEdge, Option<Caption<'a>>),
+  Line(Point, Option<Movement>, Point, Option<Caption<'a>>),
   Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),

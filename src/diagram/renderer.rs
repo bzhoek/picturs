@@ -47,10 +47,10 @@ impl Renderer {
         canvas.circle(point, radius.pixels());
         Self::draw_dot_caption(canvas, point, radius, caption);
       }
-      Shape::Arrow(caption, from, movement, to) =>
-        Self::render_arrow(canvas, used, caption, from, movement, to),
-      Shape::Line(caption, _, movement, _) =>
-        Self::render_line(canvas, used, caption, movement),
+      Shape::Arrow(from, movement, to, caption) =>
+        Self::render_arrow(canvas, used, from, movement, to, caption),
+      Shape::Line(_, movement, _, caption) =>
+        Self::render_line(canvas, used, movement, caption),
       Shape::Rectangle(text_color, paragraph, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
@@ -121,7 +121,7 @@ impl Renderer {
     }
   }
 
-  fn render_line(canvas: &mut Canvas, used: &Rect, caption: &Option<Caption>, movement: &Option<Movement>) {
+  fn render_line(canvas: &mut Canvas, used: &Rect, movement: &Option<Movement>, caption: &Option<Caption>) {
     canvas.move_to(used.left, used.top);
     let mut point = Point::new(used.left, used.top);
     if let Some(movement) = movement {
@@ -142,7 +142,7 @@ impl Renderer {
     Self::draw_caption(canvas, used, caption);
   }
 
-  fn render_arrow(canvas: &mut Canvas, used: &Rect, caption: &Option<Caption>, from: &ObjectEdge, movement: &Option<Movement>, to: &ObjectEdge) {
+  fn render_arrow(canvas: &mut Canvas, used: &Rect, from: &ObjectEdge, movement: &Option<Movement>, to: &ObjectEdge, caption: &Option<Caption>) {
     canvas.move_to(used.left, used.top);
     let mut point = Point::new(used.left, used.top);
     if let Some(movement) = movement {

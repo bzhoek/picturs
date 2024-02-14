@@ -330,7 +330,7 @@ impl<'i> Diagram<'i> {
     let (rect, used) = Self::rect_from_points(start, &movement, end);
 
     index.insert(ShapeName::Arrow, id, used);
-    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(caption, source, movement, target));
+    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(source, movement, target, caption));
     Some((used, node))
   }
 
@@ -350,7 +350,7 @@ impl<'i> Diagram<'i> {
 
 
     index.insert(ShapeName::Line, id, used);
-    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(caption, start, movement, end));
+    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Line(start, movement, end, caption));
     Some((used, node))
   }
 
