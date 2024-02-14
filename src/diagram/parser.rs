@@ -402,10 +402,16 @@ impl<'i> Diagram<'i> {
       }
       None => *cursor
     };
-    let rect = Rect::from_xywh(point.x, point.y, 0., 0.);
 
-    let node = Primitive(None, rect, rect, color, Shape::Dot(point, radius, caption));
-    Some((rect, node))
+    let mut bounds = Rect::from_xywh(point.x, point.y, 0., 0.);
+    if let Some(caption) = &caption {
+      let topleft = Renderer::topleft_of(&caption, &bounds);
+      let rect = Rect::from_point_and_size(topleft, caption.size);
+      Self::update_bounds(&mut bounds, rect);
+    }
+
+    let node = Primitive(None, bounds, bounds, color, Shape::Dot(point, radius, caption));
+    Some((bounds, node))
   }
 
   fn flow_from<'a>(pair: Pair<'a, Rule>, cursor: &Point, config: &mut Config) -> Option<(Rect, Node<'a>)> {
