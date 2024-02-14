@@ -2,10 +2,10 @@
 mod align {
   use picturs::test::assert_diagram;
 
-  use crate::create_diagram;
+  use crate::{assert_diagram, create_diagram};
 
   #[test]
-  fn doc_above_below() -> anyhow::Result<()> {
+  fn above_below() -> anyhow::Result<()> {
     let string = r#"
       right
       set line ln 3cm
@@ -18,12 +18,12 @@ mod align {
       // arrow ln 2cm "left" left
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "doc/above_below")?;
+    assert_diagram!(diagram);
     Ok(())
   }
 
   #[test]
-  fn doc_left_right() -> anyhow::Result<()> {
+  fn left_right() -> anyhow::Result<()> {
     let string = r#"
       down
       box "" wd 1in ht 0
@@ -34,18 +34,17 @@ mod align {
       arrow "right" right
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "doc/left_right")?;
+    assert_diagram!(diagram);
     Ok(())
   }
 
   #[test]
-  fn doc_dot_caption() -> anyhow::Result<()> {
+  fn dot_caption() -> anyhow::Result<()> {
     let string = r#"
-      dot color red rad 4pt
+      dot color red rad 4pt "N" above
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "doc/dot_caption")?;
+    assert_diagram!(diagram);
     Ok(())
   }
-
 }
