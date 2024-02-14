@@ -23,7 +23,7 @@ impl Conversion {
     iter.next().map(|p| p.as_str())
   }
 
-  fn into_string<'a>(iter: &mut Pairs<'a, Rule>) -> Option<&'a str> {
+  fn inner_string<'a>(iter: &mut Pairs<'a, Rule>) -> Option<&'a str> {
     let mut pairs = iter.next().unwrap().into_inner();
     pairs.next();
     pairs.next().map(|p| p.as_str())
