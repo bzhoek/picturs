@@ -178,8 +178,7 @@ impl Renderer {
 
   fn draw_caption(canvas: &mut Canvas, used: &Rect, caption: &Option<Caption>) {
     if let Some(caption) = caption {
-      let bounds = canvas.measure_str(caption.text);
-      let mut bounds = Rect::from_size(bounds);
+      let mut bounds = Rect::from_size(caption.size);
       bounds.outset((TEXT_PADDING, TEXT_PADDING));
       let offset = caption.edge.topleft_offset(&bounds);
 

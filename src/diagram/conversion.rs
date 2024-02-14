@@ -2,11 +2,12 @@
 
 use pest::iterators::{Pair, Pairs};
 use skia_safe::Color;
-use crate::diagram::index::ShapeName;
 
+use crate::diagram::index::ShapeName;
 use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Caption, Movement, Edge, Flow, Length, ObjectEdge, Unit};
+use crate::diagram::types::{Caption, Edge, Flow, Length, Movement, ObjectEdge, Unit};
+use crate::skia::Canvas;
 
 pub const WIDTH: f32 = 120.;
 pub const HEIGHT: f32 = 60.;
@@ -80,17 +81,18 @@ impl Conversion {
       .map(|p| p.into_inner().next().unwrap().as_str())
   }
 
-  pub fn caption<'a>(pair: &Pair<'a, Rule>) -> Option<Caption<'a>> {
+  pub fn caption<'a>(pair: &Pair<'a, Rule>, canvas: &Canvas) -> Option<Caption<'a>> {
     Rules::find_rule(pair, Rule::caption)
       .map(|caption| {
         let mut pairs = caption.clone().into_inner();
         let text = Self::next_to_string(&mut pairs).unwrap();
         let text = &text[1..text.len() - 1];
+        let size = canvas.measure_str(text);
         let edge = Self::next_to_string(&mut pairs)
           .map(|str| str.into())
           .unwrap_or(Edge::default())
           .flip();
-        Caption { text, edge }
+        Caption { text, edge, size }
       })
   }
 

@@ -43,6 +43,7 @@ pub struct Paragraph<'a> {
 pub struct Caption<'a> {
   pub text: &'a str,
   pub edge: Edge,
+  pub size: Size,
 }
 
 #[derive(Clone, Debug, PartialEq)]

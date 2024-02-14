@@ -313,7 +313,7 @@ impl<'i> Diagram<'i> {
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
-    let caption = Conversion::caption(&pair);
+    let caption = Conversion::caption(&pair, &canvas);
     let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
     if let Some(caption) = &caption {
@@ -336,7 +336,7 @@ impl<'i> Diagram<'i> {
 
   fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
-    let caption = Conversion::caption(&pair);
+    let caption = Conversion::caption(&pair, &canvas);
     let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
     let (start, movement, end) = Self::points_from_pair(index, cursor, config, &pair, length);
@@ -344,9 +344,7 @@ impl<'i> Diagram<'i> {
 
     if let Some((caption, movement)) = caption.as_ref().zip(movement.as_ref()) {
       if caption.edge.vertical() && movement.edge.vertical() {
-        let size = canvas.measure_str(caption.text);
-
-        info!("VERTICAL! {:?}", size);
+        info!("VERTICAL! {:?}", caption.size);
       }
     }
 
