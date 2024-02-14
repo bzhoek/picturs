@@ -4,6 +4,8 @@ use log::warn;
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::Rect;
+use crate::diagram::parser::Diagram;
+use crate::skia::A5;
 
 pub mod skia;
 pub mod diagram;
@@ -80,6 +82,13 @@ pub fn dump_pic(level: usize, pair: Pair<Rule>) {
     println!("{:level$} {:?}", level, pair);
     dump_pic(level + 1, pair);
   }
+}
+
+pub fn create_diagram(string: &str) -> Diagram {
+  init_logging();
+  let mut diagram = Diagram::inset(A5, (16., 16.));
+  diagram.parse_string(string);
+  diagram
 }
 
 pub fn init_logging() -> &'static Mutex<()> {

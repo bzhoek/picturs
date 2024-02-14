@@ -1,8 +1,9 @@
 #[cfg(test)]
 mod edges {
+  use picturs::create_diagram;
   use picturs::test::assert_diagram;
 
-  use crate::{assert_diagram, create_diagram};
+  use crate::{assert_diagram};
 
   #[test]
   fn all_edges() -> anyhow::Result<()> {
@@ -21,5 +22,4 @@ mod edges {
     assert_diagram!(diagram);
     Ok(())
   }
-
 }

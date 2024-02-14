@@ -1,11 +1,12 @@
 #[cfg(test)]
 mod edges {
   use assert_matches::assert_matches;
+  use picturs::create_diagram;
 
   use picturs::diagram::types::Node::Primitive;
   use picturs::test::assert_diagram;
 
-  use crate::{assert_diagram, create_diagram};
+  use crate::{assert_diagram};
 
   #[test]
   fn edge_top_right() {

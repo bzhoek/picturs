@@ -1,8 +1,9 @@
 #[cfg(test)]
 mod units {
+  use picturs::create_diagram;
   use picturs::test::assert_diagram;
 
-  use crate::{assert_diagram, create_diagram};
+  use crate::{assert_diagram};
 
   #[test]
   fn units() {
