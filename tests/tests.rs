@@ -16,6 +16,7 @@ mod visual {
 
 mod doc {
   mod align;
+  mod edges;
 }
 
 #[macro_export]

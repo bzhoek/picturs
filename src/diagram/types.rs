@@ -195,11 +195,17 @@ impl Edge {
     point
   }
 
-  /// Returns the offset to the top-left corner of the rectangle
+  /// Returns the offset to adjust top-left corner with
   pub fn topleft_offset(&self, rect: &Rect) -> Point {
     let point = Point::new(self.x, self.y);
     let point = point.add(Vector::new(0.5, 0.5));
     Point::new(-point.x * rect.width(), -point.y * rect.height())
+  }
+
+  // adjust the top-left corner of the rectangle so that is at the edge
+  pub fn offset(&self, rect: &mut Rect) {
+    let offset = self.topleft_offset(rect);
+    rect.offset(offset);
   }
 
   pub fn horizontal(&self) -> bool {

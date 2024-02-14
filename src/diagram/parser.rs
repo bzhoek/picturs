@@ -471,13 +471,11 @@ impl<'i> Diagram<'i> {
       Some((edge, _, _)) => edge,
       None => start
     };
-    let offset = start.topleft_offset(used);
-    used.offset(offset);
+    start.offset(used);
   }
 
   fn adjust_topleft(flow: &Flow, used: &mut Rect) {
-    let offset = flow.start.topleft_offset(used);
-    used.offset(offset);
+    flow.start.offset(used);
   }
 
   fn text_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {

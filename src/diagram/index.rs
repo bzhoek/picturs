@@ -60,8 +60,7 @@ impl Index {
     if let Some((edge, movements, object)) = &location {
       if let Some(rect) = self.offset_index(object, movements) {
         *used = Rect::from_xywh(rect.left, rect.top, used.width(), used.height());
-        let offset = edge.topleft_offset(used);
-        used.offset(offset);
+        edge.offset(used);
       }
     }
   }
