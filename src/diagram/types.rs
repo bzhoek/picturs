@@ -18,7 +18,7 @@ type EdgeMovement = (Edge, Vec<Movement>, ObjectEdge);
 #[derive(Debug, PartialEq)]
 pub enum Shape<'a> {
   Move(),
-  Dot(ObjectEdge, Radius),
+  Dot(Point, Radius, Option<Caption<'a>>),
   Arrow(Option<Caption<'a>>, ObjectEdge, Option<Movement>, ObjectEdge),
   Line(Option<Caption<'a>>, Point, Option<Movement>, Point),
   Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),

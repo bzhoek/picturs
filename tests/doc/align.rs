@@ -38,4 +38,14 @@ mod align {
     Ok(())
   }
 
+  #[test]
+  fn doc_dot_caption() -> anyhow::Result<()> {
+    let string = r#"
+      dot color red rad 4pt
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram(diagram, "doc/dot_caption")?;
+    Ok(())
+  }
+
 }

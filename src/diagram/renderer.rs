@@ -41,11 +41,11 @@ impl Renderer {
       Shape::Font(font) => {
         canvas.font = font.clone();
       }
-      Shape::Dot(_, radius) => {
-        let point = Point::new(used.left, used.top);
+      Shape::Dot(point, radius, caption) => {
         canvas.paint.set_style(PaintStyle::Fill);
         canvas.paint.set_color(*color);
-        canvas.circle(&point, radius.pixels());
+        canvas.circle(point, radius.pixels());
+        Self::draw_caption(canvas, used, caption);
       }
       Shape::Arrow(caption, from, movement, to) =>
         Self::render_arrow(canvas, used, caption, from, movement, to),

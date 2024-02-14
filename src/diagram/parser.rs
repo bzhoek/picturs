@@ -103,7 +103,7 @@ impl<'i> Diagram<'i> {
       Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor, canvas),
       Rule::cylinder => Self::cylinder_from(&pair, config, index, cursor, canvas),
       Rule::oval => Self::oval_from(&pair, config, index, cursor, canvas),
-      Rule::dot => Self::dot_from(&pair, config, index),
+      Rule::dot => Self::dot_from(&pair, config, index, cursor, canvas),
       Rule::arrow => Self::arrow_from(pair, index, cursor, config, canvas),
       Rule::line => Self::line_from(pair, index, cursor, config, canvas),
       Rule::move_to => Self::move_from(&pair, cursor, &config.unit),
@@ -313,7 +313,7 @@ impl<'i> Diagram<'i> {
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
-    let caption = Conversion::caption(&pair, &canvas);
+    let caption = Conversion::caption(&pair, canvas);
     let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
     if let Some(caption) = &caption {
@@ -336,7 +336,7 @@ impl<'i> Diagram<'i> {
 
   fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
-    let caption = Conversion::caption(&pair, &canvas);
+    let caption = Conversion::caption(&pair, canvas);
     let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
     let (start, movement, end) = Self::points_from_pair(index, cursor, config, &pair, length);
@@ -389,17 +389,23 @@ impl<'i> Diagram<'i> {
     (rect, used)
   }
 
-  fn dot_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index) -> Option<(Rect, Node<'a>)> {
+  fn dot_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+    let caption = Conversion::caption(&pair, canvas);
     let attributes = Rules::find_rule(pair, Rule::dot_attributes).unwrap();
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
     let radius = Conversion::radius(&attributes, &config.unit).unwrap_or_default();
 
-    let object = Conversion::object_edge_from_pair(pair).unwrap();
-    let point = index.point_index(&object, &[]).unwrap();
+    let point = match Conversion::object_edge_from_pair(pair) {
+      Some(_) => {
+        let object = Conversion::object_edge_from_pair(pair).unwrap();
+        index.point_index(&object, &[]).unwrap()
+      }
+      None => *cursor
+    };
     let rect = Rect::from_xywh(point.x, point.y, 0., 0.);
 
-    let dot = Primitive(None, rect, rect, color, Shape::Dot(object, radius));
-    Some((rect, dot))
+    let node = Primitive(None, rect, rect, color, Shape::Dot(point, radius, caption));
+    Some((rect, node))
   }
 
   fn flow_from<'a>(pair: Pair<'a, Rule>, cursor: &Point, config: &mut Config) -> Option<(Rect, Node<'a>)> {

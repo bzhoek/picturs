@@ -15,8 +15,8 @@ mod edges {
       text "Align top"
       box.b "B" wd 2in
       arrow from a.ne to b.nw
-      dot a.ne color red rad 4pt
-      dot b.nw color green rad 4pt
+      dot at a.ne color red rad 4pt
+      dot at b.nw color green rad 4pt
       "#;
     let diagram = create_diagram(string);
     assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0. && rect.y() == 0.);

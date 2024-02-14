@@ -136,7 +136,7 @@ impl Conversion {
   }
 
   pub fn object_edge_from_pair(pair: &Pair<Rule>) -> Option<ObjectEdge> {
-    Rules::find_rule(pair, Rule::object_edge).map(Self::pair_to_object_edge)
+    Rules::dig_rule(pair, Rule::object_edge).map(Self::pair_to_object_edge)
   }
 
   fn pair_to_object_edge(pair: Pair<Rule>) -> ObjectEdge {

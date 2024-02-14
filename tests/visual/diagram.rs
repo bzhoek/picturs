@@ -311,8 +311,8 @@ mod diagram {
       box.top    "Top"
       box.bottom "Bottom" .n 2cm down from top.s
       arrow from top.s to bottom.n
-      dot top.s color red rad 4pt
-      dot top.n color green rad 4pt
+      dot at top.s color red rad 4pt
+      dot at top.n color green rad 4pt
       "#;
     let diagram = create_diagram(string);
     assert_diagram(diagram, "target/visual_top_down_line")?;
