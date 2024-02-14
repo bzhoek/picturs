@@ -158,6 +158,13 @@ impl Edge {
       Vertical => Self { direction: Vertical, x: self.x, y: self.y * -1. }
     }
   }
+
+  pub(crate) fn mirror(&self) -> Self {
+    match self.direction {
+      Horizontal => Self { direction: Horizontal, x: self.x * -1., y: self.y * -1. },
+      Vertical => Self { direction: Vertical, x: self.x * -1., y: self.y * -1. },
+    }
+  }
 }
 
 // first character determines the direction (horizontal or vertical)

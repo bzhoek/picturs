@@ -92,7 +92,7 @@ impl Conversion {
         let edge = Self::next_to_string(&mut pairs)
           .map(|str| str.into())
           .unwrap_or(Edge::default())
-          .flip();
+          .mirror();
         Caption { text, edge, size }
       })
   }

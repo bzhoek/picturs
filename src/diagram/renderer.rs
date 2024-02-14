@@ -192,7 +192,7 @@ impl Renderer {
   pub fn dot_offset_of(point: &Point, radius: &Radius, caption: &Caption) -> Rect {
     let mut dot = Rect::from_point_and_size(*point, (0., 0.));
     dot.outset((radius.pixels() * 2., radius.pixels() * 2.));
-    let point = caption.edge.flip().edge_point(&dot);
+    let point = caption.edge.mirror().edge_point(&dot);
     let mut rect = Rect::from_point_and_size(point, caption.size);
     caption.edge.offset(&mut rect);
     rect
