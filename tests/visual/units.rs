@@ -2,10 +2,10 @@
 mod units {
   use picturs::test::assert_diagram;
 
-  use crate::create_diagram;
+  use crate::{assert_diagram, create_diagram};
 
   #[test]
-  fn visual_units() -> anyhow::Result<()> {
+  fn units() {
     let string = r#"
       down
       set unit cm
@@ -13,12 +13,11 @@ mod units {
       box "B" 10 right
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_units")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_text_fit() -> anyhow::Result<()> {
+  fn text_fit() {
     let string = r#"
       set font "Courier"
       right
@@ -34,8 +33,6 @@ mod units {
       line from host.n 1cm up "on host" above
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_text_fit")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
-
 }

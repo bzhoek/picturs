@@ -5,7 +5,7 @@ mod align {
   use crate::{assert_diagram, create_diagram};
 
   #[test]
-  fn above_below() -> anyhow::Result<()> {
+  fn above_below() {
     let string = r#"
       right
       set line ln 3cm
@@ -19,11 +19,10 @@ mod align {
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
-    Ok(())
   }
 
   #[test]
-  fn left_right() -> anyhow::Result<()> {
+  fn left_right() {
     let string = r#"
       down
       box "" wd 1in ht 0
@@ -35,16 +34,14 @@ mod align {
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
-    Ok(())
   }
 
   #[test]
-  fn dot_caption() -> anyhow::Result<()> {
+  fn dot_caption() {
     let string = r#"
       dot color red rad 4pt "N" above
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
-    Ok(())
   }
 }

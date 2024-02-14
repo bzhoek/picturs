@@ -2,10 +2,10 @@
 mod hello {
   use picturs::test::assert_diagram;
 
-  use crate::create_diagram;
+  use crate::{assert_diagram, create_diagram};
 
   #[test]
-  fn visual_hello_statements() -> anyhow::Result<()> {
+  fn hello_statements() {
     let string = r#"
       set box pd 0
       right
@@ -17,12 +17,11 @@ mod hello {
       file "file" 1cm down last ellipse
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_hello_statements")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_hello_world_right() -> anyhow::Result<()> {
+  fn hello_world_right() {
     let string = r#"
       right
       line
@@ -30,12 +29,11 @@ mod hello {
       arrow
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_hello_world_right")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_hello_world_down() -> anyhow::Result<()> {
+  fn hello_world_down() {
     let string = r#"
       down
       line
@@ -43,12 +41,11 @@ mod hello {
       arrow
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_hello_world_down")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_box_circle_cylinder() -> anyhow::Result<()> {
+  fn box_circle_cylinder() {
     let string = r#"
       set box pd 0 ht 64 wd 120
       set circle ht 64
@@ -58,23 +55,21 @@ mod hello {
       # cylinder
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_box_circle_cylinder")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_box_box() -> anyhow::Result<()> {
+  fn box_box() {
     let string = r#"
       box { box "A" }
       box { box "B" }
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_box_box")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_box_box_box() -> anyhow::Result<()> {
+  fn box_box_box() {
     let string = r#"
       box pd 0 top color green{
         box pd 0
@@ -88,12 +83,11 @@ mod hello {
       }
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_box_box_box")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_direction_start_end() -> anyhow::Result<()> {
+  fn direction_start_end() {
     let string = r#"
       set box pd 0 ht 32 wd 64
       box top color green {
@@ -123,7 +117,6 @@ mod hello {
       }
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_direction_start_end")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 }

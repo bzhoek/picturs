@@ -5,10 +5,10 @@ mod edges {
   use picturs::diagram::types::Node::Primitive;
   use picturs::test::assert_diagram;
 
-  use crate::create_diagram;
+  use crate::{assert_diagram, create_diagram};
 
   #[test]
-  fn visual_edge_top_right() -> anyhow::Result<()> {
+  fn edge_top_right() {
     let string = r#"
       top
       box.a "A" wd 1in
@@ -21,12 +21,11 @@ mod edges {
     let diagram = create_diagram(string);
     assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0. && rect.y() == 0.);
     assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.y() == 0.);
-    assert_diagram(diagram, "target/visual_edge_top_right")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_edge_bottom_left() -> anyhow::Result<()> {
+  fn edge_bottom_left() {
     let string = r#"
       box.a "A" wd 1in
       text "Default align left"
@@ -36,12 +35,11 @@ mod edges {
     let diagram = create_diagram(string);
     assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0.);
     assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.x() == 0.);
-    assert_diagram(diagram, "target/visual_edge_bottom_left")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_edge_down_center() -> anyhow::Result<()> {
+  fn edge_down_center() {
     let string = r#"
       down
       box.a "A" wd 1in
@@ -55,7 +53,6 @@ mod edges {
     let diagram = create_diagram(string);
     assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() < 0.);
     assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.x() < 0.);
-    assert_diagram(diagram, "target/visual_edge_down_center")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 }

@@ -21,7 +21,7 @@ pub fn assert_png(prefix: &str, last_file: &str) -> anyhow::Result<()> {
   let ref_file = format!("{}.png", prefix);
   let diff_file = format!("{}-diff.png", prefix);
 
-  let compare= ["/usr/local/bin/compare", "/opt/homebrew/bin/compare"].iter().find(|path| {
+  let compare = ["/usr/local/bin/compare", "/opt/homebrew/bin/compare"].iter().find(|path| {
     Path::new(path).exists()
   }).unwrap_or_else(|| panic!("compare not found"));
 

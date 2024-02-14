@@ -11,7 +11,7 @@ mod diagram {
   use picturs::diagram::types::Shape::Rectangle;
   use picturs::test::assert_diagram;
 
-  use crate::create_diagram;
+  use crate::{assert_diagram, create_diagram};
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
@@ -166,12 +166,12 @@ mod diagram {
       line from now.e 1cm right to future.e
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_double_containers")?;
+    assert_diagram!(diagram);
     Ok(())
   }
 
   #[test]
-  fn visual_effort_to_impact() -> Result<()> {
+  fn effort_to_impact() {
     let string =
       r#"
       box.step1 "Effort"
@@ -183,12 +183,11 @@ mod diagram {
       arrow from step3.s to step4.e
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_effort_to_impact")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_move() -> Result<()> {
+  fn visual_move() {
     let string =
       r#"
       box "Top"
@@ -198,12 +197,11 @@ mod diagram {
       box "Bottom"
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_move")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_text_shape() -> Result<()> {
+  fn text_shape() {
     let string =
       r#"box {
         text "Now"
@@ -211,12 +209,11 @@ mod diagram {
       }
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_text_shape")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_remember_the_future() -> Result<()> {
+  fn remember_the_future() {
     let string =
       r#"box.now "Now" {
         box.step3 "What do we need to start doing now"
@@ -230,12 +227,11 @@ mod diagram {
       line from future.s 1cm down to now.s
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_remember_the_future")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_whole_ast() -> Result<()> {
+  fn whole_ast() {
     let string =
       r#"box.now "Now" {
         box.step3 "What do we need to start doing now"
@@ -247,8 +243,7 @@ mod diagram {
       }
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_whole_ast")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
@@ -270,42 +265,39 @@ mod diagram {
   }
 
   #[test]
-  fn visual_side_by_side() -> Result<()> {
+  fn side_by_side() {
     let string =
       r#"
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .nw 2cm right 1cm down from left.ne
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_side_by_side")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_width_and_height() -> Result<()> {
+  fn width_and_height() {
     let string =
       r#"
       box wd 4cm ht 4cm "This goes to the left hand side"
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_width_and_height")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_right_center_left() -> Result<()> {
+  fn right_center_left() {
     let string =
       r#"
       box.left "This goes to the left hand side" color green fill white
       box.right "While this goes to the right hand side" color magenta fill gray text_color white .w 2cm right from left.ne
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_right_center_left")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
-  fn visual_top_down_line() -> Result<()> {
+  fn top_down_line() {
     let string =
       r#"
       box.top    "Top"
@@ -315,8 +307,7 @@ mod diagram {
       dot at top.n color green rad 4pt
       "#;
     let diagram = create_diagram(string);
-    assert_diagram(diagram, "target/visual_top_down_line")?;
-    Ok(())
+    assert_diagram!(diagram);
   }
 
   #[test]
