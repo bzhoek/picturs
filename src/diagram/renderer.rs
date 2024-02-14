@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Caption, Movement, Node, ObjectEdge, Paragraph, Shape};
+use crate::diagram::types::{Caption, Movement, Node, ObjectEdge, Paragraph, Radius, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -45,7 +45,7 @@ impl Renderer {
         canvas.paint.set_style(PaintStyle::Fill);
         canvas.paint.set_color(*color);
         canvas.circle(point, radius.pixels());
-        Self::draw_caption(canvas, used, caption);
+        Self::draw_dot_caption(canvas, point, radius, caption);
       }
       Shape::Arrow(caption, from, movement, to) =>
         Self::render_arrow(canvas, used, caption, from, movement, to),
@@ -174,6 +174,28 @@ impl Renderer {
       let direction = p2.sub(p1);
       Self::draw_arrow_head(canvas, p2, direction);
     }
+  }
+
+  fn draw_dot_caption(canvas: &mut Canvas, point: &Point, radius: &Radius, caption: &Option<Caption>) {
+    if let Some(caption) = caption {
+      let rect = Self::dot_offset_of(point, radius, caption);
+
+      canvas.paint.set_style(PaintStyle::Fill);
+      canvas.text(caption.text, (rect.left, rect.bottom - (canvas.get_font_descent() / 2.)));
+
+      // canvas.paint.set_style(PaintStyle::Stroke);
+      // canvas.paint.set_color(Color::BLACK);
+      // canvas.rectangle(&rect, 0.);
+    }
+  }
+
+  pub fn dot_offset_of(point: &Point, radius: &Radius, caption: &Caption) -> Rect {
+    let mut dot = Rect::from_point_and_size(*point, (0., 0.));
+    dot.outset((radius.pixels() * 2., radius.pixels() * 2.));
+    let point = caption.edge.flip().edge_point(&dot);
+    let mut rect = Rect::from_point_and_size(point, caption.size);
+    caption.edge.offset(&mut rect);
+    rect
   }
 
   fn draw_caption(canvas: &mut Canvas, used: &Rect, caption: &Option<Caption>) {

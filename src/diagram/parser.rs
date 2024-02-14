@@ -390,7 +390,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn dot_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let caption = Conversion::caption(&pair, canvas);
+    let caption = Conversion::caption(pair, canvas);
     let attributes = Rules::find_rule(pair, Rule::dot_attributes).unwrap();
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
     let radius = Conversion::radius(&attributes, &config.unit).unwrap_or_default();
@@ -405,8 +405,7 @@ impl<'i> Diagram<'i> {
 
     let mut bounds = Rect::from_xywh(point.x, point.y, 0., 0.);
     if let Some(caption) = &caption {
-      let topleft = Renderer::topleft_of(&caption, &bounds);
-      let rect = Rect::from_point_and_size(topleft, caption.size);
+      let rect = Renderer::dot_offset_of(&point, &radius, caption);
       Self::update_bounds(&mut bounds, rect);
     }
 

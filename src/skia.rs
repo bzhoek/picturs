@@ -181,7 +181,7 @@ impl Canvas {
   pub fn measure_str(&self, str: &str) -> Size {
     let (width_with_whitespace, _bounds) = self.font.measure_str(str, None);
     let (font_height, _font_metrics) = self.font.metrics();
-    // let height = metrics.top.abs() + metrics.bottom.abs();
+    // _bounds.size()
     Size::new(width_with_whitespace.ceil(), font_height.ceil())
   }
 

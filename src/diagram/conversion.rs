@@ -81,6 +81,7 @@ impl Conversion {
       .map(|p| p.into_inner().next().unwrap().as_str())
   }
 
+  #[allow(clippy::unwrap_or_default)]
   pub fn caption<'a>(pair: &Pair<'a, Rule>, canvas: &Canvas) -> Option<Caption<'a>> {
     Rules::find_rule(pair, Rule::caption)
       .map(|caption| {
