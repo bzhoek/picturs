@@ -1,4 +1,3 @@
-
 #[cfg(test)]
 mod tests {
   use skia_safe::{Point, Rect};

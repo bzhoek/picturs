@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod diagram {
-  use std::ops::{Mul, Sub};
+  use std::ops::Mul;
 
   use skia_safe::{Color, Point, Rect, Size, Vector};
-  use picturs::create_diagram;
 
+  use picturs::create_diagram;
   use picturs::diagram::index::Index;
   use picturs::diagram::types::{Edge, Movement, Node, Paragraph, Radius, Shape, Unit};
   use picturs::diagram::types::Node::{Container, Primitive};
@@ -137,15 +137,6 @@ mod diagram {
                 Color::BLUE,
                 tqbf),
     ], diagram.nodes);
-  }
-
-  #[test]
-  fn arrow() {
-    let p1 = Point::new(0., 0.);
-    let p2 = Point::new(20., 20.);
-    let direction = p2.sub(p1);
-    let angle = direction.y.atan2(direction.x);
-    assert_eq!(45., angle.to_degrees())
   }
 
   #[test]
