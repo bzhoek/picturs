@@ -3,6 +3,7 @@ mod tests {
   use std::ops::Sub;
 
   use skia_safe::{Point, Rect};
+  use picturs::trig::{point_from, x_from_degrees, y_from_degrees};
 
   #[test]
   fn angle_from_point() {
@@ -34,7 +35,6 @@ mod tests {
 
   #[test]
   fn x_from_angle() {
-    let rect = Rect::from_xywh(0., 0., 20., 10.);
     let x = x_from_degrees(20.);
     assert_eq!(0.44444445, x);
     let x = x_from_degrees(45.);
@@ -77,35 +77,12 @@ mod tests {
     assert_eq!(1.0, y);
   }
 
-  fn x_from_degrees(degrees: f32) -> f32 {
-    match degrees as i32 {
-      1..=45 => degrees / 45.,
-      46..=134 => 1.,
-      135..=225 => (180. - degrees) / 45.,
-      226..=314 => -1.,
-      315..=360 => (degrees - 360.) / 45.,
-      _ => 0.
-    }
-  }
-
-  fn y_from_degrees(degrees: f32) -> f32 {
-    match degrees as i32 {
-      1..=45 => 1.,
-      46..=134 => (90. - degrees) / 45.,
-      135..=225 => -1.,
-      226..=314 => (degrees - 270.) / 45.,
-      315..=360 => 1.,
-      _ => 0.
-    }
-  }
 
   #[test]
   fn rect_nnw() {
     let rect = Rect::from_xywh(0., 0., 20., 10.);
     let degrees = 20.;
-    let x = x_from_degrees(degrees);
-    let y = y_from_degrees(degrees);
-    let point = (x * rect.width() / 2., y * rect.height() / 2.);
+    let point = point_from(degrees, rect);
     assert_eq!((4.4444447, 5.), point)
   }
 }

@@ -9,6 +9,8 @@ pub mod test;
 
 pub mod pic;
 
+pub mod trig;
+
 #[allow(dead_code)]
 fn debug_rect(used: &Rect) -> String {
   format!("x: {} y: {}, w: {}, h: {}", used.x(), used.y(), used.width(), used.height())
