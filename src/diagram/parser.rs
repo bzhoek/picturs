@@ -395,12 +395,22 @@ impl<'i> Diagram<'i> {
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
     let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot.clone());
 
-    let point = match Conversion::object_edge_from_pair(pair) {
+    let mut point = match Conversion::object_edge_from_pair(pair) {
       Some(_) => {
         let object = Conversion::object_edge_from_pair(pair).unwrap();
         index.point_index(&object, &[]).unwrap()
       }
       None => *cursor
+    };
+
+    let inner = pair.clone().into_inner().next().unwrap();
+    if inner.as_rule() == Rule::object_edge {
+      let (id, degrees) = Conversion::object_edge_in_degrees_from(inner);
+      if let Some(degrees) = degrees {
+        let edge = Edge::from(degrees as f32);
+        let object = ObjectEdge::new(id, edge);
+        point = index.point_index(&object, &[]).unwrap()
+      }
     };
 
     let mut bounds = Rect::from_xywh(point.x, point.y, 0., 0.);

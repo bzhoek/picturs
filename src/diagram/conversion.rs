@@ -179,7 +179,7 @@ impl Conversion {
     let degrees = match next.as_rule() {
       Rule::compass => {
         match str {
-          "n" => 0,
+          "n" => 360,
           "ne" => 45,
           "e" => 90,
           "se" => 135,

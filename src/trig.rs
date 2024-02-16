@@ -1,9 +1,7 @@
-use skia_safe::Rect;
-
-pub fn point_from(degrees: f32, rect: Rect) -> (f32, f32) {
+pub fn factors_for(degrees: f32) -> (f32, f32) {
   let x = x_from_degrees(degrees);
   let y = y_from_degrees(degrees);
-  (x * rect.width() / 2., y * rect.height() / 2.)
+  (x, y)
 }
 
 pub fn x_from_degrees(degrees: f32) -> f32 {

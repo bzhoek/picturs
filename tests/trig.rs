@@ -1,9 +1,12 @@
+use std::ops::Sub;
+
+use skia_safe::Point;
+
+use picturs::trig::{x_from_degrees, y_from_degrees};
+
 #[cfg(test)]
 mod tests {
-  use std::ops::Sub;
-
-  use skia_safe::{Point, Rect};
-  use picturs::trig::{point_from, x_from_degrees, y_from_degrees};
+  use super::*;
 
   #[test]
   fn angle_from_point() {
@@ -75,14 +78,5 @@ mod tests {
     assert_eq!(1., y);
     let y = y_from_degrees(360.);
     assert_eq!(1.0, y);
-  }
-
-
-  #[test]
-  fn rect_nnw() {
-    let rect = Rect::from_xywh(0., 0., 20., 10.);
-    let degrees = 20.;
-    let point = point_from(degrees, rect);
-    assert_eq!((4.4444447, 5.), point)
   }
 }

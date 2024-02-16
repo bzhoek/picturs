@@ -4,6 +4,7 @@ use skia_safe::{Color, Font, Point, Rect, Size, Vector};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
+use crate::trig::{x_from_degrees, y_from_degrees};
 
 pub const BLOCK_PADDING: f32 = 8.;
 
@@ -153,22 +154,6 @@ pub struct Edge {
   pub y: f32,
 }
 
-impl Edge {
-  pub(crate) fn flip(&self) -> Self {
-    match self.direction {
-      Horizontal => Self { direction: Horizontal, x: self.x * -1., y: self.y },
-      Vertical => Self { direction: Vertical, x: self.x, y: self.y * -1. }
-    }
-  }
-
-  pub(crate) fn mirror(&self) -> Self {
-    match self.direction {
-      Horizontal => Self { direction: Horizontal, x: self.x * -1., y: self.y * -1. },
-      Vertical => Self { direction: Vertical, x: self.x * -1., y: self.y * -1. },
-    }
-  }
-}
-
 // first character determines the direction (horizontal or vertical)
 impl From<&str> for Edge {
   fn from(item: &str) -> Self {
@@ -189,7 +174,35 @@ impl From<&str> for Edge {
   }
 }
 
+impl From<f32> for Edge {
+  fn from(degrees: f32) -> Self {
+    let x = x_from_degrees(degrees) / 2.;
+    let y = y_from_degrees(degrees) / -2.; // TODO: check with tests/types.rs:80
+    let direction = if x == 1. {
+      Horizontal
+    } else {
+      Vertical
+    };
+    Self { direction, x, y }
+  }
+}
+
+
 impl Edge {
+
+  pub fn flip(&self) -> Self {
+    match self.direction {
+      Horizontal => Self { direction: Horizontal, x: self.x * -1., y: self.y },
+      Vertical => Self { direction: Vertical, x: self.x, y: self.y * -1. }
+    }
+  }
+
+  pub fn mirror(&self) -> Self {
+    match self.direction {
+      Horizontal => Self { direction: Horizontal, x: self.x * -1., y: self.y * -1. },
+      Vertical => Self { direction: Vertical, x: self.x * -1., y: self.y * -1. },
+    }
+  }
   pub fn tuple(&self) -> (f32, f32) {
     (self.x, self.y)
   }
