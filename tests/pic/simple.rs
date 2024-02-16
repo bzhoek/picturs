@@ -4,9 +4,9 @@ mod homepage {
 
   use pest::Parser;
 
-  use picturs::{dump_pic, parse_nodes, PicParser, Rule};
-  use picturs::Node::{Attribute, Primitive, String};
-  use picturs::Shape::{Arrow, Box};
+  use picturs::pic::{dump_pic, parse_nodes, PicParser, Rule};
+  use picturs::pic::Node::{Attribute, Primitive, String};
+  use picturs::pic::Shape::{Arrow, Box};
 
   #[test]
   fn it_dumps_homepage() {

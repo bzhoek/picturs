@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod edges {
   use assert_matches::assert_matches;
-  use picturs::create_diagram;
+  use picturs::diagram::create_diagram;
 
   use picturs::diagram::types::Node::Primitive;
   use picturs::test::assert_diagram;

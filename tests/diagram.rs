@@ -4,7 +4,7 @@ mod diagram {
 
   use skia_safe::{Color, Point, Rect, Size, Vector};
 
-  use picturs::create_diagram;
+  use picturs::diagram::create_diagram;
   use picturs::diagram::index::Index;
   use picturs::diagram::types::{Edge, Movement, Node, Paragraph, Radius, Shape, Unit};
   use picturs::diagram::types::Node::{Container, Primitive};

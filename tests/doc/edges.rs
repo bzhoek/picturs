@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod edges {
-  use picturs::create_diagram;
+  use picturs::diagram::create_diagram;
   use picturs::test::assert_diagram;
 
   use crate::{assert_diagram};

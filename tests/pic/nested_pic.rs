@@ -5,9 +5,9 @@ mod nested {
   use pest::iterators::Pair;
   use pest::Parser;
 
-  use picturs::{dump_pic, parse_nodes, PicParser, Rule};
-  use picturs::Node::{Container, Primitive};
-  use picturs::Shape::{Arc, Arrow, Box};
+  use picturs::pic::{dump_pic, parse_nodes, PicParser, Rule};
+  use picturs::pic::Node::{Container, Primitive};
+  use picturs::pic::Shape::{Arc, Arrow, Box};
 
   fn parse_pic(string: &str) -> Pair<Rule> {
     PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap()
