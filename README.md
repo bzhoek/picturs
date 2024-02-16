@@ -26,11 +26,27 @@ Containers are always positioned relative to their top-left corner, because thei
 
 The position of captions on lines and arrows is determined by the alignment suffix, like `above` and `below` for horizontal lines.
 
-![Alignment above and below](tests/doc/align-above_below.png)
+![Above and below](tests/doc/align-above_below.png)
 
 For vertical lines the alignment is `left` and `right`. The default is `center`.
 
-![Alignment left and right](tests/doc/align-left_right.png)
+![Left and right](tests/doc/align-left_right.png)
+
+### Edges
+
+The edges of a block object can be identified in four ways, each offering more granularity:
+- 4 directions, `up`, `down`, `left`, and `right`
+- 8 compass points `n`, `ne`, `e`, `se`, `s`, `sw`, `w`, and `nw`
+- 12 clock hours `1:` - `12:`
+- 360 degree angles `0` - `360`
+
+In combination with the block `id`, they indicate exact positions on the block's edge.
+
+The four directions indicate the midpoints on a block object, named `up`, `down`, `left`, and `right`. Compass points also add positions for the corners `nw`, `n`, `ne`, `e`, `se`, `s`, `sw`, and `w`.
+
+![Degree angles](tests/doc/edges-all_edges.png)
+
+Clock hours give you 12 positions on the edge of a block, and might be more natural. The `:` suffix is used to distinguish them from degree angles. Degree angles divide the edge in 360 parts, with 0 pointing up.
 
 ## Diagram
 
