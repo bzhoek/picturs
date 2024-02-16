@@ -14,7 +14,7 @@ mod diagram {
 
   fn rectangle(title: Option<(&str, f32)>) -> Shape {
     let paragraph = title.map(|(title, width)| {
-      let size = Size::new(120., 17.);
+      let size = Size::new(88.5, 17.);
       Paragraph { text: title, widths: vec!(width), height: size.height, size }
     });
     Rectangle(Color::BLACK, paragraph, Radius::default(), Color::TRANSPARENT, None)
@@ -27,10 +27,10 @@ mod diagram {
 
     assert_eq!(vec![
       Primitive(None,
-                Rect::from_xywh(0., 0., 120., 76.),
-                Rect::from_xywh(0., 0., 120., 68.),
-                Color::BLUE,
-                rectangle(None)),
+        Rect::from_xywh(0., 0., 88.5, 75.),
+        Rect::from_xywh(0., 0., 88.5, 67.),
+        Color::BLUE,
+        rectangle(None)),
     ], diagram.nodes);
   }
 
@@ -41,10 +41,10 @@ mod diagram {
 
     assert_eq!(vec![
       Primitive(Some("first"),
-                Rect::from_xywh(0., 0., 120., 76.),
-                Rect::from_xywh(0., 0., 120., 68.),
-                Color::BLUE,
-                rectangle(Some(("title", 31.)))),
+        Rect::from_xywh(0., 0., 88.5, 75.),
+        Rect::from_xywh(0., 0., 88.5, 67.),
+        Color::BLUE,
+        rectangle(Some(("title", 31.)))),
     ], diagram.nodes);
   }
 
@@ -55,10 +55,10 @@ mod diagram {
 
     assert_eq!(vec![
       Primitive(None,
-                Rect::from_xywh(0., 0., 120., 76.),
-                Rect::from_xywh(0., 0., 120., 68.),
-                Color::BLUE,
-                rectangle(Some(("title", 31.)))),
+        Rect::from_xywh(0., 0., 88.5, 75.),
+        Rect::from_xywh(0., 0., 88.5, 67.),
+        Color::BLUE,
+        rectangle(Some(("title", 31.)))),
     ], diagram.nodes);
   }
 
@@ -68,18 +68,19 @@ mod diagram {
                          box";
     let diagram = create_diagram(string);
 
-    assert_eq!(vec![
-      Primitive(None,
-                Rect::from_xywh(0., 0., 120., 76.),
-                Rect::from_xywh(0., 0., 120., 68.),
-                Color::BLUE,
-                rectangle(None)),
-      Primitive(None,
-                Rect::from_xywh(0., 76., 120., 76.),
-                Rect::from_xywh(0., 76., 120., 68.),
-                Color::BLUE,
-                rectangle(None)),
-    ], diagram.nodes);
+    assert_eq!(diagram.nodes,
+      vec![
+        Primitive(None,
+          Rect::from_xywh(0., 0., 88.5, 75.),
+          Rect::from_xywh(0., 0., 88.5, 67.),
+          Color::BLUE,
+          rectangle(None)),
+        Primitive(None,
+          Rect::from_xywh(0., 75., 88.5, 75.),
+          Rect::from_xywh(0., 75., 88.5, 67.),
+          Color::BLUE,
+          rectangle(None)),
+      ]);
   }
 
   #[test]
@@ -87,18 +88,19 @@ mod diagram {
     let string = "box.parent { box }";
     let diagram = create_diagram(string);
 
-    assert_eq!(vec![
-      Container(Some("parent"), Radius::default(), None,
-                Rect::from_xywh(0., 0., 136., 100.),
-                Rect::from_xywh(0., 0., 136., 92.),
-                vec![
-                  Primitive(None,
-                            Rect::from_xywh(8., 8., 120., 76.),
-                            Rect::from_xywh(8., 8., 120., 68.),
-                            Color::BLUE,
-                            rectangle(None))
-                ])
-    ], diagram.nodes);
+    assert_eq!(diagram.nodes,
+      vec![
+        Container(Some("parent"), Radius::default(), None,
+          Rect::from_xywh(0., 0., 104.5, 99.),
+          Rect::from_xywh(0., 0., 104.5, 91.),
+          vec![
+            Primitive(None,
+              Rect::from_xywh(8., 8., 88.5, 75.),
+              Rect::from_xywh(8., 8., 88.5, 67.),
+              Color::BLUE,
+              rectangle(None))
+          ])
+      ]);
   }
 
   #[test]
@@ -106,37 +108,41 @@ mod diagram {
     let string = r#"box "parent" { box "child" }"#;
     let diagram = create_diagram(string);
 
-    assert_eq!(vec![
-      Container(None, Radius::default(), Some("parent"),
-                Rect::from_xywh(0., 0., 136., 113.),
-                Rect::from_xywh(0., 0., 136., 105.),
-                vec![
-                  Primitive(None,
-                            Rect::from_xywh(8., 8., 120., 76.),
-                            Rect::from_xywh(8., 8., 120., 68.),
-                            Color::BLUE,
-                            rectangle(Some(("child", 40.))))
-                ])
-    ], diagram.nodes);
+    assert_eq!(diagram.nodes,
+      vec![
+        Container(None, Radius::default(), Some("parent"),
+          Rect::from_xywh(0., 0., 104.5, 112.),
+          Rect::from_xywh(0., 0., 104.5, 104.),
+          vec![
+            Primitive(None,
+              Rect::from_xywh(8., 8., 88.5, 75.),
+              Rect::from_xywh(8., 8., 88.5, 67.),
+              Color::BLUE,
+              rectangle(Some(("child", 40.))))
+          ])
+      ]);
   }
 
   #[test]
   fn box_with_wrapping_title() {
     let string = format!(r#"box "{}""#, TQBF);
     let diagram = create_diagram(&string);
-    let paragraph1_rect = Rect::from_xywh(0., 0., 120., 84.);
-    let paragraph2_rect = Rect::from_xywh(0., 0., 120., 76.);
-    let size = Size::new(120., 68.);
+    let paragraph1_rect = Rect::from_xywh(0., 0., 88.5, 101.);
+    let paragraph2_rect = Rect::from_xywh(0., 0., 88.5, 93.);
 
-    let tqbf = Rectangle(Color::BLACK, Some(Paragraph { text: TQBF, widths: vec!(72., 78., 115., 68.), height: 68., size }), Radius::default(), Color::TRANSPARENT, None);
+    let size = Size::new(88.5, 85.);
+    let tqbf = Rectangle(Color::BLACK,
+      Some(Paragraph { text: TQBF, widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
+      Radius::default(), Color::TRANSPARENT, None);
 
-    assert_eq!(vec![
-      Primitive(None,
-                paragraph1_rect,
-                paragraph2_rect,
-                Color::BLUE,
-                tqbf),
-    ], diagram.nodes);
+    assert_eq!(diagram.nodes,
+      vec![
+        Primitive(None,
+          paragraph1_rect,
+          paragraph2_rect,
+          Color::BLUE,
+          tqbf),
+      ]);
   }
 
   #[test]
@@ -149,12 +155,12 @@ mod diagram {
     let diagram = create_diagram(string);
 
     let left = diagram.used_rect("left").unwrap();
-    let expected = Rect { left: 0., top: 0., right: 120., bottom: 68. };
-    assert_eq!(&expected, left);
+    let expected = Rect { left: 0., top: 0., right: 88.5, bottom: 67. };
+    assert_eq!(left, &expected);
 
     let right = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(196., 0., 120., 68.);
-    assert_eq!(&expected, right);
+    let expected = Rect::from_xywh(164.5, 0., 88.5, 76.);
+    assert_eq!(right, &expected);
   }
 
   #[test]
@@ -222,10 +228,10 @@ mod diagram {
   #[test]
   fn test_primitives_mut() {
     let mut primitive = Primitive(None,
-                                  Rect::from_xywh(0., 0., 120., 76.),
-                                  Rect::from_xywh(0., 0., 120., 68.),
-                                  Color::BLACK,
-                                  rectangle(None));
+      Rect::from_xywh(0., 0., 88.5, 75.),
+      Rect::from_xywh(0., 0., 88.5, 67.),
+      Color::BLACK,
+      rectangle(None));
 
     match primitive {
       Primitive(_, ref mut rect, _, _, _) => {

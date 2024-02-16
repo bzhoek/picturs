@@ -10,8 +10,10 @@ use crate::diagram::rules::Rules;
 use crate::diagram::types::{Caption, Edge, Flow, Length, Movement, ObjectEdge, Unit};
 use crate::skia::Canvas;
 
-pub const WIDTH: f32 = 120.;
-pub const HEIGHT: f32 = 60.;
+const INCH: f32 = 118.;
+
+pub const WIDTH: f32 = INCH * 0.75;
+pub const HEIGHT: f32 = INCH * 0.5;
 
 pub struct Conversion;
 

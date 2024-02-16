@@ -18,9 +18,37 @@ The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the dire
 
 The first relative component determines direction, `circle 1 right 1 down` will be horizontal, and `oval 1 down` will be vertical.
 
+## Movement
+
+The `move` command moves the current position to a new location. From current position is implied.
+
+```pic
+move # move default length in current direction
+move 1 # move 1cm in current direction
+move 1 right # move 1cm right
+move 1 right from box.e # move 1cm right from box east edge
+move to box.s # set current position to south edge of box
+```
+
+```pic
+
 ### Containers
 
 Containers are always positioned relative to their top-left corner, because their size is determined by the content and thus not known in advance.
+
+### Sizes
+
+The defaults sizes are the same as GNU PIC:
+
+| Shape   | Size                    |
+|---------|-------------------------|
+| box     | 0.75" wide by 0.5" high |
+| ellipse | 0.75" wide by 0.5" high |
+| oval    | 0.75" wide by 0.5" high |
+| circle  | 0.5" diameter           |
+| arc     | 0.5" radius             |
+| line    | 0.5" long               |
+| arrow   | 0.5" long               |
 
 ### Alignment
 

@@ -10,7 +10,7 @@ mod units {
     let string = r#"
       down
       set unit cm
-      box "A" wd 1in ht 0.5in
+      box "A" wd 1in
       box "B" 10 right
       "#;
     let diagram = create_diagram(string);
