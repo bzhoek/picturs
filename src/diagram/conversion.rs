@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
 use pest::iterators::{Pair, Pairs};
+use pest::Parser;
 use skia_safe::Color;
 
 use crate::diagram::index::ShapeName;
-use crate::diagram::parser::Rule;
+use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
 use crate::diagram::types::{Caption, Edge, Flow, Length, Movement, ObjectEdge, Unit};
 use crate::skia::Canvas;
@@ -15,6 +16,14 @@ pub const HEIGHT: f32 = 60.;
 pub struct Conversion;
 
 impl Conversion {
+  pub fn pair_for(rule: Rule, string: &str) -> Pair<Rule> {
+    Self::pairs_for(rule, string).next().unwrap()
+  }
+
+  pub fn pairs_for(rule: Rule, string: &str) -> Pairs<Rule> {
+    DiagramParser::parse(rule, string).unwrap()
+  }
+
   fn next_to_f32(iter: &mut Pairs<Rule>) -> Option<f32> {
     iter.next().and_then(|p| p.as_str().parse::<f32>().ok())
   }
@@ -152,6 +161,43 @@ impl Conversion {
       .map(Edge::from)
       .unwrap_or(default.clone());
     ObjectEdge::new(id, edge)
+  }
+
+  pub fn object_edge_in_degrees_from(pair: Pair<Rule>) -> (&str, Option<i32>) {
+    let mut inner = pair.into_inner();
+    let id = inner.next().unwrap().as_str();
+
+    let edge = inner.next();
+    if edge.is_none() {
+      return (id, None);
+    }
+
+    let mut inner = edge.unwrap().into_inner();
+    let next = inner.next().unwrap();
+    let str = next.as_str();
+
+    let degrees = match next.as_rule() {
+      Rule::compass => {
+        match str {
+          "n" => 0,
+          "ne" => 45,
+          "e" => 90,
+          "se" => 135,
+          "s" => 180,
+          "sw" => 225,
+          "w" => 270,
+          "nw" => 315,
+          _ => panic!("unexpected compass direction")
+        }
+      }
+      Rule::degrees => str.parse().unwrap(),
+      Rule::hours => {
+        let hour = str[0..str.len() - 1].parse::<i32>().unwrap();
+        hour * 30
+      }
+      _ => panic!("unexpected rule")
+    };
+    (id, Some(degrees))
   }
 
   pub fn flow(pair: &Pair<Rule>) -> Option<Flow> {

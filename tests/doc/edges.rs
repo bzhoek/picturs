@@ -107,4 +107,14 @@ mod edges {
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
   }
+
+  #[test]
+  fn degrees_edge() {
+    let string = r#"
+      box.d wd 1in ht 1in
+      dot at d.0 color red rad 4pt ".0" above
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram!(diagram);
+  }
 }

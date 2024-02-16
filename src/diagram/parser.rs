@@ -2,7 +2,6 @@ use std::ops::Add;
 
 use log::{debug, info, warn};
 use pest::iterators::{Pair, Pairs};
-use pest::Parser;
 use pest_derive::Parser;
 use skia_safe::{Color, Font, FontMgr, FontStyle, ISize, Point, Rect, Size};
 
@@ -37,7 +36,7 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
-    let top = DiagramParser::parse(Rule::picture, string).unwrap();
+    let top = Conversion::pairs_for(Rule::picture, string);
     let mut canvas = Canvas::new(self.size);
     let flow = Flow::new("left");
     let config = Config::new(flow, 120., 60.);

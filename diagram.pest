@@ -29,7 +29,7 @@ color = { "color" ~ id }
 fill = { "fill" ~ id }
 text_color = { "text_color" ~ id }
 identified = { "." ~ id }
-id = @{ ASCII_ALPHANUMERIC* }
+id = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
 
 radius = { ("rd" | "rad" | "radius") ~ size }
 width = { ("wd" | "wid" | "width") ~ size }
@@ -56,8 +56,9 @@ line = { "line" ~ (length | line_attributes) ~ caption? }
 line_attributes = _{ source? ~ movement? ~ target? }
 caption = { string ~ alignment? }
 alignment = { "left" | "right" | "above" | "below" | "nw" | "ne" | "sw" | "se" }
+
 dot = { "dot" ~ at_object_edge? ~ dot_attributes ~ caption? }
-at_object_edge = { "at" ~ object_edge }
+at_object_edge = _{ "at" ~ object_edge }
 dot_attributes = { dot_attribute* }
 dot_attribute = { color | radius | same }
 same = { "same" }
@@ -65,7 +66,11 @@ same = { "same" }
 source = { "from" ~ object_edge }
 target = { "to" ~ object_edge }
 object_edge = ${ id ~ edge? }
-edge = { "." ~ ("ne" | "nw" | "n" | "e" | "se" | "sw" | "s" | "w" |  "c") }
+edge = ${ "." ~ (compass | hours | degrees) }
+
+compass = { "ne" | "nw" | "n" | "e" | "se" | "sw" | "s" | "w" |  "c" }
+hours = ${ ASCII_DIGIT{1,2} ~ ":" }
+degrees = { ASCII_DIGIT{1,3} }
 
 title = { string? }
 string = ${ "\"" ~ inner ~ "\"" }
