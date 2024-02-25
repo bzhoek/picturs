@@ -101,6 +101,55 @@ mod tests {
     assert_eq!(y0, 1.8);
   }
 
+  #[test]
+  fn line_outside() {
+    let a = Point::new(0., 0.);
+    let b = Point::new(15., 0.);
+    let ab = b.sub(a);
+
+    let c = Point::new(10., 10.);
+    let d = Point::new(20., 0.);
+    let cd = d.sub(c);
+
+    let a_ = (d.x - c.x) * (c.y - a.y) - (d.y - c.y) * (c.x - a.x);
+    let b_ = (d.x - c.x) * (b.y - a.y) - (d.y - c.y) * (b.x - a.x);
+    let c_ = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+
+    let r = a_ / b_;
+    assert_eq!(r, 1.3333334);
+    let x0 = lerp(a.x, b.x, r);
+    assert_eq!(x0, 20.);
+    let x0 = lerp(c.x, d.x, c_ / b_);
+    assert_eq!(x0, 20.);
+    let y0 = lerp(c.y, d.y, c_ / b_);
+    assert_eq!(y0, 0.);
+  }
+
+  fn intersect_factors(a: impl Into<Point>, b: impl Into<Point>, c: impl Into<Point>, d: impl Into<Point>) -> (scalar, scalar, scalar) {
+    let a = a.into();
+    let b = b.into();
+    let c = c.into();
+    let d = d.into();
+
+    let alpha = (d.x - c.x) * (c.y - a.y) - (d.y - c.y) * (c.x - a.x);
+    let beta = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+    let numerator = (d.x - c.x) * (b.y - a.y) - (d.y - c.y) * (b.x - a.x);
+
+    (alpha, beta, numerator)
+  }
+
+  fn top_bottom(a: impl Into<Point>, b: impl Into<Point>, c: impl Into<Point>, d: impl Into<Point>) -> (scalar, scalar) {
+    let a = a.into();
+    let b = b.into();
+    let c = c.into();
+    let d = d.into();
+
+    let top = (d.x - c.x) * (a.y - c.y) - (d.y - c.y) * (a.x - c.x);
+    let bottom = (d.x - c.y) * (b.x - a.x) - (d.x - c.x) * (b.y - a.y);
+
+    (top, bottom)
+  }
+
   /// https://en.wikipedia.org/wiki/Interpolation
   fn lerp(a: scalar, b: scalar, t: f32) -> scalar {
     a + (b - a) * t
