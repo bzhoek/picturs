@@ -23,12 +23,9 @@ impl Edge {
     let beta = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
     let bottom = (d.x - c.x) * (b.y - a.y) - (d.y - c.y) * (b.x - a.x);
 
-    // let alpha = (d.x - c.x) * (a.y - c.y) - (d.y - c.y) * (a.x - c.x);
-    // let beta = (c.y - a.y) * (a.x - b.x) - (c.x - a.x) * (a.y - b.y);
-    // let bottom = (d.y - c.y) * (b.x - a.x) - (d.x - c.x) * (b.y - a.y);
-
     let alpha = alpha / bottom;
     let beta = beta / bottom;
+
     if alpha > 0. && alpha < 1. && beta > 0. && beta < 1. {
       return Some(alpha);
     }
@@ -40,32 +37,12 @@ impl Edge {
   }
 
   fn intersects(&self, with: &Edge) -> Option<Point> {
-    let alpha = Self::intersect_factors(self.from, self.to, with.from, with.to);
-    let x1 = self.from.x;
-    let y1 = self.from.y;
-    let x2 = self.to.x;
-    let y2 = self.to.y;
-    let x3 = with.from.x;
-    let y3 = with.from.y;
-    let x4 = with.to.x;
-    let y4 = with.to.y;
-    let x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4))
-      / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-    let y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4))
-      / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-
-
-    if let Some(alpha) = alpha {
-      let x0 = Self::lerp(self.from.x, self.to.x, alpha);
-      let y0 = Self::lerp(self.from.y, self.to.y, alpha);
-      return Some(Point::new(x0, y0));
-    }
-
-    if alpha.is_none() || x.is_nan() || y.is_nan() {
-      None
-    } else {
-      Some(Point::new(x, y))
-    }
+    Self::intersect_factors(self.from, self.to, with.from, with.to)
+      .map(|alpha| {
+        let x0 = Self::lerp(self.from.x, self.to.x, alpha);
+        let y0 = Self::lerp(self.from.y, self.to.y, alpha);
+        Point::new(x0, y0)
+      })
   }
 }
 
