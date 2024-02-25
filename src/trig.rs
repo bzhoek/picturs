@@ -1,3 +1,10 @@
+pub fn angle_at(degrees: f32, length: f32) -> (f32, f32) {
+  let north = degrees + 270.;
+  let radians = north.to_radians();
+  let sin_cos = radians.sin_cos();
+  (sin_cos.1 * length, sin_cos.0 * length)
+}
+
 pub fn factors_for(degrees: f32) -> (f32, f32) {
   let x = x_from_degrees(degrees);
   let y = y_from_degrees(degrees);
