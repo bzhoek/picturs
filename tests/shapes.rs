@@ -1,14 +1,15 @@
 use skia_safe::{Point, Rect};
 
 #[cfg(test)]
-mod tests {
+mod shapes {
   use std::ops::Add;
 
   use skia_safe::{Color, PaintStyle};
+  use picturs::assert_canvas;
 
   use picturs::diagram::edges::{Edge, EdgeFinder};
   use picturs::skia::Canvas;
-  use picturs::test::assert_canvas;
+
   use picturs::trig::angle_at;
 
   use super::*;
@@ -133,7 +134,7 @@ mod tests {
       }
     });
 
-    assert_canvas(canvas, "target/ellipse_intersect").unwrap();
+    assert_canvas!(canvas);
   }
 
   fn prepare_cylinder_canvas(rect: &Rect, top: &Vec<Rect>, line: &Edge) -> Canvas {

@@ -1,9 +1,7 @@
 #[cfg(test)]
 mod align {
+  use picturs::assert_diagram;
   use picturs::diagram::create_diagram;
-  use picturs::test::assert_diagram;
-
-  use crate::{assert_diagram};
 
   #[test]
   fn above_below() {
