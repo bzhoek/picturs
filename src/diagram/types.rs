@@ -71,7 +71,7 @@ pub struct ShapeConfig {
 
 impl Default for ShapeConfig {
   fn default() -> Self {
-    Self { padding: BLOCK_PADDING, width: WIDTH, height: HEIGHT }
+    Self { padding: BLOCK_PADDING, width: WIDTH.trunc(), height: HEIGHT.trunc() }
   }
 }
 

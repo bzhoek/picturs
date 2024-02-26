@@ -122,6 +122,8 @@ impl Renderer {
   }
 
   fn render_line(canvas: &mut Canvas, used: &Rect, movement: &Option<Movement>, caption: &Option<Caption>) {
+    let used = Self::pixel_align(used);
+
     canvas.move_to(used.left, used.top);
     let mut point = Point::new(used.left, used.top);
     if let Some(movement) = movement {
@@ -139,7 +141,11 @@ impl Renderer {
     canvas.line_to(used.right, used.bottom);
     canvas.stroke();
 
-    Self::draw_caption(canvas, used, caption);
+    Self::draw_caption(canvas, &used, caption);
+  }
+
+  pub fn pixel_align(used: &Rect) -> Rect {
+    Rect::from_xywh(used.left.trunc() + 0.5, used.top.trunc() + 0.5, used.width().round(), used.height().round())
   }
 
   fn render_arrow(canvas: &mut Canvas, used: &Rect, from: &ObjectEdge, movement: &Option<Movement>, to: &ObjectEdge, caption: &Option<Caption>) {
@@ -179,6 +185,7 @@ impl Renderer {
   fn draw_dot_caption(canvas: &mut Canvas, point: &Point, radius: &Radius, caption: &Option<Caption>) {
     if let Some(caption) = caption {
       let rect = Self::dot_offset_of(point, radius, caption);
+      let rect = Self::pixel_align(&rect);
 
       canvas.paint.set_style(PaintStyle::Fill);
       canvas.text(caption.text, (rect.left, rect.bottom - (canvas.get_font_descent() / 2.)));
@@ -229,6 +236,7 @@ impl Renderer {
       } else {
         rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
       }
+      let rect = Self::pixel_align(&rect);
       canvas.paragraph(paragraph.text, (rect.left, rect.top), rect.width());
     }
   }

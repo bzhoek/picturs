@@ -18,8 +18,8 @@ mod edges {
       dot at b.nw color green rad 4pt
       "#;
     let diagram = create_diagram(string);
-    assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0. && rect.y() == 0.);
-    assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.y() == 0.);
+    assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0.5 && rect.y() == 0.5);
+    assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.y() == 0.5);
     assert_diagram!(diagram);
   }
 
@@ -32,8 +32,8 @@ mod edges {
       arrow from a.sw to b.nw
       "#;
     let diagram = create_diagram(string);
-    assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0.);
-    assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.x() == 0.);
+    assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0.5);
+    assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.x() == 0.5);
     assert_diagram!(diagram);
   }
 

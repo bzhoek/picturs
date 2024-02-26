@@ -14,7 +14,7 @@ mod diagram {
 
   fn rectangle(title: Option<(&str, f32)>) -> Shape {
     let paragraph = title.map(|(title, width)| {
-      let size = Size::new(88.5, 17.);
+      let size = Size::new(88., 17.);
       Paragraph { text: title, widths: vec!(width), height: size.height, size }
     });
     Rectangle(Color::BLACK, paragraph, Radius::default(), Color::TRANSPARENT, None)
@@ -29,8 +29,8 @@ mod diagram {
       diagram.nodes,
       vec![Primitive(
         None,
-        Rect::from_xywh(0., 0., 88.5, 75.),
-        Rect::from_xywh(0., 0., 88.5, 67.),
+        Rect::from_xywh(0.5, 0.5, 88., 75.),
+        Rect::from_xywh(0.5, 0.5, 88., 67.),
         Color::BLUE,
         rectangle(None)),
       ]);
@@ -45,8 +45,8 @@ mod diagram {
       diagram.nodes,
       vec![Primitive(
         Some("first"),
-        Rect::from_xywh(0., 0., 88.5, 75.),
-        Rect::from_xywh(0., 0., 88.5, 67.),
+        Rect::from_xywh(0.5, 0.5, 88., 75.),
+        Rect::from_xywh(0.5, 0.5, 88., 67.),
         Color::BLUE,
         rectangle(Some(("title", 31.)))),
       ]);
@@ -61,8 +61,8 @@ mod diagram {
       diagram.nodes,
       vec![Primitive(
         None,
-        Rect::from_xywh(0., 0., 88.5, 75.),
-        Rect::from_xywh(0., 0., 88.5, 67.),
+        Rect::from_xywh(0.5, 0.5, 88., 75.),
+        Rect::from_xywh(0.5, 0.5, 88., 67.),
         Color::BLUE,
         rectangle(Some(("title", 31.)))),
       ]);
@@ -78,14 +78,14 @@ mod diagram {
       diagram.nodes,
       vec![Primitive(
         None,
-        Rect::from_xywh(0., 0., 88.5, 75.),
-        Rect::from_xywh(0., 0., 88.5, 67.),
+        Rect::from_xywh(0.5, 0.5, 88., 75.),
+        Rect::from_xywh(0.5, 0.5, 88., 67.),
         Color::BLUE,
         rectangle(None)),
            Primitive(
              None,
-             Rect::from_xywh(0., 75., 88.5, 75.),
-             Rect::from_xywh(0., 75., 88.5, 67.),
+             Rect::from_xywh(0.5, 75.5, 88., 75.),
+             Rect::from_xywh(0.5, 75.5, 88., 67.),
              Color::BLUE,
              rectangle(None)),
       ]);
@@ -100,12 +100,12 @@ mod diagram {
       diagram.nodes,
       vec![Container(
         Some("parent"), Radius::default(), None,
-        Rect::from_xywh(0., 0., 104.5, 99.),
-        Rect::from_xywh(0., 0., 104.5, 91.),
+        Rect::from_xywh(0.5, 0.5, 104., 99.),
+        Rect::from_xywh(0.5, 0.5, 104., 91.),
         vec![Primitive(
           None,
-          Rect::from_xywh(8., 8., 88.5, 75.),
-          Rect::from_xywh(8., 8., 88.5, 67.),
+          Rect::from_xywh(8.5, 8.5, 88., 75.),
+          Rect::from_xywh(8.5, 8.5, 88., 67.),
           Color::BLUE,
           rectangle(None))
         ])
@@ -121,12 +121,12 @@ mod diagram {
       diagram.nodes,
       vec![Container(
         None, Radius::default(), Some("parent"),
-        Rect::from_xywh(0., 0., 104.5, 112.),
-        Rect::from_xywh(0., 0., 104.5, 104.),
+        Rect::from_xywh(0.5, 0.5, 104., 112.),
+        Rect::from_xywh(0.5, 0.5, 104., 104.),
         vec![Primitive(
           None,
-          Rect::from_xywh(8., 8., 88.5, 75.),
-          Rect::from_xywh(8., 8., 88.5, 67.),
+          Rect::from_xywh(8.5, 8.5, 88., 75.),
+          Rect::from_xywh(8.5, 8.5, 88., 67.),
           Color::BLUE,
           rectangle(Some(("child", 40.))))
         ])
@@ -137,13 +137,14 @@ mod diagram {
   fn box_with_wrapping_title() {
     let string = format!(r#"box "{}""#, TQBF);
     let diagram = create_diagram(&string);
-    let paragraph1_rect = Rect::from_xywh(0., 0., 88.5, 101.);
-    let paragraph2_rect = Rect::from_xywh(0., 0., 88.5, 93.);
+    let paragraph1_rect = Rect::from_xywh(0.5, 0.5, 88.0, 101.);
+    let paragraph2_rect = Rect::from_xywh(0.5, 0.5, 88.0, 93.);
 
-    let size = Size::new(88.5, 85.);
-    let tqbf = Rectangle(Color::BLACK,
-                         Some(Paragraph { text: TQBF, widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
-                         Radius::default(), Color::TRANSPARENT, None);
+    let size = Size::new(88., 85.);
+    let tqbf = Rectangle(
+      Color::BLACK,
+      Some(Paragraph { text: TQBF, widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
+      Radius::default(), Color::TRANSPARENT, None);
 
     assert_eq!(
       diagram.nodes,
@@ -166,11 +167,11 @@ mod diagram {
     let diagram = create_diagram(string);
 
     let left = diagram.used_rect("left").unwrap();
-    let expected = Rect { left: 0., top: 0., right: 88.5, bottom: 67. };
+    let expected = Rect::from_xywh(0.5, 0.5, 88., 67.);
     assert_eq!(left, &expected);
 
     let right = diagram.used_rect("right").unwrap();
-    let expected = Rect::from_xywh(164.5, 0., 88.5, 76.);
+    let expected = Rect::from_xywh(164.5, 0.5, 88., 76.);
     assert_eq!(right, &expected);
   }
 

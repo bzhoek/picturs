@@ -41,7 +41,7 @@ impl<'i> Diagram<'i> {
     let flow = Flow::new("left");
     let config = Config::new(flow, 120., 60.);
     let mut index = Index::default();
-    let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &mut canvas, &Point::default(), config, &mut index);
+    let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &mut canvas, &Point::new(0.5, 0.5), config, &mut index);
     self.nodes = ast;
     self.bounds = bounds;
     top
