@@ -147,11 +147,41 @@ impl EdgeFinder {
   }
 
   pub fn intersect(&self, degrees: f32) -> Option<Point> {
+    let line = self.center_to_edge(degrees);
+    self.edges.iter().find_map(|edge| line.intersects(edge))
+  }
+
+  pub fn center_to_edge(&self, degrees: f32) -> Edge {
     let from = self.bounds.center();
     let length = self.bounds.width().max(self.bounds.height());
     let offset: Point = angle_at(degrees, length).into();
-    let line = Edge::new(from, from.add(offset));
+    Edge::new(from, from.add(offset))
+  }
+
+  pub fn intersect_line(&self, line: &Edge) -> Option<Point> {
     self.edges.iter().find_map(|edge| line.intersects(edge))
   }
+
+  #[allow(non_snake_case)]
+  pub fn intersect_ellipse(line: &Edge, ellipse: &Rect) -> Option<(scalar, scalar)> {
+    let e = ellipse.center();
+    let w = ellipse.width() / 2.;
+    let h = ellipse.height() / 2.;
+    let p1 = line.from.sub(e);
+    let p2 = line.to.sub(e);
+
+    let d = p2.sub(p1);
+    let A = d.x * d.x / w / w + d.y * d.y / h / h;
+    let B = 2. * p1.x * (d.x) / w / w + 2. * p1.y * (d.y) / h / h;
+    let C = p1.x * p1.x / w / w + p1.y * p1.y / h / h - 1.;
+    let D = B * B - 4. * A * C;
+    if D == 0. {} else if D > 0. {
+      let t1 = (-B - D.sqrt()) / (2. * A);
+      let t2 = (-B + D.sqrt()) / (2. * A);
+      return Some((t1, t2));
+    }
+    None
+  }
+
 }
 
