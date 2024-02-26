@@ -60,6 +60,7 @@ pub struct Config {
   pub(crate) oval: ShapeConfig,
   pub(crate) rectangle: ShapeConfig,
   pub(crate) file: ShapeConfig,
+  pub(crate) cylinder: ShapeConfig,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -88,6 +89,7 @@ impl Config {
       ellipse: ShapeConfig::default(),
       oval: ShapeConfig::default(),
       rectangle: ShapeConfig::default(),
+      cylinder: ShapeConfig::default(),
       file: ShapeConfig {
         padding: 0.0,
         width: width * 0.666,
