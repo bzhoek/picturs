@@ -31,7 +31,8 @@ impl Renderer {
           canvas.rectangle(used, radius.pixels());
         }
         Primitive(_id, _, used, color, shape) => {
-          Self::render_shape(canvas, used, color, shape);
+          let used = Self::pixel_align(used);
+          Self::render_shape(canvas, &used, color, shape);
         }
       }
     }
@@ -65,11 +66,18 @@ impl Renderer {
       Shape::File(text_color, paragraph, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
-        canvas.rectangle(used, radius.pixels());
 
-        canvas.paint.set_style(PaintStyle::Fill);
-        canvas.paint.set_color(*fill);
-        canvas.rectangle(used, radius.pixels());
+        let fold = 16.;
+        canvas.move_to(used.left, used.top);
+        canvas.line_to(used.left, used.bottom);
+        canvas.line_to(used.right, used.bottom);
+        canvas.line_to(used.right, used.top + fold);
+        canvas.line_to(used.right - fold, used.top + fold);
+        canvas.line_to(used.right - fold, used.top);
+        canvas.line_to(used.right, used.top + fold);
+        canvas.move_to(used.left, used.top);
+        canvas.line_to(used.right - fold, used.top);
+        canvas.stroke();
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
@@ -122,8 +130,6 @@ impl Renderer {
   }
 
   fn render_line(canvas: &mut Canvas, used: &Rect, movement: &Option<Movement>, caption: &Option<Caption>) {
-    let used = Self::pixel_align(used);
-
     canvas.move_to(used.left, used.top);
     let mut point = Point::new(used.left, used.top);
     if let Some(movement) = movement {

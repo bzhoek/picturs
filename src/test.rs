@@ -14,7 +14,8 @@ macro_rules! assert_canvas {
     }
 
     let function_name = type_name_of(stub).rsplit("::").collect::<Vec<_>>();
-      picturs::test::assert_canvas_from_function($canvas, function_name);
+    let path = std::path::Path::new(file!());
+    picturs::test::assert_canvas_from_function($canvas, path, function_name);
   };
 }
 
@@ -27,22 +28,22 @@ macro_rules! assert_diagram {
     }
 
     let function_name = type_name_of(stub).rsplit("::").collect::<Vec<_>>();
-      picturs::test::assert_diagram_from_function($diagram, function_name);
+    let path = std::path::Path::new(file!());
+    picturs::test::assert_diagram_from_function($diagram, path, function_name);
   };
 }
 
-pub fn assert_diagram_from_function(diagram: Diagram, function_name: Vec<&str>) {
-  let prefix = derive_prefix(function_name);
+pub fn assert_diagram_from_function(diagram: Diagram, path: &Path, function_name: Vec<&str>) {
+  let prefix = derive_prefix(path, function_name);
   assert_diagram(diagram, &prefix).unwrap();
 }
 
-pub fn assert_canvas_from_function(canvas: Canvas, function_name: Vec<&str>) {
-  let prefix = derive_prefix(function_name);
+pub fn assert_canvas_from_function(canvas: Canvas, path: &Path, function_name: Vec<&str>) {
+  let prefix = derive_prefix(path, function_name);
   assert_canvas(canvas, &prefix).unwrap();
 }
 
-fn derive_prefix(function_name: Vec<&str>) -> String {
-  let path = Path::new(file!());
+fn derive_prefix(path: &Path, function_name: Vec<&str>) -> String {
   let parent = Path::new("tests/snapshots");
   if !parent.exists() {
     fs::create_dir(parent).unwrap_or_else(|_| panic!("Cannot create {:?}.", parent));

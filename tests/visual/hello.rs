@@ -12,8 +12,8 @@ mod hello {
       circle "circle" 2cm right
       ellipse "ellipse" 2cm right
       oval "oval" 1cm down last box
-      cylinder "cylinder" 1cm down last circle
-      file "file" 1cm down last ellipse
+      file "file" 1cm down last circle
+      cylinder "cylinder" 1cm down last ellipse
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);

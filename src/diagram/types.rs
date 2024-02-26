@@ -91,9 +91,9 @@ impl Config {
       rectangle: ShapeConfig::default(),
       cylinder: ShapeConfig::default(),
       file: ShapeConfig {
-        padding: 0.0,
-        width: width * 0.666,
-        height: width,
+        padding: 8.0,
+        width: HEIGHT.trunc(),
+        height: WIDTH.trunc(),
       },
     }
   }
