@@ -26,10 +26,13 @@ mod nested {
     let pair = parse_pic(&*string);
     let nodes = parse_nodes(pair, vec![]);
 
-    assert_eq!(nodes, vec![Container(vec![
-      Primitive(Arc, vec![]),
-      Primitive(Arrow, vec![]),
-      Primitive(Box, vec![]),
-    ], vec![])]);
+    assert_eq!(
+      nodes,
+      vec![Container(
+        vec![Primitive(
+          Arc, vec![]),
+             Primitive(Arrow, vec![]),
+             Primitive(Box, vec![]),
+        ], vec![])]);
   }
 }

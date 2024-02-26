@@ -23,7 +23,7 @@ mod shapes {
   #[test]
   fn angle() {
     let angle = angle_from((10., 10.), 0., 10.);
-    assert_eq!(Edge::new((10, 10), (10, 0)), angle);
+    assert_eq!(angle, Edge::new((10, 10), (10, 0)))
   }
 
   #[test]
@@ -37,8 +37,8 @@ mod shapes {
   #[test]
   fn rectangle() {
     let shape = EdgeFinder::rectangle(0., 0., 20., 20.);
-    assert_eq!(4, shape.edges.len());
-    assert_eq!(Edge::new((0, 0), (20, 0)), shape.edges[0]);
+    assert_eq!(shape.edges.len(), 4);
+    assert_eq!(shape.edges[0], Edge::new((0, 0), (20, 0)))
   }
 
   #[test]
@@ -47,14 +47,14 @@ mod shapes {
 
     let angle = angle_from(shape.bounds.center(), 0., 11.);
     let intersect = angle.intersects(&shape.edges[0]);
-    assert_eq!(Some(Point::new(10., -0.)), round(intersect));
+    assert_eq!(round(intersect), Some(Point::new(10., -0.)));
 
     let intersect = angle.intersects(&shape.edges[1]);
-    assert_eq!(None, intersect);
+    assert_eq!(intersect, None);
 
     let angle = angle_from(shape.bounds.center(), 90., 11.);
     let intersect = angle.intersects(&shape.edges[1]);
-    assert_eq!(Some(Point::new(20., 10.)), round(intersect));
+    assert_eq!(round(intersect), Some(Point::new(20., 10.)))
   }
 
   fn round(point: Option<Point>) -> Option<Point> {
@@ -64,8 +64,8 @@ mod shapes {
   #[test]
   fn triangle() {
     let shape = EdgeFinder::triangle(0., 0., 20., 20.);
-    assert_eq!(3, shape.edges.len());
-    assert_eq!(Edge::new((10, 0), (20, 20)), shape.edges[0]);
+    assert_eq!(shape.edges.len(), 3);
+    assert_eq!(shape.edges[0], Edge::new((10, 0), (20, 20)))
   }
 
   #[test]
@@ -74,27 +74,27 @@ mod shapes {
 
     let angle = angle_from(shape.bounds.center(), 45., 10.);
     let intersect = angle.intersects(&shape.edges[0]);
-    assert_eq!(Some(Point::new(13., 7.)), round(intersect));
+    assert_eq!(round(intersect), Some(Point::new(13., 7.)))
   }
 
   #[test]
   fn triangle_intersect() {
     let shape = EdgeFinder::triangle(0., 0., 20., 20.);
     let intersect = shape.intersect(45.);
-    assert_eq!(Some(Point::new(13., 7.)), round(intersect));
+    assert_eq!(round(intersect), Some(Point::new(13., 7.)))
   }
 
   #[test]
   fn diamond() {
     let shape = EdgeFinder::diamond(0., 0., 20., 20.);
-    assert_eq!(4, shape.edges.len());
-    assert_eq!(Edge::new((10, 0), (20, 10)), shape.edges[0]);
+    assert_eq!(shape.edges.len(), 4);
+    assert_eq!(shape.edges[0], Edge::new((10, 0), (20, 10)))
   }
 
   #[test]
   fn file() {
     let shape = EdgeFinder::file(0., 0., 20., 20., 5.);
-    assert_eq!(5, shape.edges.len());
+    assert_eq!(shape.edges.len(), 5);
     assert_eq!(shape.edges[0], Edge::new((0, 0), (15, 0)));
     assert_eq!(shape.edges[1], Edge::new((15, 0), (20, 5)));
   }

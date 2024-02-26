@@ -21,17 +21,23 @@ mod homepage {
     let pair = PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap();
     let nodes = parse_nodes(pair, vec![]);
 
-    assert_eq!(nodes, vec![
-      Primitive(Arrow,
+    assert_eq!(
+      nodes,
+      vec![Primitive(
+        Arrow,
         vec![Attribute("right 200%".to_string()), String("Markdown".to_string()), String("Source".to_string())]),
-      Primitive(Box,
-        vec![String("Markdown".to_string()), String("Formatter".to_string()), String("(markdown.c)".to_string())]),
-      Primitive(Arrow,
-        vec![Attribute("right 200%".to_string()), String("HTML+SVG".to_string()), String("Output".to_string())]),
-      Primitive(Arrow,
-        vec![Attribute("down 70%".to_string()), Attribute("from last box.s".to_string())]),
-      Primitive(Box,
-        vec![String("Pikchr".to_string()), String("Formatter".to_string()), String("(pikchr.c)".to_string())]),
-    ])
+           Primitive(
+             Box,
+             vec![String("Markdown".to_string()), String("Formatter".to_string()), String("(markdown.c)".to_string())]),
+           Primitive(
+             Arrow,
+             vec![Attribute("right 200%".to_string()), String("HTML+SVG".to_string()), String("Output".to_string())]),
+           Primitive(
+             Arrow,
+             vec![Attribute("down 70%".to_string()), Attribute("from last box.s".to_string())]),
+           Primitive(
+             Box,
+             vec![String("Pikchr".to_string()), String("Formatter".to_string()), String("(pikchr.c)".to_string())]),
+      ])
   }
 }

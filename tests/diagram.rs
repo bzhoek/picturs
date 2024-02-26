@@ -25,13 +25,15 @@ mod diagram {
     let string = r#"box"#;
     let diagram = create_diagram(string);
 
-    assert_eq!(vec![
-      Primitive(None,
+    assert_eq!(
+      diagram.nodes,
+      vec![Primitive(
+        None,
         Rect::from_xywh(0., 0., 88.5, 75.),
         Rect::from_xywh(0., 0., 88.5, 67.),
         Color::BLUE,
         rectangle(None)),
-    ], diagram.nodes);
+      ]);
   }
 
   #[test]
@@ -39,13 +41,15 @@ mod diagram {
     let string = r#"box.first "title""#;
     let diagram = create_diagram(string);
 
-    assert_eq!(vec![
-      Primitive(Some("first"),
+    assert_eq!(
+      diagram.nodes,
+      vec![Primitive(
+        Some("first"),
         Rect::from_xywh(0., 0., 88.5, 75.),
         Rect::from_xywh(0., 0., 88.5, 67.),
         Color::BLUE,
         rectangle(Some(("title", 31.)))),
-    ], diagram.nodes);
+      ]);
   }
 
   #[test]
@@ -53,13 +57,15 @@ mod diagram {
     let string = r#"box "title""#;
     let diagram = create_diagram(string);
 
-    assert_eq!(vec![
-      Primitive(None,
+    assert_eq!(
+      diagram.nodes,
+      vec![Primitive(
+        None,
         Rect::from_xywh(0., 0., 88.5, 75.),
         Rect::from_xywh(0., 0., 88.5, 67.),
         Color::BLUE,
         rectangle(Some(("title", 31.)))),
-    ], diagram.nodes);
+      ]);
   }
 
   #[test]
@@ -68,18 +74,20 @@ mod diagram {
                          box";
     let diagram = create_diagram(string);
 
-    assert_eq!(diagram.nodes,
-      vec![
-        Primitive(None,
-          Rect::from_xywh(0., 0., 88.5, 75.),
-          Rect::from_xywh(0., 0., 88.5, 67.),
-          Color::BLUE,
-          rectangle(None)),
-        Primitive(None,
-          Rect::from_xywh(0., 75., 88.5, 75.),
-          Rect::from_xywh(0., 75., 88.5, 67.),
-          Color::BLUE,
-          rectangle(None)),
+    assert_eq!(
+      diagram.nodes,
+      vec![Primitive(
+        None,
+        Rect::from_xywh(0., 0., 88.5, 75.),
+        Rect::from_xywh(0., 0., 88.5, 67.),
+        Color::BLUE,
+        rectangle(None)),
+           Primitive(
+             None,
+             Rect::from_xywh(0., 75., 88.5, 75.),
+             Rect::from_xywh(0., 75., 88.5, 67.),
+             Color::BLUE,
+             rectangle(None)),
       ]);
   }
 
@@ -88,18 +96,19 @@ mod diagram {
     let string = "box.parent { box }";
     let diagram = create_diagram(string);
 
-    assert_eq!(diagram.nodes,
-      vec![
-        Container(Some("parent"), Radius::default(), None,
-          Rect::from_xywh(0., 0., 104.5, 99.),
-          Rect::from_xywh(0., 0., 104.5, 91.),
-          vec![
-            Primitive(None,
-              Rect::from_xywh(8., 8., 88.5, 75.),
-              Rect::from_xywh(8., 8., 88.5, 67.),
-              Color::BLUE,
-              rectangle(None))
-          ])
+    assert_eq!(
+      diagram.nodes,
+      vec![Container(
+        Some("parent"), Radius::default(), None,
+        Rect::from_xywh(0., 0., 104.5, 99.),
+        Rect::from_xywh(0., 0., 104.5, 91.),
+        vec![Primitive(
+          None,
+          Rect::from_xywh(8., 8., 88.5, 75.),
+          Rect::from_xywh(8., 8., 88.5, 67.),
+          Color::BLUE,
+          rectangle(None))
+        ])
       ]);
   }
 
@@ -108,18 +117,19 @@ mod diagram {
     let string = r#"box "parent" { box "child" }"#;
     let diagram = create_diagram(string);
 
-    assert_eq!(diagram.nodes,
-      vec![
-        Container(None, Radius::default(), Some("parent"),
-          Rect::from_xywh(0., 0., 104.5, 112.),
-          Rect::from_xywh(0., 0., 104.5, 104.),
-          vec![
-            Primitive(None,
-              Rect::from_xywh(8., 8., 88.5, 75.),
-              Rect::from_xywh(8., 8., 88.5, 67.),
-              Color::BLUE,
-              rectangle(Some(("child", 40.))))
-          ])
+    assert_eq!(
+      diagram.nodes,
+      vec![Container(
+        None, Radius::default(), Some("parent"),
+        Rect::from_xywh(0., 0., 104.5, 112.),
+        Rect::from_xywh(0., 0., 104.5, 104.),
+        vec![Primitive(
+          None,
+          Rect::from_xywh(8., 8., 88.5, 75.),
+          Rect::from_xywh(8., 8., 88.5, 67.),
+          Color::BLUE,
+          rectangle(Some(("child", 40.))))
+        ])
       ]);
   }
 
@@ -132,16 +142,17 @@ mod diagram {
 
     let size = Size::new(88.5, 85.);
     let tqbf = Rectangle(Color::BLACK,
-      Some(Paragraph { text: TQBF, widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
-      Radius::default(), Color::TRANSPARENT, None);
+                         Some(Paragraph { text: TQBF, widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
+                         Radius::default(), Color::TRANSPARENT, None);
 
-    assert_eq!(diagram.nodes,
-      vec![
-        Primitive(None,
-          paragraph1_rect,
-          paragraph2_rect,
-          Color::BLUE,
-          tqbf),
+    assert_eq!(
+      diagram.nodes,
+      vec![Primitive(
+        None,
+        paragraph1_rect,
+        paragraph2_rect,
+        Color::BLUE,
+        tqbf),
       ]);
   }
 
@@ -169,14 +180,14 @@ mod diagram {
 
     let edge = Edge::from("nw");
     let center = rect.center();
-    assert_eq!(Point::new(90., 140.), center);
+    assert_eq!(center, Point::new(90., 140.));
 
     let nw = edge.edge_point(&rect);
-    assert_eq!(Point::new(40., 40.), nw);
+    assert_eq!(nw, Point::new(40., 40.));
 
     let edge = Edge::from("se");
     let se = edge.edge_point(&rect);
-    assert_eq!(Point::new(140., 240.), se);
+    assert_eq!(se, Point::new(140., 240.));
   }
 
   #[test]
@@ -185,10 +196,10 @@ mod diagram {
 
     let edge = Edge::from("sw");
     let center = rect.center();
-    assert_eq!(Point::new(180., 0.), center);
+    assert_eq!(center, Point::new(180., 0.));
 
     let nw = edge.edge_point(&rect);
-    assert_eq!(Point::new(0., 30.), nw);
+    assert_eq!(nw, Point::new(0., 30.));
   }
 
 
@@ -205,7 +216,7 @@ mod diagram {
     let _point = Point::new(32., 32.);
     let offset = Vector::new(-1., 0.);
     let result = offset.mul(3.);
-    assert_eq!(Point::new(-3., 0.), result);
+    assert_eq!(result, Point::new(-3., 0.));
   }
 
   #[test]
@@ -217,7 +228,7 @@ mod diagram {
     ];
     let result = Index::offset_from_rect(&rect, &Edge::from("nw"), &movements);
     let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };
-    assert_eq!(expected, result);
+    assert_eq!(result, expected);
   }
 
   #[derive(Debug)]
@@ -228,10 +239,10 @@ mod diagram {
   #[test]
   fn test_primitives_mut() {
     let mut primitive = Primitive(None,
-      Rect::from_xywh(0., 0., 88.5, 75.),
-      Rect::from_xywh(0., 0., 88.5, 67.),
-      Color::BLACK,
-      rectangle(None));
+                                  Rect::from_xywh(0., 0., 88.5, 75.),
+                                  Rect::from_xywh(0., 0., 88.5, 67.),
+                                  Color::BLACK,
+                                  rectangle(None));
 
     match primitive {
       Primitive(_, ref mut rect, _, _, _) => {

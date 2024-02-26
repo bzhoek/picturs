@@ -36,45 +36,45 @@ mod tests {
   #[test]
   fn x_from_angle() {
     let x = x_from_degrees(20.);
-    assert_eq!(0.44444445, x);
+    assert_eq!(x, 0.44444445);
     let x = x_from_degrees(45.);
-    assert_eq!(1., x);
+    assert_eq!(x, 1.);
     let x = x_from_degrees(90.);
-    assert_eq!(1., x);
+    assert_eq!(x, 1.);
     let x = x_from_degrees(135.);
-    assert_eq!(1., x);
+    assert_eq!(x, 1.);
     let x = x_from_degrees(180.);
-    assert_eq!(0., x);
+    assert_eq!(x, 0.);
     let x = x_from_degrees(200.);
-    assert_eq!(-0.44444445, x);
+    assert_eq!(x, -0.44444445);
     let x = x_from_degrees(225.);
-    assert_eq!(-1., x);
+    assert_eq!(x, -1.);
     let x = x_from_degrees(315.);
-    assert_eq!(-1., x);
+    assert_eq!(x, -1.);
     let x = x_from_degrees(360.);
-    assert_eq!(0.0, x);
+    assert_eq!(x, 0.0);
   }
 
   #[test]
   fn y_from_angle() {
     let y = y_from_degrees(45.);
-    assert_eq!(1., y);
+    assert_eq!(y, 1.);
     let y = y_from_degrees(65.);
-    assert_eq!(0.5555556, y);
+    assert_eq!(y, 0.5555556);
     let y = y_from_degrees(90.);
-    assert_eq!(0., y);
+    assert_eq!(y, 0.);
     let y = y_from_degrees(135.);
-    assert_eq!(-1., y);
+    assert_eq!(y, -1.);
     let y = y_from_degrees(180.);
-    assert_eq!(-1., y);
+    assert_eq!(y, -1.);
     let y = y_from_degrees(225.);
-    assert_eq!(-1., y);
+    assert_eq!(y, -1.);
     let y = y_from_degrees(245.);
-    assert_eq!(-0.5555556, y);
+    assert_eq!(y, -0.5555556);
     let y = y_from_degrees(315.);
-    assert_eq!(1., y);
+    assert_eq!(y, 1.);
     let y = y_from_degrees(360.);
-    assert_eq!(1.0, y);
+    assert_eq!(y, 1.0);
   }
 
   // https://www.youtube.com/watch?v=bvlIYX9cgls

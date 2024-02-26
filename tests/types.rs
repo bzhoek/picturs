@@ -9,23 +9,23 @@ mod tests {
     let rect = Rect::from_xywh(40., 40., 10., 20.);
 
     let edge = Edge::from("nw");
-    assert_eq!((-0.5, -0.5), edge.tuple());
+    assert_eq!(edge.tuple(), (-0.5, -0.5));
     let nw = edge.topleft_offset(&rect);
-    assert_eq!(Point::new(-0., -0.), nw);
+    assert_eq!(nw, Point::new(-0., -0.));
 
     let edge = Edge::from("ne");
-    assert_eq!((0.5, -0.5), edge.tuple());
+    assert_eq!(edge.tuple(), (0.5, -0.5));
     let ne = edge.topleft_offset(&rect);
-    assert_eq!(Point::new(-10., -0.), ne);
+    assert_eq!(ne, Point::new(-10., -0.));
 
     let edge = Edge::from("se");
-    assert_eq!((0.5, 0.5), edge.tuple());
+    assert_eq!(edge.tuple(), (0.5, 0.5));
     let se = edge.topleft_offset(&rect);
-    assert_eq!(Point::new(-10., -20.), se);
+    assert_eq!(se, Point::new(-10., -20.));
 
     let edge = Edge::from("c");
-    assert_eq!((0., 0.), edge.tuple());
+    assert_eq!(edge.tuple(), (0., 0.));
     let se = edge.topleft_offset(&rect);
-    assert_eq!(Point::new(-5., -10.), se);
+    assert_eq!(se, Point::new(-5., -10.));
   }
 }

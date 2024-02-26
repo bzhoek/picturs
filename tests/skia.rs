@@ -13,7 +13,7 @@ mod tests {
     let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
     let font = Font::from_typeface(typeface, 17.0);
     let (height, _metrics) = font.metrics();
-    assert_eq!(17., height)
+    assert_eq!(height, 17.)
   }
 
   #[test]
@@ -41,7 +41,7 @@ mod tests {
     let center = rect.center();
     let topleft = center + offset;
 
-    assert_eq!(Point::from((28.5, 41.5)), topleft);
+    assert_eq!(topleft, Point::from((28.5, 41.5)));
   }
 
   #[test]
@@ -57,8 +57,8 @@ mod tests {
     let (widths, height) = canvas.paragraph(TQBF, (40, 40), 320.);
     assert_canvas!(canvas);
 
-    assert_eq!(vec!(299.0, 33.0), widths);
-    assert_eq!(34., height);
+    assert_eq!(widths, vec!(299.0, 33.0));
+    assert_eq!(height, 34.);
   }
 
   #[test]
