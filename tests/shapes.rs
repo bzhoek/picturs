@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Sub};
 use skia_safe::{Point, Rect, scalar};
 use picturs::trig::angle_at;
 
@@ -11,6 +11,22 @@ struct Edge {
 impl Edge {
   fn new(from: impl Into<Point>, to: impl Into<Point>) -> Self {
     Edge { from: from.into(), to: to.into() }
+  }
+
+  fn angle(&self) -> f32 {
+    self.angle_to(&self.to)
+  }
+
+  fn angle_to(&self, to: &Point) -> f32 {
+    let direction = to.sub(self.from);
+    direction.y.atan2(direction.x)
+  }
+
+  /// https://en.wikipedia.org/wiki/Interpolation
+  fn interpolate(&self, t: scalar) -> Point {
+    let x = Edge::lerp(self.from.x, self.to.x, t);
+    let y = Edge::lerp(self.from.y, self.to.y, t);
+    Point::new(x, y)
   }
 
   fn intersect_factors(a: impl Into<Point>, b: impl Into<Point>, c: impl Into<Point>, d: impl Into<Point>) -> Option<scalar> {
@@ -123,7 +139,10 @@ impl Shape {
 
 #[cfg(test)]
 mod tests {
-  use std::ops::Add;
+  use std::ops::{Add, Sub};
+  use skia_safe::{Color, PaintStyle};
+  use picturs::skia::Canvas;
+  use picturs::test::assert_canvas;
   use picturs::trig::angle_at;
   use super::*;
 
@@ -223,5 +242,86 @@ mod tests {
 
     let intersect = shape.intersect(45.);
     assert_eq!(round(intersect), Some(Point::new(7., -8.)));
+  }
+
+  // http://www.csharphelper.com/howtos/howto_line_ellipse_intersection.html
+  // https://github.com/davidfig/intersects/blob/master/ellipse-line.js
+  #[test]
+  fn arc_intersect() {
+    let rect = Rect::from_xywh(8., 8., 40., 48.);
+    let top = Rect::from_xywh(rect.left, rect.top, rect.width(), rect.height() / 3.);
+    let bottom = Rect::from_xywh(rect.left, rect.bottom - top.height(), rect.width(), top.height());
+
+    let line = Edge::new(rect.center(), (rect.right, rect.bottom));
+
+    let result = if in_arc_range(&top, &line) {
+      intersect_ellipse(&top, &line)
+    } else if in_arc_range(&bottom, &line) {
+      intersect_ellipse(&bottom, &line)
+    } else {
+      panic!("no intersection")
+    };
+
+    let mut canvas = prepare_cylinder_canvas(&rect, &top, &bottom, &line);
+
+    if let Some((t1, t2)) = result {
+      let i1 = line.interpolate(t1);
+      let i2 = line.interpolate(t2);
+
+      canvas.paint.set_color(Color::RED);
+      canvas.circle(&i1, 1.);
+      canvas.circle(&i2, 1.);
+    }
+
+    assert_canvas(canvas, "target/ellipse_intersect").unwrap();
+  }
+
+  fn prepare_cylinder_canvas(rect: &Rect, top: &Rect, bottom: &Rect, line: &Edge) -> Canvas {
+    let mut canvas = Canvas::new((56, 64));
+
+    canvas.paint.set_style(PaintStyle::Stroke);
+
+    canvas.paint.set_color(Color::BLUE);
+    canvas.rectangle(&rect, 0.);
+
+    canvas.paint.set_color(Color::WHITE);
+    canvas.circle(&line.from, 1.);
+    canvas.ellipse(&top);
+    canvas.ellipse(&bottom);
+    canvas
+  }
+
+  #[allow(non_snake_case)]
+  fn intersect_ellipse(ellipse: &Rect, line: &Edge) -> Option<(scalar, scalar)> {
+    let e = ellipse.center();
+    let w = ellipse.width() / 2.;
+    let h = ellipse.height() / 2.;
+    let p1 = line.from.sub(e);
+    let p2 = line.to.sub(e);
+
+    let d = p2.sub(p1);
+    let A = d.x * d.x / w / w + d.y * d.y / h / h;
+    let B = 2. * p1.x * (d.x) / w / w + 2. * p1.y * (d.y) / h / h;
+    let C = p1.x * p1.x / w / w + p1.y * p1.y / h / h - 1.;
+    let D = B * B - 4. * A * C;
+    if D == 0. {} else if D > 0. {
+      let t1 = (-B - D.sqrt()) / (2. * A);
+      let t2 = (-B + D.sqrt()) / (2. * A);
+      return Some((t1, t2));
+    }
+    None
+  }
+
+  fn in_arc_range(rect: &Rect, line: &Edge) -> bool {
+    let mid_left = Point::new(rect.left, rect.center_y());
+    let mid_right = Point::new(rect.right, rect.center_y());
+    let left_angle = line.angle_to(&mid_left);
+    let right_angle = line.angle_to(&mid_right);
+    let line_angle = line.angle();
+    return if line_angle < 0. {
+      line_angle < right_angle && line_angle > left_angle
+    } else {
+      line_angle > right_angle && line_angle < left_angle
+    };
   }
 }
