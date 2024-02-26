@@ -8,6 +8,7 @@ pub mod rules;
 pub mod conversion;
 pub mod renderer;
 pub mod index;
+pub mod edges;
 
 pub fn create_diagram(string: &str) -> Diagram {
   init_logging();
