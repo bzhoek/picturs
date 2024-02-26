@@ -71,19 +71,26 @@ impl Edge {
 
 pub struct EdgeFinder {
   pub edges: Vec<Edge>,
+  pub ellipses: Vec<Rect>,
   pub bounds: Rect,
 }
 
 impl EdgeFinder {
   pub fn cylinder(x: f32, y: f32, width: f32, height: f32) -> Self {
     let bounds = Rect::from_xywh(x, y, width, height);
-    let half = height / 6.;
-    let tl = Point::new(x, y + half);
-    let tr = Point::new(x + width, y + half);
-    let br = Point::new(x + width, y + height - half);
-    let bl = Point::new(x, y + height - half);
+
+    let third = height / 3.;
+    let top = Rect::from_xywh(x, y, width, third);
+    let bottom = Rect::from_xywh(x, y + height - third, width, third);
+    let ellipses = vec![top, bottom];
+
+    let tl = Point::new(x, top.center_y());
+    let tr = Point::new(x + width, top.center_y());
+    let br = Point::new(x + width, bottom.center_y());
+    let bl = Point::new(x, bottom.center_y());
     let edges = vec![Edge { from: tl, to: bl }, Edge { from: tr, to: br }];
-    EdgeFinder { edges, bounds }
+
+    EdgeFinder { edges, ellipses, bounds }
   }
 
   pub fn rectangle(x: f32, y: f32, width: f32, height: f32) -> Self {
@@ -98,7 +105,8 @@ impl EdgeFinder {
       Edge { from: br, to: bl },
       Edge { from: bl, to: tl },
     ];
-    EdgeFinder { edges, bounds }
+    let ellipses = vec![];
+    EdgeFinder { edges, ellipses, bounds }
   }
 
   pub fn triangle(x: f32, y: f32, width: f32, height: f32) -> Self {
@@ -111,7 +119,8 @@ impl EdgeFinder {
       Edge { from: br, to: bl },
       Edge { from: bl, to: tc },
     ];
-    EdgeFinder { edges, bounds }
+    let ellipses = vec![];
+    EdgeFinder { edges, ellipses, bounds }
   }
 
   pub fn diamond(x: f32, y: f32, width: f32, height: f32) -> Self {
@@ -126,7 +135,8 @@ impl EdgeFinder {
       Edge { from: bc, to: ml },
       Edge { from: ml, to: tc },
     ];
-    EdgeFinder { edges, bounds }
+    let ellipses = vec![];
+    EdgeFinder { edges, ellipses, bounds }
   }
 
   pub fn file(x: f32, y: f32, width: f32, height: f32, radius: f32) -> Self {
@@ -143,7 +153,8 @@ impl EdgeFinder {
       Edge { from: br, to: bl },
       Edge { from: bl, to: tl },
     ];
-    EdgeFinder { edges, bounds }
+    let ellipses = vec![];
+    EdgeFinder { edges, ellipses, bounds }
   }
 
   pub fn intersect(&self, degrees: f32) -> Option<Point> {
@@ -158,12 +169,17 @@ impl EdgeFinder {
     Edge::new(from, from.add(offset))
   }
 
-  pub fn intersect_line(&self, line: &Edge) -> Option<Point> {
-    self.edges.iter().find_map(|edge| line.intersects(edge))
+  pub fn intersects(&self, line: &Edge) -> Option<Point> {
+    self.edges.iter()
+      .find_map(|edge| line.intersects(edge))
+      .or_else(|| self.ellipses.iter().find_map(|rect| {
+        EdgeFinder::intersect_ellipse(line, rect)
+          .map(|ratio| line.interpolate(ratio))
+      }))
   }
 
   #[allow(non_snake_case)]
-  pub fn intersect_ellipse(line: &Edge, ellipse: &Rect) -> Option<(scalar, scalar)> {
+  pub fn intersect_ellipse(line: &Edge, ellipse: &Rect) -> Option<scalar> {
     let e = ellipse.center();
     let w = ellipse.width() / 2.;
     let h = ellipse.height() / 2.;
@@ -176,12 +192,13 @@ impl EdgeFinder {
     let C = p1.x * p1.x / w / w + p1.y * p1.y / h / h - 1.;
     let D = B * B - 4. * A * C;
     if D == 0. {} else if D > 0. {
-      let t1 = (-B - D.sqrt()) / (2. * A);
-      let t2 = (-B + D.sqrt()) / (2. * A);
-      return Some((t1, t2));
+      let _near = (-B - D.sqrt()) / (2. * A);
+      let far = (-B + D.sqrt()) / (2. * A);
+      if far > 0. && far < 1. {
+        return Some(far);
+      }
     }
     None
   }
-
 }
 

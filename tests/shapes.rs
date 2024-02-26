@@ -1,4 +1,4 @@
-use skia_safe::{Point, Rect, scalar};
+use skia_safe::{Point, Rect};
 
 #[cfg(test)]
 mod tests {
@@ -115,15 +115,7 @@ mod tests {
   // https://github.com/davidfig/intersects/blob/master/ellipse-line.js
   #[test]
   fn ellipse_intersect() {
-    let rect = Rect::from_xywh(8., 8., 40., 48.);
     let shape = EdgeFinder::cylinder(8., 8., 40., 48.);
-    let top = Rect::from_xywh(rect.left, rect.top, rect.width(), rect.height() / 3.);
-    let bottom = Rect::from_xywh(
-      rect.left,
-      rect.bottom - top.height(),
-      rect.width(),
-      top.height(),
-    );
 
     let lines = vec![
       shape.center_to_edge(45.),
@@ -131,25 +123,20 @@ mod tests {
       shape.center_to_edge(275.),
     ];
 
-    let mut canvas = prepare_cylinder_canvas(&rect, &top, &bottom, &lines.first().unwrap());
+    let mut canvas = prepare_cylinder_canvas(&shape.bounds, &shape.ellipses, &lines.first().unwrap());
 
     lines.iter().for_each(|line| {
-      let intersect = shape.intersect_line(line);
+      let intersect = shape.intersects(line);
       if let Some(i) = intersect {
         canvas.paint.set_color(Color::GREEN);
         canvas.circle(&i, 1.);
-      } else {
-        let ratios = EdgeFinder::intersect_ellipse(&line, &top);
-        mark_dots(line, &mut canvas, ratios);
-        let ratios = EdgeFinder::intersect_ellipse(&line, &bottom);
-        mark_dots(line, &mut canvas, ratios);
       }
     });
 
     assert_canvas(canvas, "target/ellipse_intersect").unwrap();
   }
 
-  fn prepare_cylinder_canvas(rect: &Rect, top: &Rect, bottom: &Rect, line: &Edge) -> Canvas {
+  fn prepare_cylinder_canvas(rect: &Rect, top: &Vec<Rect>, line: &Edge) -> Canvas {
     let mut canvas = Canvas::new((56, 64));
 
     canvas.paint.set_style(PaintStyle::Stroke);
@@ -159,24 +146,7 @@ mod tests {
 
     canvas.paint.set_color(Color::WHITE);
     canvas.circle(&line.from, 1.);
-    canvas.ellipse(&top);
-    canvas.ellipse(&bottom);
+    top.iter().for_each(|ellipse|canvas.ellipse(ellipse));
     canvas
   }
-
-  fn mark_dots(line: &Edge, canvas: &mut Canvas, ratios: Option<(scalar, scalar)>) {
-    if let Some((t1, t2)) = ratios {
-      if t1 < 0. || t2 < 0. {
-        return;
-      }
-      let i1 = line.interpolate(t1);
-      let i2 = line.interpolate(t2);
-
-      canvas.paint.set_color(Color::YELLOW);
-      canvas.circle(&i1, 1.);
-      canvas.paint.set_color(Color::RED);
-      canvas.circle(&i2, 1.);
-    }
-  }
-
 }
