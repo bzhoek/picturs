@@ -29,7 +29,7 @@ impl Edge {
     Point::new(x, y)
   }
 
-  fn intersect_factors(a: impl Into<Point>, b: impl Into<Point>, c: impl Into<Point>, d: impl Into<Point>) -> Option<scalar> {
+  fn intersect_factor(a: impl Into<Point>, b: impl Into<Point>, c: impl Into<Point>, d: impl Into<Point>) -> Option<scalar> {
     let a = a.into();
     let b = b.into();
     let c = c.into();
@@ -53,7 +53,7 @@ impl Edge {
   }
 
   fn intersects(&self, with: &Edge) -> Option<Point> {
-    Self::intersect_factors(self.from, self.to, with.from, with.to)
+    Self::intersect_factor(self.from, self.to, with.from, with.to)
       .map(|alpha| {
         let x0 = Self::lerp(self.from.x, self.to.x, alpha);
         let y0 = Self::lerp(self.from.y, self.to.y, alpha);
@@ -68,6 +68,20 @@ struct Shape {
 }
 
 impl Shape {
+  fn cylinder(x: f32, y: f32, width: f32, height: f32) -> Self {
+    let bounds = Rect::from_xywh(x, y, width, height);
+    let half = height / 6.;
+    let tl = Point::new(x, y + half);
+    let tr = Point::new(x + width, y + half);
+    let br = Point::new(x + width, y + height - half);
+    let bl = Point::new(x, y + height - half);
+    let edges = vec![
+      Edge { from: tl, to: bl },
+      Edge { from: tr, to: br },
+    ];
+    Shape { edges, bounds }
+  }
+
   fn rectangle(x: f32, y: f32, width: f32, height: f32) -> Self {
     let bounds = Rect::from_xywh(x, y, width, height);
     let tl = Point::new(x, y);
@@ -249,20 +263,26 @@ mod tests {
   #[test]
   fn arc_intersect() {
     let rect = Rect::from_xywh(8., 8., 40., 48.);
+    let shape = Shape::cylinder(8., 8., 40., 48.);
     let top = Rect::from_xywh(rect.left, rect.top, rect.width(), rect.height() / 3.);
     let bottom = Rect::from_xywh(rect.left, rect.bottom - top.height(), rect.width(), top.height());
 
-    let line = Edge::new(rect.center(), (rect.right, rect.bottom));
+    let line = Edge::new(rect.center(), (rect.right + 1., rect.center_y()));
+
+    let mut canvas = prepare_cylinder_canvas(&rect, &top, &bottom, &line);
 
     let result = if in_arc_range(&top, &line) {
       intersect_ellipse(&top, &line)
     } else if in_arc_range(&bottom, &line) {
       intersect_ellipse(&bottom, &line)
     } else {
-      panic!("no intersection")
+      let intersect = shape.intersect(275.);
+      if let Some(i) = intersect {
+        canvas.paint.set_color(Color::GREEN);
+        canvas.circle(&i, 1.);
+      }
+      None
     };
-
-    let mut canvas = prepare_cylinder_canvas(&rect, &top, &bottom, &line);
 
     if let Some((t1, t2)) = result {
       let i1 = line.interpolate(t1);
