@@ -117,9 +117,15 @@ impl<'i> Diagram<'i> {
     result
   }
 
-  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn closed_attributes<'a>(pair: &Pair<'a, Rule>) -> (Option<&'a str>, Pair<'a, Rule>) {
     let id = Conversion::identified(pair);
     let attributes = Rules::get_rule(pair, Rule::attributes);
+    (id, attributes)
+  }
+
+  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+    let (id, attributes) = Self::closed_attributes(pair);
+
     let radius = Conversion::radius(&attributes, &config.unit).unwrap_or_default();
     let padding = Conversion::padding(&attributes, &config.unit).unwrap_or(config.rectangle.padding);
     let title = Conversion::string_dig(&attributes, Rule::inner);
@@ -155,8 +161,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn oval_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::identified(pair);
-    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let (id, attributes) = Self::closed_attributes(pair);
+
     let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.oval.width);
     let height = Conversion::height(&attributes, &config.unit).unwrap_or(config.oval.height);
 
@@ -179,8 +185,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn rectangle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::identified(pair);
-    let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
+    let (id, attributes) = Self::closed_attributes(pair);
 
     let radius = Conversion::radius(&attributes, &config.unit).unwrap_or_default();
     let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.rectangle.width);
@@ -210,8 +215,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn file_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::identified(pair);
-    let attributes = Rules::find_rule(pair, Rule::attributes).unwrap();
+    let (id, attributes) = Self::closed_attributes(pair);
 
     let radius = Conversion::radius(&attributes, &config.unit).unwrap_or_default();
     let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.file.width);
@@ -241,8 +245,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::identified(pair);
-    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let (id, attributes) = Self::closed_attributes(pair);
+
     let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.ellipse.width);
     let height = Conversion::height(&attributes, &config.unit).unwrap_or(config.ellipse.height);
 
@@ -265,8 +269,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn cylinder_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::identified(pair);
-    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let (id, attributes) = Self::closed_attributes(pair);
+
     let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.ellipse.width);
     let height = Conversion::height(&attributes, &config.unit).unwrap_or(config.ellipse.height);
 
