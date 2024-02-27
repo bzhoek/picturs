@@ -9,7 +9,7 @@ use crate::diagram::types::{Movement, Edge, ObjectEdge};
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum ShapeName {
-  Rectangle,
+  Box,
   Container,
   Circle,
   Ellipse,
@@ -24,7 +24,7 @@ pub enum ShapeName {
 impl ShapeName {
   pub fn some(name: &str) -> Option<Self> {
     match name {
-      "box" => Some(ShapeName::Rectangle),
+      "box" => Some(ShapeName::Box),
       "container" => Some(ShapeName::Container),
       "ellipse" => Some(ShapeName::Ellipse),
       "cylinder" => Some(ShapeName::Cylinder),

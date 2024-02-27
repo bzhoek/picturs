@@ -52,7 +52,7 @@ impl Renderer {
         Self::render_arrow(canvas, used, from, movement, to, caption),
       Shape::Line(_, movement, _, caption) =>
         Self::render_line(canvas, used, movement, caption),
-      Shape::Rectangle(text_color, paragraph, radius, fill, _) => {
+      Shape::Box(text_color, paragraph, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
         canvas.rectangle(used, radius.pixels());

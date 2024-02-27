@@ -8,7 +8,7 @@ mod diagram {
   use picturs::diagram::index::Index;
   use picturs::diagram::types::{Edge, Movement, Node, Paragraph, Radius, Shape, Unit};
   use picturs::diagram::types::Node::{Container, Primitive};
-  use picturs::diagram::types::Shape::Rectangle;
+  use picturs::diagram::types::Shape::Box;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
@@ -17,7 +17,7 @@ mod diagram {
       let size = Size::new(88., 17.);
       Paragraph { text: title, widths: vec!(width), height: size.height, size }
     });
-    Rectangle(Color::BLACK, paragraph, Radius::default(), Color::TRANSPARENT, None)
+    Box(Color::BLACK, paragraph, Radius::default(), Color::TRANSPARENT, None)
   }
 
   #[test]
@@ -141,7 +141,7 @@ mod diagram {
     let paragraph2_rect = Rect::from_xywh(0.5, 0.5, 88.0, 93.);
 
     let size = Size::new(88., 85.);
-    let tqbf = Rectangle(
+    let tqbf = Box(
       Color::BLACK,
       Some(Paragraph { text: TQBF, widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
       Radius::default(), Color::TRANSPARENT, None);

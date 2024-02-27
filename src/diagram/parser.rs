@@ -87,7 +87,7 @@ impl<'i> Diagram<'i> {
       Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor, canvas),
       Rule::file => Self::file_from(&pair, config, index, cursor, canvas),
       Rule::oval => Self::oval_from(&pair, config, index, cursor, canvas),
-      Rule::rectangle => Self::rectangle_from(&pair, config, index, cursor, canvas),
+      Rule::rectangle => Self::box_from(&pair, config, index, cursor, canvas),
       Rule::arrow => Self::arrow_from(pair, index, cursor, config, canvas),
       Rule::line => Self::line_from(pair, index, cursor, config, canvas),
       Rule::text => Self::text_from(&pair, config, index, cursor, canvas),
@@ -282,7 +282,7 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn rectangle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let attrs = Self::closed_attributes(pair, config, &config.rectangle);
 
     let paragraph = Self::paragraph_height(attrs.title, attrs.width, canvas);
@@ -293,7 +293,7 @@ impl<'i> Diagram<'i> {
     Self::adjust_topleft(&config.flow, &mut used);
     index.position_rect(&attrs.location, &mut used);
 
-    index.insert(ShapeName::Rectangle, attrs.id, used);
+    index.insert(ShapeName::Box, attrs.id, used);
 
     let mut rect = used;
     if config.flow.end.x <= 0. {
@@ -302,7 +302,7 @@ impl<'i> Diagram<'i> {
 
     let rectangle = Primitive(
       attrs.id, rect, used, attrs.stroke,
-      Shape::Rectangle(attrs.text, paragraph, attrs.radius, attrs.fill, attrs.location));
+      Shape::Box(attrs.text, paragraph, attrs.radius, attrs.fill, attrs.location));
     Some((rect, rectangle))
   }
 

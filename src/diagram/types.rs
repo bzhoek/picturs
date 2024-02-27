@@ -22,7 +22,7 @@ pub enum Shape<'a> {
   Dot(Point, Radius, Option<Caption<'a>>),
   Arrow(ObjectEdge, Option<Movement>, ObjectEdge, Option<Caption<'a>>),
   Line(Point, Option<Movement>, Point, Option<Caption<'a>>),
-  Rectangle(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),
+  Box(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Cylinder(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
