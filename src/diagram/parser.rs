@@ -313,7 +313,7 @@ impl<'i> Diagram<'i> {
     let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
     if let Some(caption) = &caption {
-      if caption.edge.horizontal() && config.flow.end.horizontal() {
+      if caption.inner.horizontal() && config.flow.end.horizontal() {
         let size = canvas.measure_str(caption.text);
 
         info!("HORIZONTAL! {:?}", size);
@@ -339,7 +339,7 @@ impl<'i> Diagram<'i> {
     let (rect, used) = Self::rect_from_points(start, &movement, end);
 
     if let Some((caption, movement)) = caption.as_ref().zip(movement.as_ref()) {
-      if caption.edge.vertical() && movement.edge.vertical() {
+      if caption.inner.vertical() && movement.edge.vertical() {
         info!("VERTICAL! {:?}", caption.size);
       }
     }

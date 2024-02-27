@@ -43,7 +43,8 @@ pub struct Paragraph<'a> {
 #[derive(Debug, PartialEq)]
 pub struct Caption<'a> {
   pub text: &'a str,
-  pub edge: Edge,
+  pub inner: Edge,
+  pub outer: Edge,
   pub size: Size,
 }
 
@@ -162,17 +163,17 @@ impl From<&str> for Edge {
   fn from(item: &str) -> Self {
     let dot_removed = item.trim_start_matches('.');
     match dot_removed.to_lowercase().as_str() {
-      "n" | "up" | "above" => Self { direction: Vertical, x: 0., y: -0.5 },
+      "n" | "up" | "above" => Self::above(),
       "ne" => Self { direction: Vertical, x: 0.5, y: -0.5 },
       "en" => Self { direction: Horizontal, x: 0.5, y: -0.5 },
-      "e" | "right" => Self { direction: Horizontal, x: 0.5, y: 0. },
+      "e" | "right" => Self::right(),
       "se" => Self { direction: Vertical, x: 0.5, y: 0.5 },
-      "s" | "down" | "below" => Self { direction: Vertical, x: 0., y: 0.5 },
+      "s" | "down" | "below" => Self::below(),
       "sw" => Self { direction: Vertical, x: -0.5, y: 0.5 },
-      "w" | "left" => Self { direction: Horizontal, x: -0.5, y: 0. },
+      "w" | "left" => Self::left(),
       "nw" => Self { direction: Vertical, x: -0.5, y: -0.5 },
       "wn" => Self { direction: Horizontal, x: -0.5, y: -0.5 },
-      _ => Self { direction: Horizontal, x: 0., y: 0. }
+      _ => Self::center()
     }
   }
 }
@@ -192,6 +193,25 @@ impl From<f32> for Edge {
 
 
 impl Edge {
+  pub fn above() -> Self {
+    Self { direction: Vertical, x: 0., y: -0.5 }
+  }
+
+  pub fn below() -> Self {
+    Self { direction: Vertical, x: 0., y: 0.5 }
+  }
+
+  pub fn left() -> Self {
+    Self { direction: Horizontal, x: -0.5, y: 0. }
+  }
+
+  pub fn right() -> Self {
+    Self { direction: Horizontal, x: 0.5, y: 0. }
+  }
+
+  pub fn center() -> Self {
+    Self { direction: Horizontal, x: 0., y: 0. }
+  }
 
   pub fn flip(&self) -> Self {
     match self.direction {

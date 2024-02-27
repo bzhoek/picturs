@@ -147,7 +147,7 @@ impl Renderer {
     canvas.line_to(used.right, used.bottom);
     canvas.stroke();
 
-    Self::draw_caption(canvas, &used, caption);
+    Self::draw_caption(canvas, used, caption);
   }
 
   pub fn pixel_align(used: &Rect) -> Rect {
@@ -205,9 +205,9 @@ impl Renderer {
   pub fn dot_offset_of(point: &Point, radius: &Radius, caption: &Caption) -> Rect {
     let mut dot = Rect::from_point_and_size(*point, (0., 0.));
     dot.outset((radius.pixels() * 2., radius.pixels() * 2.));
-    let point = caption.edge.mirror().edge_point(&dot);
+    let point = caption.inner.mirror().edge_point(&dot);
     let mut rect = Rect::from_point_and_size(point, caption.size);
-    caption.edge.offset(&mut rect);
+    caption.inner.offset(&mut rect);
     rect
   }
 
@@ -223,9 +223,10 @@ impl Renderer {
   pub fn topleft_of(caption: &Caption, used: &Rect) -> Point {
     let mut bounds = Rect::from_size(caption.size);
     bounds.outset((TEXT_PADDING, TEXT_PADDING));
-    let offset = caption.edge.topleft_offset(&bounds);
+    let offset = caption.inner.topleft_offset(&bounds);
 
-    let mut topleft = used.center();
+    let mut topleft = caption.outer.edge_point(used);
+
     topleft.offset(offset);
     topleft.offset((TEXT_PADDING, TEXT_PADDING + bounds.height() / 2.));
     topleft

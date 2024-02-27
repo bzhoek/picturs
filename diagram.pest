@@ -44,7 +44,7 @@ target = { "to" ~ object_edge }
 fraction = ${ number ~ "/" ~ number }
 
 caption = { string ~ alignment? }
-alignment = { "left" | "right" | "above" | "below" | "nw" | "ne" | "sw" | "se" }
+alignment = { "left" | "right" | "above" | "below" | "nw" | "ne" | "sw" | "se" | "ljust" }
 
 // text
 text = { "text" ~ identified? ~ text_attributes }
@@ -70,7 +70,6 @@ from_object = _{ "from" ~ object_edge }
 flow_to = { "flow" ~ size }
 move_to = { "move" ~ movements }
 movements = { movement* }
-
 
 dot = { "dot" ~ at_object_edge? ~ dot_attributes ~ caption? }
 at_object_edge = _{ "at" ~ object_edge }

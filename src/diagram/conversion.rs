@@ -94,18 +94,21 @@ impl Conversion {
 
   #[allow(clippy::unwrap_or_default)]
   pub fn caption<'a>(pair: &Pair<'a, Rule>, canvas: &Canvas) -> Option<Caption<'a>> {
-    Rules::find_rule(pair, Rule::caption)
-      .map(|caption| {
-        let mut pairs = caption.clone().into_inner();
-        let text = Self::next_to_string(&mut pairs).unwrap();
-        let text = &text[1..text.len() - 1];
-        let size = canvas.measure_str(text);
-        let edge = Self::next_to_string(&mut pairs)
-          .map(|str| str.into())
-          .unwrap_or(Edge::default())
-          .mirror();
-        Caption { text, edge, size }
-      })
+    Rules::find_rule(pair, Rule::caption).map(|caption| {
+      let mut pairs = caption.clone().into_inner();
+      let text = Self::next_to_string(&mut pairs).unwrap();
+      let text = &text[1..text.len() - 1];
+      let size = canvas.measure_str(text);
+      let string = Self::next_to_string(&mut pairs);
+      let (inner, outer) = string
+        .map(|string|
+          match string {
+            "ljust" => (Edge::right(), Edge::right()),
+            _ => (string.into(), Edge::center())
+          }).unwrap_or((Edge::center(), Edge::center()));
+
+      Caption { text, inner: inner.mirror(), outer, size }
+    })
   }
 
   fn movement_from(pair: Pair<Rule>, unit: &Unit) -> Movement {
