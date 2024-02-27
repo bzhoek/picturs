@@ -37,6 +37,9 @@ arrow = { "arrow" ~ (length | line_attributes) ~ caption? }
 line = { "line" ~ (length | line_attributes) ~ caption? }
 length = { ("ln" | "length") ~ size }
 line_attributes = _{ source? ~ movement? ~ target? }
+source = { "from" ~ fraction? ~ object_edge }
+target = { "to" ~ object_edge }
+fraction = ${ number ~ "/" ~ number }
 
 // text
 text = { "text" ~ identified? ~ text_attributes }
@@ -71,9 +74,6 @@ at_object_edge = _{ "at" ~ object_edge }
 dot_attributes = { dot_attribute* }
 dot_attribute = { color | radius | same }
 same = { "same" }
-
-source = { "from" ~ object_edge }
-target = { "to" ~ object_edge }
 
 object_edge = ${ id ~ edge? }
 edge = ${ "." ~ (compass | hours | degrees) }

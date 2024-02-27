@@ -334,7 +334,7 @@ impl<'i> Diagram<'i> {
     let caption = Conversion::caption(&pair, canvas);
     let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
 
-    let (start, movement, end) = Self::points_from_pair(index, cursor, config, &pair, length);
+    let (start, movement, end) = Self::points_from_pair(&pair, index, cursor, config, length);
     let (rect, used) = Self::rect_from_points(start, &movement, end);
 
     if let Some((caption, movement)) = caption.as_ref().zip(movement.as_ref()) {
@@ -466,9 +466,12 @@ impl<'i> Diagram<'i> {
   fn source_movement_target_from_pair(pair: &Pair<Rule>, unit: &Unit) -> (ObjectEdge, Option<Movement>, ObjectEdge) {
     let source = Conversion::location_to_edge(pair, Rule::source)
       .unwrap_or(ObjectEdge::new("source", "e"));
+
     let movement = Conversion::rule_to_movement(pair, Rule::movement, unit);
+
     let target = Conversion::location_to_edge(pair, Rule::target)
       .unwrap_or(ObjectEdge::new("source", "w"));
+
     (source, movement, target)
   }
 
@@ -481,7 +484,7 @@ impl<'i> Diagram<'i> {
       })
   }
 
-  fn points_from_pair(index: &mut Index, cursor: &Point, config: &Config, pair: &Pair<Rule>, default: f32) -> (Point, Option<Movement>, Point) {
+  fn points_from_pair(pair: &Pair<Rule>, index: &mut Index, cursor: &Point, config: &Config, default: f32) -> (Point, Option<Movement>, Point) {
     let (source, movement, target) = Self::source_movement_target_from_pair(pair, &config.unit);
     let start = index.point_index(&source, &[]).unwrap_or(*cursor);
     let end = index.point_index(&target, &[])

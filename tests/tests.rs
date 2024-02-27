@@ -7,6 +7,7 @@ mod visual {
   mod diagram;
   mod edges;
   mod hello;
+  mod real_world;
   mod units;
 }
 

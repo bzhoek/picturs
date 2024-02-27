@@ -149,6 +149,7 @@ pub enum EdgeDirection {
   Vertical,
 }
 
+// Transform factors from center to edge
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Edge {
   pub direction: EdgeDirection,

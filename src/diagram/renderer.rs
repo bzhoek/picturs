@@ -63,7 +63,7 @@ impl Renderer {
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
-      Shape::File(text_color, paragraph, radius, fill, _) => {
+      Shape::File(text_color, paragraph, _radius, _fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
 

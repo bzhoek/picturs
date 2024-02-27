@@ -208,9 +208,31 @@ impl Conversion {
   }
 
   pub fn location_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
-    Rules::find_rule(pair, rule)
-      .and_then(|pair| Rules::find_rule(&pair, Rule::object_edge))
-      .map(Self::pair_to_object_edge)
+    Rules::find_rule(pair, rule).map(|pair| {
+      let mut fraction: Option<f32> = None;
+      let mut object: Option<ObjectEdge> = None;
+
+      pair.into_inner().for_each(|pair| match pair.as_rule() {
+        Rule::fraction => {
+          let mut inner = pair.into_inner();
+          let x = Self::next_to_f32(&mut inner).unwrap();
+          let y = Self::next_to_f32(&mut inner).unwrap();
+          fraction = Some(x / y - 0.5 / y);
+        }
+        Rule::object_edge => {
+          let mut inner = pair.into_inner();
+          let id = Self::next_to_string(&mut inner).unwrap();
+          let edge = Self::next_to_string(&mut inner).unwrap_or("c");
+          object = Some(ObjectEdge::new(id, edge));
+        }
+        _ => panic!("Unexpected rule {:?}", pair.as_rule())
+      });
+      let mut object = object.unwrap();
+      if let Some(fraction) = fraction {
+        object.edge.y = fraction - 0.5;
+      }
+      object
+    })
   }
 
   pub fn rule_to_movement(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Movement> {
