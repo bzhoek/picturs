@@ -13,6 +13,7 @@ use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Length, Movement,
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
+#[derive(Debug)]
 struct ClosedAttributes<'a> {
   id: Option<&'a str>,
   attributes: Pair<'a, Rule>,
@@ -142,7 +143,7 @@ impl<'i> Diagram<'i> {
       padding: Conversion::padding(&attributes, &config.unit).unwrap_or(shape.padding),
       radius: Conversion::radius(&attributes, &config.unit).unwrap_or_default(),
       title: Conversion::string_dig(&attributes, Rule::inner),
-      location: Conversion::location_from(&attributes, &config.flow.end, &config.unit),
+      location: Conversion::location_from(&attributes, &Edge::from("c"), &config.unit),
       attributes,
       stroke,
       fill,

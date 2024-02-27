@@ -249,7 +249,7 @@ impl Conversion {
   }
 
   pub fn location_from(pair: &Pair<Rule>, end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Movement>, ObjectEdge)> {
-    Rules::dig_rule(pair, Rule::location)
+    Rules::find_rule(pair, Rule::location)
       .map(|p| {
         let mut object: Option<ObjectEdge> = None;
         let mut directions: Vec<Movement> = vec![];
@@ -266,6 +266,7 @@ impl Conversion {
             _ => {}
           }
         };
+
         if let Some(movement) = directions.first() {
           if let Some(object) = object.as_mut() {
             if ShapeName::some(object.id.as_str()).is_some() {
