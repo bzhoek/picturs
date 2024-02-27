@@ -7,7 +7,7 @@ use skia_safe::Color;
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Caption, Edge, Flow, Length, Movement, ObjectEdge, Unit};
+use crate::diagram::types::{Arrows, Caption, Edge, Flow, Length, Movement, ObjectEdge, Unit};
 use crate::skia::Canvas;
 
 const INCH: f32 = 118.;
@@ -109,6 +109,12 @@ impl Conversion {
 
       Caption { text, inner: inner.mirror(), outer, size }
     })
+  }
+
+  pub fn arrows<'a>(pair: &Pair<'a, Rule>) -> Arrows {
+    Rules::find_rule(pair, Rule::arrows)
+      .map(|pair| pair.as_str().into())
+      .unwrap_or_default()
   }
 
   fn movement_from(pair: Pair<Rule>, unit: &Unit) -> Movement {

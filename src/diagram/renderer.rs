@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Caption, Movement, Node, ObjectEdge, Paragraph, Radius, Shape};
+use crate::diagram::types::{Arrows, Caption, Movement, Node, ObjectEdge, Paragraph, Radius, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -50,8 +50,8 @@ impl Renderer {
       }
       Shape::Arrow(from, movement, to, caption) =>
         Self::render_arrow(canvas, used, from, movement, to, caption),
-      Shape::Line(_, movement, _, caption) =>
-        Self::render_line(canvas, used, movement, caption),
+      Shape::Line(start, movement, end, caption, arrows) =>
+        Self::render_line(canvas, used, start, movement, end, caption, arrows),
       Shape::Box(text_color, paragraph, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
@@ -129,7 +129,7 @@ impl Renderer {
     }
   }
 
-  fn render_line(canvas: &mut Canvas, used: &Rect, movement: &Option<Movement>, caption: &Option<Caption>) {
+  fn render_line(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Movement>, end: &Point, caption: &Option<Caption>, arrows: &Arrows) {
     canvas.move_to(used.left, used.top);
     let mut point = Point::new(used.left, used.top);
     if let Some(movement) = movement {
@@ -146,6 +146,16 @@ impl Renderer {
 
     canvas.line_to(used.right, used.bottom);
     canvas.stroke();
+
+    if *arrows == Arrows::Start || *arrows == Arrows::Both {
+      let direction = end.sub(*start);
+      Self::draw_arrow_head(canvas, end, direction);
+    }
+
+    if *arrows == Arrows::End || *arrows == Arrows::Both {
+      let direction = start.sub(*end);
+      Self::draw_arrow_head(canvas, start, direction);
+    }
 
     Self::draw_caption(canvas, used, caption);
   }
@@ -184,7 +194,7 @@ impl Renderer {
       Self::draw_caption(canvas, used, caption);
 
       let direction = p2.sub(p1);
-      Self::draw_arrow_head(canvas, p2, direction);
+      Self::draw_arrow_head(canvas, &p2, direction);
     }
   }
 
@@ -216,9 +226,9 @@ impl Renderer {
       let (topleft, rect) = Self::topleft_of(caption, used);
 
       // let rect = Self::pixel_align(&rect);
-      canvas.paint.set_color(Color::LIGHT_GRAY);
-      canvas.paint.set_style(PaintStyle::StrokeAndFill);
-      canvas.rectangle(&rect, 0.);
+      // canvas.paint.set_color(Color::LIGHT_GRAY);
+      // canvas.paint.set_style(PaintStyle::StrokeAndFill);
+      // canvas.rectangle(&rect, 0.);
 
       canvas.paint.set_color(Color::BLACK);
       canvas.paint.set_style(PaintStyle::Fill);
@@ -255,7 +265,7 @@ impl Renderer {
     }
   }
 
-  fn draw_arrow_head(canvas: &mut Canvas, p2: Point, direction: Point) {
+  fn draw_arrow_head(canvas: &mut Canvas, p2: &Point, direction: Point) {
     let angle = direction.y.atan2(direction.x);
     let arrow = 25. * PI / 180.;
     let size = 15.;

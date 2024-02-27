@@ -21,7 +21,7 @@ pub enum Shape<'a> {
   Move(),
   Dot(Point, Radius, Option<Caption<'a>>),
   Arrow(ObjectEdge, Option<Movement>, ObjectEdge, Option<Caption<'a>>),
-  Line(Point, Option<Movement>, Point, Option<Caption<'a>>),
+  Line(Point, Option<Movement>, Point, Option<Caption<'a>>, Arrows),
   Box(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
@@ -46,6 +46,26 @@ pub struct Caption<'a> {
   pub inner: Edge,
   pub outer: Edge,
   pub size: Size,
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub enum Arrows {
+  #[default]
+  None,
+  Start,
+  End,
+  Both,
+}
+
+impl From<&str> for Arrows {
+  fn from(item: &str) -> Self {
+    match item {
+      "<-" => Arrows::Start,
+      "->" => Arrows::End,
+      "<->" => Arrows::Both,
+      _ => panic!("Unknown arrows {}", item)
+    }
+  }
 }
 
 #[derive(Clone, Debug, PartialEq)]
