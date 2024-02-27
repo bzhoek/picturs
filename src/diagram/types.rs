@@ -46,6 +46,7 @@ pub struct Caption<'a> {
   pub inner: Edge,
   pub outer: Edge,
   pub size: Size,
+  pub opaque: bool,
 }
 
 #[derive(Debug, Default, PartialEq)]

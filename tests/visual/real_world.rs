@@ -7,7 +7,7 @@ mod real_world {
   fn pic8259_diagram() {
     let string = r#"
       box.pic1 ht 2in wd 1in "Primary Interrupt Controller"
-      line from 1/8 pic1.w 1.5in left "Timer" ljust ->
+      line from 1/8 pic1.w 1.5in left "Timer" ljust opaque ->
       line from 2/8 pic1.w 1.5in left "Keyboard" ljust ->
       line from 3/8 pic1.w 2in left <->
       line from 4/8 pic1.w 1.5in left "Serial Port 2" ljust ->

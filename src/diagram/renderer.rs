@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Arrows, Caption, Movement, Node, ObjectEdge, Paragraph, Radius, Shape};
+use crate::diagram::types::{Arrows, Caption, Edge, Movement, Node, ObjectEdge, Paragraph, Radius, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -225,10 +225,12 @@ impl Renderer {
     if let Some(caption) = caption {
       let (topleft, rect) = Self::topleft_of(caption, used);
 
-      // let rect = Self::pixel_align(&rect);
-      // canvas.paint.set_color(Color::LIGHT_GRAY);
-      // canvas.paint.set_style(PaintStyle::StrokeAndFill);
-      // canvas.rectangle(&rect, 0.);
+      if caption.opaque {
+        let rect = Self::pixel_align(&rect);
+        canvas.paint.set_color(Color::LIGHT_GRAY);
+        canvas.paint.set_style(PaintStyle::StrokeAndFill);
+        canvas.rectangle(&rect, 0.);
+      }
 
       canvas.paint.set_color(Color::BLACK);
       canvas.paint.set_style(PaintStyle::Fill);

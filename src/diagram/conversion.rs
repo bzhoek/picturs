@@ -95,23 +95,35 @@ impl Conversion {
   #[allow(clippy::unwrap_or_default)]
   pub fn caption<'a>(pair: &Pair<'a, Rule>, canvas: &Canvas) -> Option<Caption<'a>> {
     Rules::find_rule(pair, Rule::caption).map(|caption| {
-      let mut pairs = caption.clone().into_inner();
-      let text = Self::next_to_string(&mut pairs).unwrap();
-      let text = &text[1..text.len() - 1];
-      let size = canvas.measure_str(text);
-      let string = Self::next_to_string(&mut pairs);
-      let (inner, outer) = string
-        .map(|string|
-          match string {
+      let mut text: Option<&str> = None;
+      let mut alignment: Option<(Edge, Edge)> = None;
+      let mut opaque = false;
+
+      let pairs = caption.clone().into_inner();
+      pairs.for_each(|pair| match pair.as_rule() {
+        Rule::string => {
+          let str = pair.as_str();
+          text = Some(&str[1..str.len() - 1]);
+        }
+        Rule::alignment => {
+          let string = pair.as_str();
+          alignment = match string {
             "ljust" => (Edge::right(), Edge::right()),
             _ => (string.into(), Edge::center())
-          }).unwrap_or((Edge::center(), Edge::center()));
+          }.into();
+        }
+        Rule::opaque => { opaque = true }
+        _ => panic!("unexpected rule {:?}", pair.as_rule())
+      });
 
-      Caption { text, inner: inner.mirror(), outer, size }
+      let (inner, outer) = alignment.unwrap_or((Edge::center(), Edge::center()));
+      let text = text.unwrap();
+      let size = canvas.measure_str(text);
+      Caption { text, inner: inner.mirror(), outer, size, opaque }
     })
   }
 
-  pub fn arrows<'a>(pair: &Pair<'a, Rule>) -> Arrows {
+  pub fn arrows(pair: &Pair<Rule>) -> Arrows {
     Rules::find_rule(pair, Rule::arrows)
       .map(|pair| pair.as_str().into())
       .unwrap_or_default()

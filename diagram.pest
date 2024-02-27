@@ -44,8 +44,9 @@ fraction = ${ number ~ "/" ~ number }
 target = { "to" ~ object_edge }
 arrows = { "<->" | "<-" | "->"  }
 
-caption = { string ~ alignment? }
+caption = { string ~ alignment? ~ opaque? }
 alignment = { "left" | "right" | "above" | "below" | "nw" | "ne" | "sw" | "se" | "ljust" }
+opaque = { "opaque" }
 
 // text
 text = { "text" ~ identified? ~ text_attributes }
