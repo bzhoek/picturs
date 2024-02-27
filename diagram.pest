@@ -23,7 +23,7 @@ cylinder = { "cylinder" ~ identified? ~ attributes }
 oval = { "oval" ~ identified? ~ attributes }
 
 attributes = { attribute* }
-attribute = { string | color | fill | width | height | padding | radius | location | text_color | flow }
+attribute = _{ string | color | fill | width | height | padding | radius | location | text_color | flow }
 color = { "color" ~ id }
 fill = { "fill" ~ id }
 width = { ("wd" | "wid" | "width") ~ size }
@@ -35,16 +35,21 @@ text_color = { "text_color" ~ id }
 // open shapes
 arrow = { "arrow" ~ (length | line_attributes) ~ caption? }
 line = { "line" ~ (length | line_attributes) ~ caption? }
+
 length = { ("ln" | "length") ~ size }
+
 line_attributes = _{ source? ~ movement? ~ target? }
 source = { "from" ~ fraction? ~ object_edge }
 target = { "to" ~ object_edge }
 fraction = ${ number ~ "/" ~ number }
 
+caption = { string ~ alignment? }
+alignment = { "left" | "right" | "above" | "below" | "nw" | "ne" | "sw" | "se" }
+
 // text
 text = { "text" ~ identified? ~ text_attributes }
 text_attributes = { text_attribute* }
-text_attribute = { string | color | fill | width | location | fit }
+text_attribute = _{ string | color | fill | width | location | fit }
 fit = { "fit" }
 
 // common
@@ -56,18 +61,16 @@ number = @{ ASCII_DIGIT* ~ ("." ~ ASCII_DIGIT+)? }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
 
 location = { edge? ~ movement+ ~ (last_object | from_object)? }
-last_object = _{ "last" ~ object_edge }
-from_object = _{ "from" ~ object_edge }
 movement = { offset ~ direction }
 offset = { size }
 direction = { "up" | "down" | "left" | "right" }
+last_object = _{ "last" ~ object_edge }
+from_object = _{ "from" ~ object_edge }
 
 flow_to = { "flow" ~ size }
 move_to = { "move" ~ movements }
 movements = { movement* }
 
-caption = { string ~ alignment? }
-alignment = { "left" | "right" | "above" | "below" | "nw" | "ne" | "sw" | "se" }
 
 dot = { "dot" ~ at_object_edge? ~ dot_attributes ~ caption? }
 at_object_edge = _{ "at" ~ object_edge }
