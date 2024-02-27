@@ -213,14 +213,20 @@ impl Renderer {
 
   fn draw_caption(canvas: &mut Canvas, used: &Rect, caption: &Option<Caption>) {
     if let Some(caption) = caption {
-      let topleft = Self::topleft_of(caption, used);
+      let (topleft, rect) = Self::topleft_of(caption, used);
 
+      // let rect = Self::pixel_align(&rect);
+      canvas.paint.set_color(Color::LIGHT_GRAY);
+      canvas.paint.set_style(PaintStyle::StrokeAndFill);
+      canvas.rectangle(&rect, 0.);
+
+      canvas.paint.set_color(Color::BLACK);
       canvas.paint.set_style(PaintStyle::Fill);
       canvas.text(caption.text, topleft);
     }
   }
 
-  pub fn topleft_of(caption: &Caption, used: &Rect) -> Point {
+  pub fn topleft_of(caption: &Caption, used: &Rect) -> (Point, Rect) {
     let mut bounds = Rect::from_size(caption.size);
     bounds.outset((TEXT_PADDING, TEXT_PADDING));
     let offset = caption.inner.topleft_offset(&bounds);
@@ -228,8 +234,9 @@ impl Renderer {
     let mut topleft = caption.outer.edge_point(used);
 
     topleft.offset(offset);
+    let rect = Rect::from_point_and_size(topleft, bounds.size());
     topleft.offset((TEXT_PADDING, TEXT_PADDING + bounds.height() / 2.));
-    topleft
+    (topleft, rect)
   }
 
   fn draw_paragraph(canvas: &mut Canvas, used: &Rect, text_color: &Color, paragraph: &Option<Paragraph>) {
