@@ -33,12 +33,12 @@ radius = { ("rd" | "rad" | "radius") ~ size }
 text_color = { "text_color" ~ id }
 
 // open shapes
-arrow = { "arrow" ~ (length | line_attributes) ~ caption? }
-line = { "line" ~ (length | line_attributes) ~ caption? ~ arrows? }
+arrow = { "arrow" ~ line_attributes }
+line = { "line" ~ line_attributes }
 
+line_attributes = { line_attribute* }
+line_attribute = _ { length | source | movement | target | caption | arrows | same }
 length = { ("ln" | "length") ~ size }
-
-line_attributes = _{ source? ~ movement? ~ target? }
 source = { "from" ~ fraction? ~ object_edge }
 fraction = ${ number ~ "/" ~ number }
 target = { "to" ~ object_edge }

@@ -12,7 +12,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Length, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{Arrows, BLOCK_PADDING, Caption, Config, Edge, Flow, Length, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -29,6 +29,19 @@ struct ClosedAttributes<'a> {
   stroke: Color,
   fill: Color,
   text: Color,
+}
+
+#[derive(Debug)]
+struct OpenAttributes<'a> {
+  id: Option<&'a str>,
+  attributes: Pair<'a, Rule>,
+  same: bool,
+  caption: Option<Caption<'a>>,
+  length: f32,
+  arrows: Arrows,
+  source: Option<ObjectEdge>,
+  target: Option<ObjectEdge>,
+  movement: Option<Movement>,
 }
 
 #[derive(Parser)]
@@ -310,48 +323,58 @@ impl<'i> Diagram<'i> {
     Some((rect, rectangle))
   }
 
-  fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::identified(&pair);
-    let caption = Conversion::caption(&pair, canvas);
-    let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
+  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, canvas: &mut Canvas) -> OpenAttributes<'a> {
+    let attributes = Rules::get_rule(pair, Rule::line_attributes);
 
-    if let Some(caption) = &caption {
-      if caption.inner.horizontal() && config.flow.end.horizontal() {
-        let size = canvas.measure_str(caption.text);
-
-        info!("HORIZONTAL! {:?}", size);
-      }
+    OpenAttributes {
+      id: Conversion::identified(pair),
+      caption: Conversion::caption(&attributes, canvas),
+      length: Conversion::length(&attributes, &config.unit).unwrap_or(config.line.pixels()),
+      arrows: Conversion::arrows(&attributes),
+      source: Conversion::location_to_edge(&attributes, Rule::source),
+      target: Conversion::location_to_edge(&attributes, Rule::target),
+      movement: Conversion::rule_to_movement(&attributes, Rule::movement, &config.unit),
+      same: Rules::find_rule(pair, Rule::same).is_some(),
+      attributes,
     }
-    let (source, movement, target) = Self::source_movement_target_from_pair(&pair, &config.unit);
-    let start = index.point_index(&source, &[]).unwrap_or(*cursor);
-    let end = index.point_index(&target, &[])
-      .unwrap_or(Self::displace_from_start(start, &movement, &config.flow, length));
+  }
+
+  fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+    let attrs = Self::open_attributes(&pair, config, canvas);
+
+    let (source, movement, target) = Self::source_movement_target_from_pair(&attrs.attributes, &config.unit);
+    let start = index.point_index(attrs.source.as_ref(), &[]).unwrap_or(*cursor);
+    let end = index.point_index(attrs.target.as_ref(), &[])
+      .unwrap_or(Self::displace_from_start(start, &attrs.movement, &config.flow, attrs.length));
     let (rect, used) = Self::rect_from_points(start, &movement, end);
 
-    index.insert(ShapeName::Arrow, id, used);
-    let node = Primitive(id, rect, rect, Color::BLACK, Shape::Arrow(source, movement, target, caption));
+    index.insert(ShapeName::Arrow, attrs.id, used);
+
+    let node = Primitive(
+      attrs.id, rect, rect, Color::BLACK,
+      Shape::Arrow(source, movement, target, attrs.caption));
     Some((used, node))
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::identified(&pair);
-    let caption = Conversion::caption(&pair, canvas);
-    let arrows = Conversion::arrows(&pair);
-    let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
+    let attrs = Self::open_attributes(&pair, config, canvas);
 
-    let (start, movement, end) = Self::points_from_pair(&pair, index, cursor, config, length);
-    let (rect, used) = Self::rect_from_points(start, &movement, end);
+    let start = index.point_index(attrs.source.as_ref(), &[]).unwrap_or(*cursor);
+    let end = index.point_index(attrs.target.as_ref(), &[])
+      .unwrap_or(Self::displace_from_start(start, &attrs.movement, &config.flow, attrs.length));
 
-    if let Some((caption, movement)) = caption.as_ref().zip(movement.as_ref()) {
+    let (rect, used) = Self::rect_from_points(start, &attrs.movement, end);
+
+    if let Some((caption, movement)) = attrs.caption.as_ref().zip(attrs.movement.as_ref()) {
       if caption.inner.vertical() && movement.edge.vertical() {
         info!("VERTICAL! {:?}", caption.size);
       }
     }
 
-    index.insert(ShapeName::Line, id, used);
+    index.insert(ShapeName::Line, attrs.id, used);
     let node = Primitive(
-      id, rect, rect, Color::BLACK,
-      Shape::Line(start, movement, end, caption, arrows));
+      attrs.id, rect, rect, Color::BLACK,
+      Shape::Line(start, attrs.movement, end, attrs.caption, attrs.arrows));
     Some((used, node))
   }
 
@@ -399,7 +422,7 @@ impl<'i> Diagram<'i> {
     let mut point = match Conversion::object_edge_from_pair(pair) {
       Some(_) => {
         let object = Conversion::object_edge_from_pair(pair).unwrap();
-        index.point_index(&object, &[]).unwrap()
+        index.point_index(Some(&object), &[]).unwrap()
       }
       None => *cursor
     };
@@ -410,7 +433,7 @@ impl<'i> Diagram<'i> {
       if let Some(degrees) = degrees {
         let edge = Edge::from(degrees as f32);
         let object = ObjectEdge::new(id, edge);
-        point = index.point_index(&object, &[]).unwrap()
+        point = index.point_index(Some(&object), &[]).unwrap()
       }
     };
 
@@ -487,14 +510,6 @@ impl<'i> Diagram<'i> {
         let movement = Movement::new(default, Unit::Px, flow.end.clone());
         start.add(movement.offset())
       })
-  }
-
-  fn points_from_pair(pair: &Pair<Rule>, index: &mut Index, cursor: &Point, config: &Config, default: f32) -> (Point, Option<Movement>, Point) {
-    let (source, movement, target) = Self::source_movement_target_from_pair(pair, &config.unit);
-    let start = index.point_index(&source, &[]).unwrap_or(*cursor);
-    let end = index.point_index(&target, &[])
-      .unwrap_or(Self::displace_from_start(start, &movement, &config.flow, default));
-    (start, movement, end)
   }
 
   fn rect_from_points(start: Point, movement: &Option<Movement>, end: Point) -> (Rect, Rect) {

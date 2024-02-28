@@ -94,12 +94,14 @@ impl Index {
     }
   }
 
-  pub fn point_index(&self, edge: &ObjectEdge, movements: &[Movement]) -> Option<Point> {
-    self.ids.get(&edge.id).map(|rect| {
-      Self::point_from_rect(rect, &edge.edge, movements)
-    }).or_else(|| {
-      error!("{} edge id not found", edge.id);
-      None
+  pub fn point_index(&self, edge: Option<&ObjectEdge>, movements: &[Movement]) -> Option<Point> {
+    edge.and_then(|edge| {
+      self.ids.get(&edge.id).map(|rect| {
+        Self::point_from_rect(rect, &edge.edge, movements)
+      }).or_else(|| {
+        error!("{} edge id not found", edge.id);
+        None
+      })
     })
   }
 
