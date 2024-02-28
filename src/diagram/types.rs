@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::ops::{Add, Mul};
 
 use skia_safe::{Color, Font, Point, Rect, Size, Vector};

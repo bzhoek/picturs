@@ -16,6 +16,4 @@ mod doc {
   mod edges;
 }
 
-mod diagram;
-
 mod shapes;

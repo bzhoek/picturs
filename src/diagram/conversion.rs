@@ -1,5 +1,8 @@
 #![allow(dead_code)]
 
+#[cfg(test)]
+mod tests;
+
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use skia_safe::Color;
@@ -15,14 +18,14 @@ const INCH: f32 = 118.;
 pub const WIDTH: f32 = INCH * 0.75;
 pub const HEIGHT: f32 = INCH * 0.5;
 
-pub struct Conversion;
+pub(crate) struct Conversion;
 
 impl Conversion {
-  pub fn pair_for(rule: Rule, string: &str) -> Pair<Rule> {
+  pub(crate) fn pair_for(rule: Rule, string: &str) -> Pair<Rule> {
     Self::pairs_for(rule, string).next().unwrap()
   }
 
-  pub fn pairs_for(rule: Rule, string: &str) -> Pairs<Rule> {
+  pub(crate) fn pairs_for(rule: Rule, string: &str) -> Pairs<Rule> {
     DiagramParser::parse(rule, string).unwrap()
   }
 
@@ -40,22 +43,22 @@ impl Conversion {
     pairs.next().map(|p| p.as_str())
   }
 
-  pub fn colors_from(pair: &Pair<Rule>) -> (Color, Color, Color) {
+  pub(crate) fn colors_from(pair: &Pair<Rule>) -> (Color, Color, Color) {
     let stroke = Conversion::stroke_color(pair).unwrap_or(Color::BLUE);
     let fill = Conversion::fill_color(pair).unwrap_or(Color::TRANSPARENT);
     let text_color = Conversion::text_color(pair).unwrap_or(Color::BLACK);
     (stroke, fill, text_color)
   }
 
-  pub fn stroke_color(pair: &Pair<Rule>) -> Option<Color> {
+  pub(crate) fn stroke_color(pair: &Pair<Rule>) -> Option<Color> {
     Rules::dig_rule(pair, Rule::color).and_then(Self::color)
   }
 
-  pub fn fill_color(pair: &Pair<Rule>) -> Option<Color> {
+  pub(crate) fn fill_color(pair: &Pair<Rule>) -> Option<Color> {
     Rules::dig_rule(pair, Rule::fill).and_then(Self::color)
   }
 
-  pub fn text_color(pair: &Pair<Rule>) -> Option<Color> {
+  pub(crate) fn text_color(pair: &Pair<Rule>) -> Option<Color> {
     Rules::dig_rule(pair, Rule::text_color).and_then(Self::color)
   }
 
@@ -77,23 +80,23 @@ impl Conversion {
       })
   }
 
-  pub fn string_dig<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
+  pub(crate) fn string_dig<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
     Rules::dig_rule(pair, rule)
       .map(|p| p.as_str())
   }
 
-  pub fn string_find<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
+  pub(crate) fn string_find<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
     Rules::find_rule(pair, rule)
       .map(|p| p.as_str())
   }
 
-  pub fn identified<'a>(pair: &Pair<'a, Rule>) -> Option<&'a str> {
+  pub(crate) fn identified<'a>(pair: &Pair<'a, Rule>) -> Option<&'a str> {
     Rules::dig_rule(pair, Rule::identified)
       .map(|p| p.into_inner().next().unwrap().as_str())
   }
 
   #[allow(clippy::unwrap_or_default)]
-  pub fn caption<'a>(pair: &Pair<'a, Rule>, canvas: &Canvas) -> Option<Caption<'a>> {
+  pub(crate) fn caption<'a>(pair: &Pair<'a, Rule>, canvas: &Canvas) -> Option<Caption<'a>> {
     Rules::find_rule(pair, Rule::caption).map(|caption| {
       let mut text: Option<&str> = None;
       let mut alignment: Option<(Edge, Edge)> = None;
@@ -123,7 +126,7 @@ impl Conversion {
     })
   }
 
-  pub fn arrows(pair: &Pair<Rule>) -> Arrows {
+  pub(crate) fn arrows(pair: &Pair<Rule>) -> Arrows {
     Rules::find_rule(pair, Rule::arrows)
       .map(|pair| pair.as_str().into())
       .unwrap_or_default()
@@ -136,39 +139,39 @@ impl Conversion {
     Movement { length, edge: direction.into() }
   }
 
-  pub fn length_dig(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Length> {
+  pub(crate) fn length_dig(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Length> {
     Rules::dig_rule(pair, rule)
       .map(|pair| Self::length_from(pair, unit))
   }
 
-  pub fn length_from(pair: Pair<Rule>, unit: &Unit) -> Length {
+  pub(crate) fn length_from(pair: Pair<Rule>, unit: &Unit) -> Length {
     let mut width = pair.into_inner();
     let length = Self::next_to_f32(&mut width).unwrap();
     let unit = Self::next_to_string(&mut width).map(|str| str.into()).unwrap_or(unit.clone());
     Length::new(length, unit)
   }
 
-  pub fn radius(attributes: &Pair<Rule>, unit: &Unit) -> Option<Length> {
+  pub(crate) fn radius(attributes: &Pair<Rule>, unit: &Unit) -> Option<Length> {
     Conversion::length_dig(attributes, Rule::radius, unit)
   }
 
-  pub fn width(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
+  pub(crate) fn width(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_dig(attributes, Rule::width, unit).map(|length| length.pixels())
   }
 
-  pub fn height(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
+  pub(crate) fn height(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_dig(attributes, Rule::height, unit).map(|length| length.pixels())
   }
 
-  pub fn length(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
+  pub(crate) fn length(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_dig(attributes, Rule::length, unit).map(|length| length.pixels())
   }
 
-  pub fn padding(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
+  pub(crate) fn padding(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_dig(attributes, Rule::padding, unit).map(|length| length.pixels())
   }
 
-  pub fn object_edge_from_pair(pair: &Pair<Rule>) -> Option<ObjectEdge> {
+  pub(crate) fn object_edge_from_pair(pair: &Pair<Rule>) -> Option<ObjectEdge> {
     Rules::dig_rule(pair, Rule::object_edge).map(Self::pair_to_object_edge)
   }
 
@@ -186,7 +189,7 @@ impl Conversion {
     ObjectEdge::new(id, edge)
   }
 
-  pub fn object_edge_in_degrees_from(pair: Pair<Rule>) -> (&str, Option<i32>) {
+  pub(crate) fn object_edge_in_degrees_from(pair: Pair<Rule>) -> (&str, Option<i32>) {
     let mut inner = pair.into_inner();
     let id = inner.next().unwrap().as_str();
 
@@ -223,12 +226,12 @@ impl Conversion {
     (id, Some(degrees))
   }
 
-  pub fn flow(pair: &Pair<Rule>) -> Option<Flow> {
+  pub(crate) fn flow(pair: &Pair<Rule>) -> Option<Flow> {
     Rules::dig_rule(pair, Rule::flow)
       .map(|pair| Flow::new(pair.as_str()))
   }
 
-  pub fn location_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
+  pub(crate) fn location_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
     Rules::find_rule(pair, rule).map(|pair| {
       let mut fraction: Option<f32> = None;
       let mut object: Option<ObjectEdge> = None;
@@ -256,11 +259,11 @@ impl Conversion {
     })
   }
 
-  pub fn rule_to_movement(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Movement> {
+  pub(crate) fn rule_to_movement(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Movement> {
     Rules::find_rule(pair, rule).map(|pair| Self::movement_from(pair, unit))
   }
 
-  pub fn movements_from_pair(pair: &Pair<Rule>, unit: &Unit) -> Option<Vec<Movement>> {
+  pub(crate) fn movements_from_pair(pair: &Pair<Rule>, unit: &Unit) -> Option<Vec<Movement>> {
     Rules::find_rule(pair, Rule::movements)
       .map(|pair| {
         pair.into_inner()
@@ -269,7 +272,7 @@ impl Conversion {
       })
   }
 
-  pub fn location_from(pair: &Pair<Rule>, end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Movement>, ObjectEdge)> {
+  pub(crate) fn location_from(pair: &Pair<Rule>, end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Movement>, ObjectEdge)> {
     Rules::find_rule(pair, Rule::location)
       .map(|p| {
         let mut object: Option<ObjectEdge> = None;
