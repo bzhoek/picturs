@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use std::ops::Add;
 
 use log::{debug, info, warn};
@@ -89,8 +92,8 @@ impl<'i> Diagram<'i> {
       Rule::file => Self::file_from(&pair, config, index, cursor, canvas),
       Rule::oval => Self::oval_from(&pair, config, index, cursor, canvas),
       Rule::rectangle => Self::box_from(&pair, config, index, cursor, canvas),
-      Rule::arrow => Self::arrow_from(pair, index, cursor, config, canvas),
-      Rule::line => Self::line_from(pair, index, cursor, config, canvas),
+      Rule::arrow => Self::arrow_from(pair, config, index, cursor, canvas),
+      Rule::line => Self::line_from(pair, config, index, cursor, canvas),
       Rule::text => Self::text_from(&pair, config, index, cursor, canvas),
       Rule::dot => Self::dot_from(&pair, config, index, cursor, canvas),
       Rule::flow_to => Self::flow_from(pair, cursor, config),
@@ -307,7 +310,7 @@ impl<'i> Diagram<'i> {
     Some((rect, rectangle))
   }
 
-  fn arrow_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
     let caption = Conversion::caption(&pair, canvas);
     let length = Conversion::length(&pair, &config.unit).unwrap_or(config.line.pixels());
@@ -330,7 +333,7 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn line_from<'a>(pair: Pair<'a, Rule>, index: &mut Index, cursor: &Point, config: &Config, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(&pair);
     let caption = Conversion::caption(&pair, canvas);
     let arrows = Conversion::arrows(&pair);

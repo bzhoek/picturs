@@ -13,3 +13,17 @@ For straight edges, `intersect_factor` returns an interpolation factor somewhere
 Composite shapes have some straight edges, but also curved edges, for example the cylinder. The cylinder has two straight edges, left and right, and two curved edges, top and bottom. The top and bottom are ellipses.
 
 Rectangles with rounded corners are also composite shapes, as the corners are curved.
+
+## DRY
+
+The `same` attribute tries to cut down on duplicating the same attributes over and over.
+
+```
+box.pic1 ht 2in wd 1in "Primary Interrupt Controller"
+line from 1/8 pic1.w 1.5in left "Timer" ljust opaque ->
+line from 2/8 pic1.w same "Keyboard"
+
+box.pic2 same "Primary Interrupt Controller"
+```
+
+In this example, the second `line` gets the `1.5in left` movement and `ljust opaque ->` from the first `line`. The `same` attributes only takes values for empty `Option`s

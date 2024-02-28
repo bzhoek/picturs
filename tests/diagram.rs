@@ -3,9 +3,11 @@ mod diagram {
   use std::ops::Mul;
 
   use skia_safe::{Color, Point, Rect, Size, Vector};
+  use picturs::diagram::conversion::Conversion;
 
   use picturs::diagram::create_diagram;
   use picturs::diagram::index::Index;
+  use picturs::diagram::parser::Rule;
   use picturs::diagram::types::{Edge, Movement, Node, Paragraph, Radius, Shape, Unit};
   use picturs::diagram::types::Node::{Container, Primitive};
   use picturs::diagram::types::Shape::Box;
@@ -18,6 +20,12 @@ mod diagram {
       Paragraph { text: title, widths: vec!(width), height: size.height, size }
     });
     Box(Color::BLACK, paragraph, Radius::default(), Color::TRANSPARENT, None)
+  }
+
+  #[test]
+  fn should_copy_same_attributes_from_line() {
+    let pic = Conversion::pair_for(Rule::rectangle, r#"box.pic1 ht 2in wd 1in "Primary Interrupt Controller""#);
+    dbg!(pic);
   }
 
   #[test]
