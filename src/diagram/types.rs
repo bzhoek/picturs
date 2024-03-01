@@ -76,14 +76,13 @@ impl From<&str> for Arrows {
 pub struct Config {
   pub(crate) flow: Flow,
   pub(crate) unit: Unit,
-  pub(crate) width: f32,
-  pub(crate) height: f32,
   pub(crate) line: Length,
-  pub(crate) dot: Length,
   pub(crate) circle: ShapeConfig,
+  pub(crate) dot: Length,
   pub(crate) ellipse: ShapeConfig,
   pub(crate) oval: ShapeConfig,
   pub(crate) rectangle: ShapeConfig,
+  pub(crate) text: ShapeConfig,
   pub(crate) file: ShapeConfig,
   pub(crate) cylinder: ShapeConfig,
   pub(crate) font: Font,
@@ -102,22 +101,27 @@ impl Default for ShapeConfig {
   }
 }
 
+impl Default for Config {
+  fn default() -> Self {
+    Self::new(Flow::new("left"))
+  }
+}
+
 impl Config {
-  pub fn new(flow: Flow, width: f32, height: f32) -> Self {
+  pub fn new(flow: Flow) -> Self {
     let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
     let font = Font::from_typeface(typeface, 17.0);
     Self {
       flow,
-      width,
-      height,
       dot: Radius::new(4., Unit::Px),
-      line: Length::new(2., Unit::Cm),
-      unit: Unit::default(),
       circle: ShapeConfig::default(),
+      cylinder: ShapeConfig::default(),
       ellipse: ShapeConfig::default(),
+      line: Length::new(2., Unit::Cm),
       oval: ShapeConfig::default(),
       rectangle: ShapeConfig::default(),
-      cylinder: ShapeConfig::default(),
+      text: ShapeConfig::default(),
+      unit: Unit::default(),
       file: ShapeConfig {
         padding: 8.0,
         width: HEIGHT.trunc(),

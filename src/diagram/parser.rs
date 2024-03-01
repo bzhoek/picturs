@@ -68,8 +68,7 @@ impl<'i> Diagram<'i> {
 
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
     let top = Conversion::pairs_for(Rule::picture, string);
-    let flow = Flow::new("left");
-    let config = Config::new(flow, 120., 60.);
+    let config = Config::default();
     let mut index = Index::default();
     let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &Point::new(0.5, 0.5), config, &mut index);
     self.nodes = ast;
@@ -387,7 +386,7 @@ impl<'i> Diagram<'i> {
         Paragraph { text: title, widths: vec![size.width], height: size.height, size }
       }
       None => {
-        let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.width);
+        let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.text.width);
         let (widths, height) = config.measure_strings(title, width - 2. * TEXT_PADDING);
         let size = Size::new(width, height);
         Paragraph { text: title, widths, height, size }

@@ -3,7 +3,7 @@ mod tests {
   use skia_safe::{Font, FontMgr, FontStyle, PaintStyle, Point, Rect, Size};
 
   use picturs::assert_canvas;
-  use picturs::diagram::types::Edge;
+  use picturs::diagram::types::{Config, Edge, Flow};
   use picturs::skia::Canvas;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
@@ -18,23 +18,23 @@ mod tests {
 
   #[test]
   fn measure_str() {
-    let canvas = Canvas::new((1024, 1024));
-    let bounds = canvas.measure_str(TQBF);
+    let config = Config::default();
+    let bounds = config.measure_string(TQBF);
     assert_eq!(bounds, Size::new(331., 17.));
   }
 
   #[test]
   fn measure_whitespace_str() {
-    let canvas = Canvas::new((1024, 1024));
-    let bounds = canvas.measure_str(" TQBF ");
+    let config = Config::default();
+    let bounds = config.measure_string(" TQBF ");
     assert_eq!(bounds, Size::new(55., 17.));
   }
 
   #[test]
   fn center_str() {
-    let canvas = Canvas::new((1024, 1024));
+    let config = Config::default();
     let rect = Rect::from_xywh(40., 40., 10., 20.);
-    let bounds = canvas.measure_str("Title");
+    let bounds = config.measure_string("Title");
     let edge = Edge::from("c");
     let bounds = Rect::from_size(bounds);
     let offset = edge.topleft_offset(&bounds);
