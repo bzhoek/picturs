@@ -1,8 +1,5 @@
 #![allow(dead_code)]
 
-#[cfg(test)]
-mod tests;
-
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use skia_safe::Color;
@@ -10,8 +7,10 @@ use skia_safe::Color;
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Arrows, Caption, Edge, Flow, Length, Movement, ObjectEdge, Unit};
-use crate::skia::Canvas;
+use crate::diagram::types::{Arrows, Caption, Config, Edge, Flow, Length, Movement, ObjectEdge, Unit};
+
+#[cfg(test)]
+mod tests;
 
 const INCH: f32 = 118.;
 
@@ -96,7 +95,7 @@ impl Conversion {
   }
 
   #[allow(clippy::unwrap_or_default)]
-  pub(crate) fn caption<'a>(pair: &Pair<'a, Rule>, canvas: &Canvas) -> Option<Caption<'a>> {
+  pub(crate) fn caption<'a>(pair: &Pair<'a, Rule>, config: &Config) -> Option<Caption<'a>> {
     Rules::find_rule(pair, Rule::caption).map(|caption| {
       let mut text: Option<&str> = None;
       let mut alignment: Option<(Edge, Edge)> = None;
@@ -121,7 +120,7 @@ impl Conversion {
 
       let (inner, outer) = alignment.unwrap_or((Edge::center(), Edge::center()));
       let text = text.unwrap();
-      let size = canvas.measure_str(text);
+      let size = config.measure_string(text);
       Caption { text, inner: inner.mirror(), outer, size, opaque }
     })
   }

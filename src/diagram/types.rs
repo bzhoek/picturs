@@ -3,7 +3,7 @@ mod tests;
 
 use std::ops::{Add, Mul};
 
-use skia_safe::{Color, Font, Point, Rect, Size, Vector};
+use skia_safe::{Color, Font, FontMgr, FontStyle, Point, Rect, scalar, Size, Vector};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
@@ -86,6 +86,7 @@ pub struct Config {
   pub(crate) rectangle: ShapeConfig,
   pub(crate) file: ShapeConfig,
   pub(crate) cylinder: ShapeConfig,
+  pub(crate) font: Font,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -103,6 +104,8 @@ impl Default for ShapeConfig {
 
 impl Config {
   pub fn new(flow: Flow, width: f32, height: f32) -> Self {
+    let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
+    let font = Font::from_typeface(typeface, 17.0);
     Self {
       flow,
       width,
@@ -120,7 +123,36 @@ impl Config {
         width: HEIGHT.trunc(),
         height: WIDTH.trunc(),
       },
+      font,
     }
+  }
+
+  pub fn measure_string(&self, str: &str) -> Size {
+    let (width_with_whitespace, _bounds) = self.font.measure_str(str, None);
+    let (font_height, _font_metrics) = self.font.metrics();
+    // _bounds.size()
+    Size::new(width_with_whitespace.ceil(), font_height.ceil())
+  }
+
+  pub fn measure_strings(&self, text: &str, width: f32) -> (Vec<scalar>, scalar) {
+    let (font_height, _font_metrics) = self.font.metrics();
+    let advance = font_height / 4.;
+
+    let (mut x, mut y) = (0.0, font_height);
+    let mut widths: Vec<scalar> = vec!();
+
+    for word in text.split_whitespace() {
+      let (word_width, _word_rect) = self.font.measure_str(word, None);
+      if x + word_width > width {
+        y += font_height;
+        widths.push(x.ceil());
+        x = 0.;
+      }
+      x += word_width + advance;
+    }
+
+    widths.push(x.ceil());
+    (widths, y)
   }
 }
 

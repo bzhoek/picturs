@@ -68,23 +68,22 @@ impl<'i> Diagram<'i> {
 
   pub fn parse_string(&mut self, string: &'i str) -> Pairs<'i, Rule> {
     let top = Conversion::pairs_for(Rule::picture, string);
-    let mut canvas = Canvas::new(self.size);
     let flow = Flow::new("left");
     let config = Config::new(flow, 120., 60.);
     let mut index = Index::default();
-    let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &mut canvas, &Point::new(0.5, 0.5), config, &mut index);
+    let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &Point::new(0.5, 0.5), config, &mut index);
     self.nodes = ast;
     self.bounds = bounds;
     top
   }
 
-  pub fn nodes_from<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, canvas: &mut Canvas, offset: &Point, mut config: Config, index: &mut Index)
+  pub fn nodes_from<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, offset: &Point, mut config: Config, index: &mut Index)
                         -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
     let mut cursor = Point::new(offset.x, offset.y);
 
     for pair in pairs.into_iter() {
-      let result = Self::node_from(pair, &mut config, index, &mut cursor, canvas);
+      let result = Self::node_from(pair, &mut config, index, &mut cursor);
 
       if let Some((rect, node)) = result {
         ast.push(node);
@@ -96,27 +95,27 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index, cursor: &mut Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
     let result = match pair.as_rule() {
-      Rule::container => Self::container_from(&pair, config, index, cursor, canvas),
-      Rule::circle => Self::circle_from(&pair, config, index, cursor, canvas),
-      Rule::cylinder => Self::cylinder_from(&pair, config, index, cursor, canvas),
-      Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor, canvas),
-      Rule::file => Self::file_from(&pair, config, index, cursor, canvas),
-      Rule::oval => Self::oval_from(&pair, config, index, cursor, canvas),
-      Rule::rectangle => Self::box_from(&pair, config, index, cursor, canvas),
-      Rule::arrow => Self::arrow_from(pair, config, index, cursor, canvas),
-      Rule::line => Self::line_from(pair, config, index, cursor, canvas),
-      Rule::text => Self::text_from(&pair, config, index, cursor, canvas),
-      Rule::dot => Self::dot_from(&pair, config, index, cursor, canvas),
+      Rule::container => Self::container_from(&pair, config, index, cursor),
+      Rule::circle => Self::circle_from(&pair, config, index, cursor),
+      Rule::cylinder => Self::cylinder_from(&pair, config, index, cursor),
+      Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor),
+      Rule::file => Self::file_from(&pair, config, index, cursor),
+      Rule::oval => Self::oval_from(&pair, config, index, cursor),
+      Rule::rectangle => Self::box_from(&pair, config, index, cursor),
+      Rule::arrow => Self::arrow_from(pair, config, index, cursor),
+      Rule::line => Self::line_from(pair, config, index, cursor),
+      Rule::text => Self::text_from(&pair, config, index, cursor),
+      Rule::dot => Self::dot_from(&pair, config, index, cursor),
       Rule::flow_to => Self::flow_from(pair, cursor, config),
       Rule::move_to => Self::move_from(&pair, cursor, &config.unit),
       Rule::font_config => {
         let name = Conversion::string_dig(&pair, Rule::inner).unwrap();
         let typeface = FontMgr::default().match_family_style(name, FontStyle::default()).unwrap();
-        canvas.font = Font::from_typeface(typeface, 17.0);
+        config.font = Font::from_typeface(typeface, 17.0);
         let rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-        let node = Primitive(None, rect, rect, Color::BLACK, Shape::Font(canvas.font.clone()));
+        let node = Primitive(None, rect, rect, Color::BLACK, Shape::Font(config.font.clone()));
         Some((rect, node))
       }
       Rule::unit_config => {
@@ -167,7 +166,7 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let attrs = Self::closed_attributes(pair, config, &config.rectangle);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
@@ -181,14 +180,14 @@ impl<'i> Diagram<'i> {
       Conversion::flow(&attrs.attributes).into_iter().for_each(|flow| {
         config.flow = flow;
       });
-      Self::nodes_from(pair.clone().into_inner(), vec![], canvas, &inset, config, index)
+      Self::nodes_from(pair.clone().into_inner(), vec![], &inset, config, index)
     };
 
     used = inner.with_outset((attrs.padding, attrs.padding));
 
     if let Some(title) = attrs.title {
       let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
-      let (_widths, down) = canvas.paragraph(title, (0., 0.), text_inset.width());
+      let (_widths, down) = config.measure_strings(title, text_inset.width());
       used.bottom = inner.bottom + down + TEXT_PADDING;
     }
 
@@ -199,10 +198,10 @@ impl<'i> Diagram<'i> {
     Some((rect, Container(attrs.id, attrs.radius, attrs.title, rect, used, nodes)))
   }
 
-  fn circle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn circle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let attrs = Self::closed_attributes(pair, config, &config.circle);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, canvas);
+    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, height, height);
@@ -218,10 +217,10 @@ impl<'i> Diagram<'i> {
     Some((used, circle))
   }
 
-  fn cylinder_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn cylinder_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let attrs = Self::closed_attributes(pair, config, &config.cylinder);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, canvas);
+    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, height);
@@ -237,10 +236,10 @@ impl<'i> Diagram<'i> {
     Some((used, cylinder))
   }
 
-  fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let attrs = Self::closed_attributes(pair, config, &config.ellipse);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, canvas);
+    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, height);
@@ -256,10 +255,10 @@ impl<'i> Diagram<'i> {
     Some((used, ellipse))
   }
 
-  fn file_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn file_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let attrs = Self::closed_attributes(pair, config, &config.file);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, canvas);
+    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, height);
@@ -280,12 +279,9 @@ impl<'i> Diagram<'i> {
     Some((rect, file))
   }
 
-  fn oval_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn oval_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let attrs = Self::closed_attributes(pair, config, &config.oval);
-
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, canvas);
-    let _height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
-
+    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, attrs.height);
 
     Self::position_rect_on_edge(&config.flow.start, &attrs.location, &mut used);
@@ -299,10 +295,10 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let attrs = Self::closed_attributes(pair, config, &config.rectangle);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, canvas);
+    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, height);
@@ -323,12 +319,12 @@ impl<'i> Diagram<'i> {
     Some((rect, rectangle))
   }
 
-  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, canvas: &mut Canvas) -> OpenAttributes<'a> {
+  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config) -> OpenAttributes<'a> {
     let attributes = Rules::get_rule(pair, Rule::line_attributes);
 
     OpenAttributes {
       id: Conversion::identified(pair),
-      caption: Conversion::caption(&attributes, canvas),
+      caption: Conversion::caption(&attributes, config),
       length: Conversion::length(&attributes, &config.unit).unwrap_or(config.line.pixels()),
       arrows: Conversion::arrows(&attributes),
       source: Conversion::location_to_edge(&attributes, Rule::source),
@@ -339,8 +335,8 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::open_attributes(&pair, config, canvas);
+  fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+    let attrs = Self::open_attributes(&pair, config);
 
     let (source, movement, target) = Self::source_movement_target_from_pair(&attrs.attributes, &config.unit);
     let start = index.point_index(attrs.source.as_ref(), &[]).unwrap_or(*cursor);
@@ -356,8 +352,8 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::open_attributes(&pair, config, canvas);
+  fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+    let attrs = Self::open_attributes(&pair, config);
 
     let start = index.point_index(attrs.source.as_ref(), &[]).unwrap_or(*cursor);
     let end = index.point_index(attrs.target.as_ref(), &[])
@@ -378,7 +374,7 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn text_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
+  fn text_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let id = Conversion::identified(pair);
     let title = Conversion::string_dig(pair, Rule::inner).unwrap();
     let attributes = Rules::find_rule(pair, Rule::text_attributes).unwrap();
@@ -387,12 +383,12 @@ impl<'i> Diagram<'i> {
     let fit = Rules::dig_rule(&attributes, Rule::fit);
     let paragraph = match fit {
       Some(_) => {
-        let size = canvas.measure_str(title);
+        let size = config.measure_string(title);
         Paragraph { text: title, widths: vec![size.width], height: size.height, size }
       }
       None => {
         let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.width);
-        let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+        let (widths, height) = config.measure_strings(title, width - 2. * TEXT_PADDING);
         let size = Size::new(width, height);
         Paragraph { text: title, widths, height, size }
       }
@@ -412,8 +408,8 @@ impl<'i> Diagram<'i> {
     Some((used, text))
   }
 
-  fn dot_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point, canvas: &mut Canvas) -> Option<(Rect, Node<'a>)> {
-    let caption = Conversion::caption(pair, canvas);
+  fn dot_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+    let caption = Conversion::caption(pair, config);
     let attributes = Rules::find_rule(pair, Rule::dot_attributes).unwrap();
     let _same = Rules::dig_rule(&attributes, Rule::same);
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
@@ -521,9 +517,9 @@ impl<'i> Diagram<'i> {
     (rect, used)
   }
 
-  fn paragraph_height<'a>(title: Option<&'a str>, width: f32, canvas: &mut Canvas) -> Option<Paragraph<'a>> {
+  fn paragraph_height<'a>(title: Option<&'a str>, width: f32, config: &Config) -> Option<Paragraph<'a>> {
     title.map(|title| {
-      let (widths, height) = canvas.paragraph(title, (0., 0.), width - 2. * TEXT_PADDING);
+      let (widths, height) = config.measure_strings(title, width - 2. * TEXT_PADDING);
       let size = Size::new(width, height);
       Paragraph { text: title, widths, height, size }
     })
