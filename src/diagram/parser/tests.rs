@@ -1,33 +1,29 @@
 use std::ops::Mul;
+
 use skia_safe::{Color, Point, Rect, Size, Vector};
 
 use crate::diagram::conversion::Conversion;
 use crate::diagram::create_diagram;
 use crate::diagram::index::Index;
 use crate::diagram::parser::{Diagram, Rule};
-use crate::diagram::types::{Config, Edge, Flow, Movement, Node, Paragraph, Radius, Shape, Unit};
+use crate::diagram::types::{Config, Edge, Movement, Node, Paragraph, Radius, Shape, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
-use crate::skia::Canvas;
 
 static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
 #[test]
 fn should_copy_same_attributes_from_line() {
   let mut index = Index::default();
-  let mut canvas = Canvas::new((100, 100));
-  let flow = Flow::new("left");
-  let config = Config::new(flow, 120., 60.);
+  let config = Config::default();
   let cursor = Point::new(0., 0.);
   let rectangle = Conversion::pair_for(Rule::rectangle, r#"box.pic1 ht 2in wd 1in "Primary Interrupt Controller""#);
   Diagram::box_from(&rectangle, &config, &mut index, &cursor);
 
-  // let line = Conversion::pair_for(Rule::rectangle, r#"box.pic1 ht 2in wd 1in "Primary Interrupt Controller""#);
-  // Diagram::line_from(line, &config, &mut index, &cursor, &mut canvas);
+  let line = Conversion::pair_for(Rule::line, r#"line from 1/8 pic1.w 1.5in left "Timer" ljust opaque ->"#);
+  Diagram::line_from(line, &config, &mut index, &cursor);
 
-  // let same = Conversion::pair_for(Rule::rectangle, r#"line from 2/8 pic1.w same "Keyboard""#);
-  // Diagram::line_from(same, &config, &mut index, &cursor, &mut canvas);
-
-  dbg!(rectangle);
+  let same = Conversion::pair_for(Rule::line, r#"line from 2/8 pic1.w same "Keyboard""#);
+  Diagram::line_from(same, &config, &mut index, &cursor);
 }
 
 #[test]

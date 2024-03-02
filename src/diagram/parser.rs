@@ -31,8 +31,8 @@ struct ClosedAttributes<'a> {
   text: Color,
 }
 
-#[derive(Debug)]
-struct OpenAttributes<'a> {
+#[derive(Clone, Debug)]
+pub struct OpenAttributes<'a> {
   id: Option<&'a str>,
   attributes: Pair<'a, Rule>,
   same: bool,
@@ -76,7 +76,7 @@ impl<'i> Diagram<'i> {
     top
   }
 
-  pub fn nodes_from<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, offset: &Point, mut config: Config, index: &mut Index)
+  pub fn nodes_from<'a>(pairs: Pairs<'a, Rule>, mut ast: Vec<Node<'a>>, offset: &Point, mut config: Config, index: &mut Index<'a>)
                         -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
     let mut cursor = Point::new(offset.x, offset.y);
@@ -94,7 +94,7 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
+  fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index<'a>, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
     let result = match pair.as_rule() {
       Rule::container => Self::container_from(&pair, config, index, cursor),
       Rule::circle => Self::circle_from(&pair, config, index, cursor),
@@ -165,7 +165,7 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let attrs = Self::closed_attributes(pair, config, &config.rectangle);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
@@ -329,7 +329,7 @@ impl<'i> Diagram<'i> {
       source: Conversion::location_to_edge(&attributes, Rule::source),
       target: Conversion::location_to_edge(&attributes, Rule::target),
       movement: Conversion::rule_to_movement(&attributes, Rule::movement, &config.unit),
-      same: Rules::find_rule(pair, Rule::same).is_some(),
+      same: Rules::find_rule(&attributes, Rule::same).is_some(),
       attributes,
     }
   }
@@ -351,8 +351,24 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::open_attributes(&pair, config);
+  fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+    let mut attrs = Self::open_attributes(&pair, config);
+
+    if attrs.same {
+      if let Some((_shape, last)) = index.last_open(ShapeName::Line) {
+        attrs.arrows = last.arrows.clone();
+        if attrs.movement.is_none() {
+          attrs.movement = last.movement.clone();
+        }
+        if let Some(caption) = &mut attrs.caption {
+          if let Some(last) = last.caption.as_ref() {
+            caption.inner = last.inner.clone();
+            caption.outer = last.outer.clone();
+            caption.opaque = last.opaque;
+          }
+        }
+      }
+    }
 
     let start = index.point_index(attrs.source.as_ref(), &[]).unwrap_or(*cursor);
     let end = index.point_index(attrs.target.as_ref(), &[])
@@ -367,6 +383,7 @@ impl<'i> Diagram<'i> {
     }
 
     index.insert(ShapeName::Line, attrs.id, used);
+    index.add_open(ShapeName::Line, attrs.clone());
     let node = Primitive(
       attrs.id, rect, rect, Color::BLACK,
       Shape::Line(start, attrs.movement, end, attrs.caption, attrs.arrows));

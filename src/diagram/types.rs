@@ -43,7 +43,7 @@ pub struct Paragraph<'a> {
   pub size: Size,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Caption<'a> {
   pub text: &'a str,
   pub inner: Edge,
@@ -52,7 +52,7 @@ pub struct Caption<'a> {
   pub opaque: bool,
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum Arrows {
   #[default]
   None,
@@ -369,7 +369,7 @@ impl Length {
   }
 }
 
-#[derive(Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Movement {
   pub(crate) length: Length,
   pub edge: Edge,
@@ -394,7 +394,7 @@ impl Movement {
   }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ObjectEdge {
   pub(crate) id: String,
   pub(crate) edge: Edge,

@@ -3,7 +3,7 @@ mod tests {
   use skia_safe::{Font, FontMgr, FontStyle, PaintStyle, Point, Rect, Size};
 
   use picturs::assert_canvas;
-  use picturs::diagram::types::{Config, Edge, Flow};
+  use picturs::diagram::types::{Config, Edge};
   use picturs::skia::Canvas;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
