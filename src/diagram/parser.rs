@@ -19,7 +19,6 @@ use crate::skia::Canvas;
 #[derive(Debug)]
 struct ClosedAttributes<'a> {
   id: Option<&'a str>,
-  attributes: Pair<'a, Rule>,
   width: f32,
   height: f32,
   padding: f32,
@@ -34,7 +33,6 @@ struct ClosedAttributes<'a> {
 #[derive(Clone, Debug)]
 pub struct OpenAttributes<'a> {
   id: Option<&'a str>,
-  attributes: Pair<'a, Rule>,
   same: bool,
   caption: Option<Caption<'a>>,
   length: f32,
@@ -146,11 +144,11 @@ impl<'i> Diagram<'i> {
     result
   }
 
-  fn closed_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> ClosedAttributes<'a> {
+  fn closed_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> (ClosedAttributes<'a>, Pair<'a, Rule>) {
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let (stroke, fill, text) = Conversion::colors_from(&attributes);
 
-    ClosedAttributes {
+    (ClosedAttributes {
       id: Conversion::identified(pair),
       width: Conversion::width(&attributes, &config.unit).unwrap_or(shape.width),
       height: Conversion::height(&attributes, &config.unit).unwrap_or(shape.height),
@@ -158,15 +156,14 @@ impl<'i> Diagram<'i> {
       radius: Conversion::radius(&attributes, &config.unit).unwrap_or_default(),
       title: Conversion::string_dig(&attributes, Rule::inner),
       location: Conversion::location_from(&attributes, &Edge::from("c"), &config.unit),
-      attributes,
       stroke,
       fill,
       text,
-    }
+    }, attributes)
   }
 
   fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::closed_attributes(pair, config, &config.rectangle);
+    let (attrs, attributes) = Self::closed_attributes(pair, config, &config.rectangle);
 
     let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
     index.position_rect(&attrs.location, &mut used);
@@ -176,7 +173,7 @@ impl<'i> Diagram<'i> {
 
     let (nodes, inner) = {
       let mut config = config.clone();
-      Conversion::flow(&attrs.attributes).into_iter().for_each(|flow| {
+      Conversion::flow(&attributes).into_iter().for_each(|flow| {
         config.flow = flow;
       });
       Self::nodes_from(pair.clone().into_inner(), vec![], &inset, config, index)
@@ -198,7 +195,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn circle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::closed_attributes(pair, config, &config.circle);
+    let (attrs, _) = Self::closed_attributes(pair, config, &config.circle);
 
     let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
@@ -217,7 +214,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn cylinder_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::closed_attributes(pair, config, &config.cylinder);
+    let (attrs, _) = Self::closed_attributes(pair, config, &config.cylinder);
 
     let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
@@ -236,7 +233,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::closed_attributes(pair, config, &config.ellipse);
+    let (attrs, _) = Self::closed_attributes(pair, config, &config.ellipse);
 
     let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
@@ -255,7 +252,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn file_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::closed_attributes(pair, config, &config.file);
+    let (attrs, _) = Self::closed_attributes(pair, config, &config.file);
 
     let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
@@ -279,7 +276,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn oval_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::closed_attributes(pair, config, &config.oval);
+    let (attrs, _) = Self::closed_attributes(pair, config, &config.oval);
+
     let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, attrs.height);
 
@@ -295,7 +293,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::closed_attributes(pair, config, &config.rectangle);
+    let (attrs, _) = Self::closed_attributes(pair, config, &config.rectangle);
 
     let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
     let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
@@ -318,10 +316,10 @@ impl<'i> Diagram<'i> {
     Some((rect, rectangle))
   }
 
-  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config) -> OpenAttributes<'a> {
+  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config) -> (OpenAttributes<'a>, Pair<'a, Rule>) {
     let attributes = Rules::get_rule(pair, Rule::line_attributes);
 
-    OpenAttributes {
+    (OpenAttributes {
       id: Conversion::identified(pair),
       caption: Conversion::caption(&attributes, config),
       length: Conversion::length(&attributes, &config.unit).unwrap_or(config.line.pixels()),
@@ -330,14 +328,13 @@ impl<'i> Diagram<'i> {
       target: Conversion::location_to_edge(&attributes, Rule::target),
       movement: Conversion::rule_to_movement(&attributes, Rule::movement, &config.unit),
       same: Rules::find_rule(&attributes, Rule::same).is_some(),
-      attributes,
-    }
+    }, attributes)
   }
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = Self::open_attributes(&pair, config);
+    let (attrs, attributes) = Self::open_attributes(&pair, config);
 
-    let (source, movement, target) = Self::source_movement_target_from_pair(&attrs.attributes, &config.unit);
+    let (source, movement, target) = Self::source_movement_target_from_pair(&attributes, &config.unit);
     let start = index.point_index(attrs.source.as_ref(), &[]).unwrap_or(*cursor);
     let end = index.point_index(attrs.target.as_ref(), &[])
       .unwrap_or(Self::displace_from_start(start, &attrs.movement, &config.flow, attrs.length));
@@ -352,7 +349,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let mut attrs = Self::open_attributes(&pair, config);
+    let (mut attrs, _attributes) = Self::open_attributes(&pair, config);
 
     if attrs.same {
       if let Some((_shape, last)) = index.last_open(ShapeName::Line) {
