@@ -28,4 +28,26 @@ mod real_world {
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
   }
+
+  #[test]
+  fn ripestat_dependencies_serial() {
+    let string = r#"
+      right
+      box.ui13 ht 1in wd 2in "jQuery"
+      box.ui20 same wd 4in "Vue"
+      box.ui23 same wd 1in "Revert"
+      box.ui24 same wd 0.5in "UX"
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram!(diagram);
+  }
+
+  #[test]
+  fn ripestat_dependencies_parallel() {
+    let string = r#"
+      path.ui13 up 1in right 3in down 0.5in left 2in down 0.5in left 1in
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram!(diagram);
+  }
 }
