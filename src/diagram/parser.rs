@@ -349,23 +349,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _attributes) = Self::open_attributes(&pair, config);
-
-    if attrs.same {
-      if let Some((_shape, last)) = index.last_open(ShapeName::Line) {
-        attrs.arrows = last.arrows.clone();
-        if attrs.movement.is_none() {
-          attrs.movement = last.movement.clone();
-        }
-        if let Some(caption) = &mut attrs.caption {
-          if let Some(last) = last.caption.as_ref() {
-            caption.inner = last.inner.clone();
-            caption.outer = last.outer.clone();
-            caption.opaque = last.opaque;
-          }
-        }
-      }
-    }
+    let (mut attrs, _) = Self::open_attributes(&pair, config);
+    Self::copy_same_attributes(index, &mut attrs);
 
     let start = index.point_index(attrs.source.as_ref(), &[]).unwrap_or(*cursor);
     let end = index.point_index(attrs.target.as_ref(), &[])
@@ -385,6 +370,26 @@ impl<'i> Diagram<'i> {
       attrs.id, rect, rect, Color::BLACK,
       Shape::Line(start, attrs.movement, end, attrs.caption, attrs.arrows));
     Some((used, node))
+  }
+
+  fn copy_same_attributes(index: &mut Index, attrs: &mut OpenAttributes) {
+    if !attrs.same {
+      return;
+    }
+
+    if let Some((_shape, last)) = index.last_open(ShapeName::Line) {
+      attrs.arrows = last.arrows.clone();
+      if attrs.movement.is_none() {
+        attrs.movement = last.movement.clone();
+      }
+      if let Some(caption) = &mut attrs.caption {
+        if let Some(last) = last.caption.as_ref() {
+          caption.inner = last.inner.clone();
+          caption.outer = last.outer.clone();
+          caption.opaque = last.opaque;
+        }
+      }
+    }
   }
 
   fn text_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
