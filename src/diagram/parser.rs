@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use std::ops::Add;
 
 use log::{debug, info, warn};
@@ -16,31 +13,8 @@ use crate::diagram::types::{Arrows, BLOCK_PADDING, Caption, Config, Edge, Flow, 
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
-#[derive(Debug)]
-struct ClosedAttributes<'a> {
-  id: Option<&'a str>,
-  width: f32,
-  height: f32,
-  padding: f32,
-  radius: Length,
-  title: Option<&'a str>,
-  location: Option<(Edge, Vec<Movement>, ObjectEdge)>,
-  stroke: Color,
-  fill: Color,
-  text: Color,
-}
-
-#[derive(Clone, Debug)]
-pub struct OpenAttributes<'a> {
-  id: Option<&'a str>,
-  same: bool,
-  caption: Option<Caption<'a>>,
-  length: f32,
-  arrows: Arrows,
-  source: Option<ObjectEdge>,
-  target: Option<ObjectEdge>,
-  movement: Option<Movement>,
-}
+#[cfg(test)]
+mod tests;
 
 #[derive(Clone, Debug)]
 pub enum Attributes<'a> {
@@ -171,25 +145,7 @@ impl<'i> Diagram<'i> {
     result
   }
 
-  fn closed_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> (ClosedAttributes<'a>, Pair<'a, Rule>) {
-    let attributes = Rules::get_rule(pair, Rule::attributes);
-    let (stroke, fill, text) = Conversion::colors_from(&attributes);
-
-    (ClosedAttributes {
-      id: Conversion::identified(pair),
-      width: Conversion::width(&attributes, &config.unit).unwrap_or(shape.width),
-      height: Conversion::height(&attributes, &config.unit).unwrap_or(shape.height),
-      padding: Conversion::padding(&attributes, &config.unit).unwrap_or(shape.padding),
-      radius: Conversion::radius(&attributes, &config.unit).unwrap_or_default(),
-      title: Conversion::string_dig(&attributes, Rule::inner),
-      location: Conversion::location_from(&attributes, &Edge::from("c"), &config.unit),
-      stroke,
-      fill,
-      text,
-    }, attributes)
-  }
-
-  fn closed_var_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> (Attributes<'a>, Pair<'a, Rule>) {
+  fn closed_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> (Attributes<'a>, Pair<'a, Rule>) {
     let attributes = Rules::get_rule(pair, Rule::attributes);
     let (stroke, fill, text) = Conversion::colors_from(&attributes);
 
@@ -209,196 +165,216 @@ impl<'i> Diagram<'i> {
   }
 
   fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, attributes) = Self::closed_attributes(pair, config, &config.rectangle);
+    let (mut attrs, attributes) = Self::closed_attributes(pair, config, &config.rectangle);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Container);
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-    index.position_rect(&attrs.location, &mut used);
+    if let Attributes::Closed {
+      id, title,
+      padding, radius,
+      location,
+      ..
+    } = &attrs {
+      let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+      index.position_rect(location, &mut used);
 
-    let mut inset = Point::new(used.left, used.bottom);
-    inset.offset((attrs.padding, attrs.padding));
+      let mut inset = Point::new(used.left, used.bottom);
+      inset.offset((*padding, *padding));
 
-    let (nodes, inner) = {
-      let mut config = config.clone();
-      Conversion::flow(&attributes).into_iter().for_each(|flow| {
-        config.flow = flow;
-      });
-      Self::nodes_from(pair.clone().into_inner(), vec![], &inset, config, index)
-    };
+      let (nodes, inner) = {
+        let mut config = config.clone();
+        Conversion::flow(&attributes).into_iter().for_each(|flow| {
+          config.flow = flow;
+        });
+        Self::nodes_from(pair.clone().into_inner(), vec![], &inset, config, index)
+      };
 
-    used = inner.with_outset((attrs.padding, attrs.padding));
+      used = inner.with_outset((*padding, *padding));
 
-    if let Some(title) = attrs.title {
-      let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
-      let (_widths, down) = config.measure_strings(title, text_inset.width());
-      used.bottom = inner.bottom + down + TEXT_PADDING;
+      if let Some(title) = *title {
+        let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
+        let (_widths, down) = config.measure_strings(title, text_inset.width());
+        used.bottom = inner.bottom + down + TEXT_PADDING;
+      }
+
+      index.insert(ShapeName::Container, *id, used);
+
+      let mut rect = used;
+      rect.bottom += padding;
+      return Some((rect, Container(*id, *radius, *title, rect, used, nodes)));
     }
-
-    index.insert(ShapeName::Container, attrs.id, used);
-
-    let mut rect = used;
-    rect.bottom += attrs.padding;
-    Some((rect, Container(attrs.id, attrs.radius, attrs.title, rect, used, nodes)))
+    None
   }
 
   fn circle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, _) = Self::closed_attributes(pair, config, &config.circle);
+    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.circle);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Circle);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
-    let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
+    if let Attributes::Closed {
+      id, title,
+      width, height,
+      location,
+      stroke, fill, text,
+      ..
+    } = &attrs {
+      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.circle);
+      let mut used = Rect::from_xywh(cursor.x, cursor.y, size.height, size.height);
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, height, height);
+      Self::adjust_topleft(&config.flow, &mut used);
+      index.position_rect(location, &mut used);
 
-    Self::adjust_topleft(&config.flow, &mut used);
-    index.position_rect(&attrs.location, &mut used);
+      index.insert(ShapeName::Circle, *id, used);
 
-    index.insert(ShapeName::Circle, attrs.id, used);
-
-    let circle = Primitive(
-      attrs.id, used, used, attrs.stroke,
-      Shape::Circle(attrs.text, paragraph, attrs.fill, attrs.location));
-    Some((used, circle))
+      let circle = Primitive(
+        *id, used, used, *stroke,
+        Shape::Circle(*text, paragraph, *fill, location.clone()));
+      return Some((used, circle));
+    }
+    None
   }
 
   fn cylinder_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, _) = Self::closed_attributes(pair, config, &config.cylinder);
+    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.cylinder);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Cylinder);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
-    let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
+    if let Attributes::Closed {
+      id, title,
+      width, height,
+      location,
+      stroke, fill, text,
+      ..
+    } = &attrs {
+      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.cylinder);
+      let mut used = Rect::from_point_and_size(*cursor, size);
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, height);
+      Self::adjust_topleft(&config.flow, &mut used);
+      index.position_rect(location, &mut used);
 
-    Self::adjust_topleft(&config.flow, &mut used);
-    index.position_rect(&attrs.location, &mut used);
+      index.insert(ShapeName::Cylinder, *id, used);
 
-    index.insert(ShapeName::Circle, attrs.id, used);
-
-    let cylinder = Primitive(
-      attrs.id, used, used, attrs.stroke,
-      Shape::Cylinder(attrs.text, paragraph, attrs.fill, attrs.location));
-    Some((used, cylinder))
+      let cylinder = Primitive(
+        *id, used, used, *stroke,
+        Shape::Cylinder(*text, paragraph, *fill, location.clone()));
+      return Some((used, cylinder));
+    }
+    None
   }
 
   fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, _) = Self::closed_attributes(pair, config, &config.ellipse);
+    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.ellipse);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Ellipse);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
-    let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
+    if let Attributes::Closed {
+      id, title,
+      width, height,
+      location,
+      stroke, fill, text,
+      ..
+    } = &attrs {
+      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.ellipse);
+      let mut used = Rect::from_point_and_size(*cursor, size);
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, height);
+      Self::adjust_topleft(&config.flow, &mut used);
+      index.position_rect(location, &mut used);
 
-    Self::adjust_topleft(&config.flow, &mut used);
-    index.position_rect(&attrs.location, &mut used);
+      index.insert(ShapeName::Ellipse, *id, used);
 
-    index.insert(ShapeName::Ellipse, attrs.id, used);
-
-    let ellipse = Primitive(
-      attrs.id, used, used, attrs.stroke,
-      Shape::Ellipse(attrs.text, paragraph, attrs.fill, attrs.location));
-    Some((used, ellipse))
+      let ellipse = Primitive(
+        *id, used, used, *stroke,
+        Shape::Ellipse(*text, paragraph, *fill, location.clone()));
+      return Some((used, ellipse));
+    }
+    None
   }
 
   fn file_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, _) = Self::closed_attributes(pair, config, &config.file);
+    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.file);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::File);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
-    let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
+    if let Attributes::Closed {
+      id, title,
+      width, height, radius,
+      location,
+      stroke, fill, text,
+      ..
+    } = &attrs {
+      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.file);
+      let mut used = Rect::from_point_and_size(*cursor, size);
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, height);
-    used.bottom += attrs.padding;
-    Self::adjust_topleft(&config.flow, &mut used);
-    index.position_rect(&attrs.location, &mut used);
+      Self::adjust_topleft(&config.flow, &mut used);
+      index.position_rect(location, &mut used);
 
-    index.insert(ShapeName::File, attrs.id, used);
+      index.insert(ShapeName::File, *id, used);
 
-    let mut rect = used;
-    if config.flow.end.x <= 0. {
-      rect.bottom += attrs.padding;
+      let file = Primitive(
+        *id, used, used, *stroke,
+        Shape::File(*text, paragraph, *radius, *fill, location.clone()));
+      return Some((used, file));
     }
-
-    let file = Primitive(
-      attrs.id, rect, used, attrs.stroke,
-      Shape::File(attrs.text, paragraph, attrs.radius, attrs.fill, attrs.location));
-    Some((rect, file))
+    None
   }
 
   fn oval_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, _) = Self::closed_attributes(pair, config, &config.oval);
+    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.oval);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Oval);
+    if let Attributes::Closed {
+      id, title,
+      width, height,
+      location,
+      stroke, fill, text,
+      ..
+    } = &attrs {
+      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.oval);
+      let mut used = Rect::from_point_and_size(*cursor, size);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, attrs.height);
+      Self::position_rect_on_edge(&config.flow.start, location, &mut used);
+      index.position_rect(location, &mut used);
 
-    Self::position_rect_on_edge(&config.flow.start, &attrs.location, &mut used);
-    index.position_rect(&attrs.location, &mut used);
+      index.insert(ShapeName::Oval, *id, used);
 
-    index.insert(ShapeName::Oval, attrs.id, used);
-
-    let node = Primitive(
-      attrs.id, used, used, attrs.stroke,
-      Shape::Oval(attrs.text, paragraph, attrs.fill, attrs.location));
-    Some((used, node))
+      let node = Primitive(
+        *id, used, used, *stroke,
+        Shape::Oval(*text, paragraph, *fill, location.clone()));
+      return Some((used, node));
+    }
+    None
   }
 
   fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::closed_var_attributes(pair, config, &config.rectangle);
+    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.rectangle);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Box);
 
-    match &attrs {
-      Attributes::Open { .. } => panic!("Wrong type"),
-      Attributes::Closed {
-        id,
-        title,
-        width,
-        height,
-        padding,
-        radius,
-        location,
-        stroke,
-        fill,
-        text,
-        ..
-      } => {
-        let width = width.unwrap_or(config.rectangle.width);
-        let height = height.unwrap_or(config.rectangle.height);
-        let paragraph = Self::paragraph_height(*title, width, config);
-        let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
+    if let Attributes::Closed {
+      id, title,
+      width, height,
+      padding, radius,
+      location,
+      stroke, fill, text,
+      ..
+    } = &attrs {
+      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.rectangle);
+      let mut used = Rect::from_point_and_size(*cursor, size);
 
-        let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
-        used.bottom += padding;
-        Self::adjust_topleft(&config.flow, &mut used);
-        index.position_rect(location, &mut used);
+      used.bottom += padding;
+      Self::adjust_topleft(&config.flow, &mut used);
+      index.position_rect(location, &mut used);
 
-        index.insert(ShapeName::Box, *id, used);
-        index.add_open(ShapeName::Box, attrs.clone());
+      index.insert(ShapeName::Box, *id, used);
+      index.add_open(ShapeName::Box, attrs.clone());
 
-        let mut rect = used;
-        if config.flow.end.x <= 0. {
-          rect.bottom += padding;
-        }
-
-        let rectangle = Primitive(
-          *id, rect, used, *stroke,
-          Shape::Box(*text, paragraph, radius.clone(), *fill, location.clone()));
-        Some((rect, rectangle))
+      let mut rect = used;
+      if config.flow.end.x <= 0. {
+        rect.bottom += padding;
       }
+
+      let rectangle = Primitive(
+        *id, rect, used, *stroke,
+        Shape::Box(*text, paragraph, *radius, *fill, location.clone()));
+      return Some((rect, rectangle));
     }
+    None
   }
 
-  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config) -> (OpenAttributes<'a>, Pair<'a, Rule>) {
-    let attributes = Rules::get_rule(pair, Rule::line_attributes);
-
-    (OpenAttributes {
-      id: Conversion::identified(pair),
-      caption: Conversion::caption(&attributes, config),
-      length: Conversion::length(&attributes, &config.unit).unwrap_or(config.line.pixels()),
-      arrows: Conversion::arrows(&attributes),
-      source: Conversion::location_to_edge(&attributes, Rule::source),
-      target: Conversion::location_to_edge(&attributes, Rule::target),
-      movement: Conversion::rule_to_movement(&attributes, Rule::movement, &config.unit),
-      same: Rules::find_rule(&attributes, Rule::same).is_some(),
-    }, attributes)
-  }
-
-  fn open_var_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config) -> (Attributes<'a>, Pair<'a, Rule>) {
+  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config) -> (Attributes<'a>, Pair<'a, Rule>) {
     let attributes = Rules::get_rule(pair, Rule::line_attributes);
 
     (Attributes::Open {
@@ -413,25 +389,32 @@ impl<'i> Diagram<'i> {
     }, attributes)
   }
 
-  fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, attributes) = Self::open_attributes(&pair, config);
+  fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+    let (mut attrs, attributes) = Self::open_attributes(&pair, config);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Arrow);
 
-    let (source, movement, target) = Self::source_movement_target_from_pair(&attributes, &config.unit);
-    let start = index.point_index(attrs.source.as_ref(), &[]).unwrap_or(*cursor);
-    let end = index.point_index(attrs.target.as_ref(), &[])
-      .unwrap_or(Self::displace_from_start(start, &attrs.movement, &config.flow, attrs.length));
-    let (rect, used) = Self::rect_from_points(start, &movement, end);
+    if let Attributes::Open {
+      id, source, target, length, ref caption, ..
+    } = &attrs {
+      let (source_edge, movement, target_edge) = Self::source_movement_target_from_pair(&attributes, &config.unit);
+      let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
+      let end = index.point_index(target.as_ref(), &[])
+        .unwrap_or(Self::displace_from_start(start, &movement, &config.flow, *length));
+      let (rect, used) = Self::rect_from_points(start, &movement, end);
 
-    index.insert(ShapeName::Arrow, attrs.id, used);
+      index.insert(ShapeName::Arrow, *id, used);
+      index.add_open(ShapeName::Arrow, attrs.clone());
 
-    let node = Primitive(
-      attrs.id, rect, rect, Color::BLACK,
-      Shape::Arrow(source, movement, target, attrs.caption));
-    Some((used, node))
+      let node = Primitive(
+        *id, rect, rect, Color::BLACK,
+        Shape::Arrow(source_edge, movement, target_edge, caption.clone()));
+      return Some((used, node));
+    }
+    None
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::open_var_attributes(&pair, config);
+    let (mut attrs, _) = Self::open_attributes(&pair, config);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
     match &attrs {
@@ -460,6 +443,7 @@ impl<'i> Diagram<'i> {
 
         index.insert(ShapeName::Line, *id, used);
         index.add_open(ShapeName::Line, attrs.clone());
+
         let node = Primitive(
           *id, rect, rect, Color::BLACK,
           Shape::Line(start, movement.clone(), end, caption.clone(), arrows.clone()));
@@ -473,7 +457,8 @@ impl<'i> Diagram<'i> {
       Attributes::Closed {
         same,
         width,
-        height, ..
+        height,
+        ..
       } => {
         if !*same {
           return;
@@ -562,7 +547,7 @@ impl<'i> Diagram<'i> {
     let attributes = Rules::find_rule(pair, Rule::dot_attributes).unwrap();
     let _same = Rules::dig_rule(&attributes, Rule::same);
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
-    let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot.clone());
+    let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot);
 
     let mut point = match Conversion::object_edge_from_pair(pair) {
       Some(_) => {
@@ -666,12 +651,18 @@ impl<'i> Diagram<'i> {
     (rect, used)
   }
 
-  fn paragraph_height<'a>(title: Option<&'a str>, width: f32, config: &Config) -> Option<Paragraph<'a>> {
-    title.map(|title| {
+  fn paragraph_sized<'a>(title: Option<&'a str>, width: &Option<f32>, height: &Option<f32>, config: &Config, shape: &ShapeConfig) -> (Option<Paragraph<'a>>, Size) {
+    let width = width.unwrap_or(shape.width);
+    let height = height.unwrap_or(shape.height);
+
+    let paragraph = title.map(|title| {
       let (widths, height) = config.measure_strings(title, width - 2. * TEXT_PADDING);
       let size = Size::new(width, height);
       Paragraph { text: title, widths, height, size }
-    })
+    });
+
+    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
+    (paragraph, Size::new(width, height))
   }
 
   fn position_rect_on_edge(start: &Edge, location: &Option<(Edge, Vec<Movement>, ObjectEdge)>, used: &mut Rect) {

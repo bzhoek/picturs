@@ -146,7 +146,7 @@ impl Conversion {
   pub(crate) fn length_from(pair: Pair<Rule>, unit: &Unit) -> Length {
     let mut width = pair.into_inner();
     let length = Self::next_to_f32(&mut width).unwrap();
-    let unit = Self::next_to_string(&mut width).map(|str| str.into()).unwrap_or(unit.clone());
+    let unit = Self::next_to_string(&mut width).map(|str| str.into()).unwrap_or(*unit);
     Length::new(length, unit)
   }
 

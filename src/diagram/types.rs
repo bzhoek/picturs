@@ -322,7 +322,7 @@ impl Edge {
   }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum Unit {
   Pt,
   Pc,
@@ -347,7 +347,7 @@ impl From<&str> for Unit {
 
 pub type Radius = Length;
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Length {
   length: f32,
   unit: Unit,
