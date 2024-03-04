@@ -23,7 +23,7 @@ cylinder = { "cylinder" ~ identified? ~ attributes }
 oval = { "oval" ~ identified? ~ attributes }
 
 attributes = { attribute* }
-attribute = _{ string | color | fill | width | height | padding | radius | location | text_color | flow }
+attribute = _{ string | color | fill | width | height | padding | radius | location | text_color | flow | same }
 color = { "color" ~ id }
 fill = { "fill" ~ id }
 width = { ("wd" | "wid" | "width") ~ size }

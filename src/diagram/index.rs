@@ -3,7 +3,7 @@ use std::ops::Add;
 
 use log::error;
 use skia_safe::{Point, Rect};
-use crate::diagram::parser::OpenAttributes;
+use crate::diagram::parser::{Attributes};
 
 use crate::diagram::types::{Movement, Edge, ObjectEdge};
 
@@ -47,7 +47,7 @@ impl From<&str> for ShapeName {
 pub struct Index<'i> {
   ids: HashMap<String, Rect>,
   shapes: Vec<(ShapeName, Rect)>,
-  open: Vec<(ShapeName, OpenAttributes<'i>)>,
+  open: Vec<(ShapeName, Attributes<'i>)>,
 }
 
 impl<'a> Index<'a> {
@@ -58,11 +58,11 @@ impl<'a> Index<'a> {
     self.shapes.push((name, rect));
   }
 
-  pub fn add_open(&mut self, name: ShapeName, attrs: OpenAttributes<'a>) {
+  pub fn add_open(&mut self, name: ShapeName, attrs: Attributes<'a>) {
     self.open.push((name, attrs));
   }
 
-  pub fn last_open(&self, shape: ShapeName) -> Option<&(ShapeName, OpenAttributes)> {
+  pub fn last_open(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes)> {
     self.open.iter().filter(|(name, _)| {
       shape == *name
     }).last()

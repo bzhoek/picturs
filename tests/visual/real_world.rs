@@ -15,7 +15,7 @@ mod real_world {
       line from 6/8 pic1.w "Parallel Port 2/3" same
       line from 7/8 pic1.w "Floppy Disk" same
       line from 8/8 pic1.w "Parallel Port 1" same
-      box.pic2 ht 2in wd 1in "Secondary Interrupt Controller" 2.5in left from pic1
+      box.pic2 same "Secondary Interrupt Controller" 2.5in left from pic1
       line from 1/8 pic2.w "Real Time Clock" same
       line from 2/8 pic2.w "ACPI" same
       line from 3/8 pic2.w "Available" same

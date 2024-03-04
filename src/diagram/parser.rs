@@ -42,6 +42,33 @@ pub struct OpenAttributes<'a> {
   movement: Option<Movement>,
 }
 
+#[derive(Clone, Debug)]
+pub enum Attributes<'a> {
+  Open {
+    id: Option<&'a str>,
+    same: bool,
+    caption: Option<Caption<'a>>,
+    length: f32,
+    arrows: Arrows,
+    source: Option<ObjectEdge>,
+    target: Option<ObjectEdge>,
+    movement: Option<Movement>,
+  },
+  Closed {
+    id: Option<&'a str>,
+    same: bool,
+    width: Option<f32>,
+    height: Option<f32>,
+    padding: f32,
+    radius: Length,
+    title: Option<&'a str>,
+    location: Option<(Edge, Vec<Movement>, ObjectEdge)>,
+    stroke: Color,
+    fill: Color,
+    text: Color,
+  },
+}
+
 #[derive(Parser)]
 #[grammar = "diagram.pest"]
 pub struct DiagramParser;
@@ -152,6 +179,25 @@ impl<'i> Diagram<'i> {
       id: Conversion::identified(pair),
       width: Conversion::width(&attributes, &config.unit).unwrap_or(shape.width),
       height: Conversion::height(&attributes, &config.unit).unwrap_or(shape.height),
+      padding: Conversion::padding(&attributes, &config.unit).unwrap_or(shape.padding),
+      radius: Conversion::radius(&attributes, &config.unit).unwrap_or_default(),
+      title: Conversion::string_dig(&attributes, Rule::inner),
+      location: Conversion::location_from(&attributes, &Edge::from("c"), &config.unit),
+      stroke,
+      fill,
+      text,
+    }, attributes)
+  }
+
+  fn closed_var_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> (Attributes<'a>, Pair<'a, Rule>) {
+    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let (stroke, fill, text) = Conversion::colors_from(&attributes);
+
+    (Attributes::Closed {
+      id: Conversion::identified(pair),
+      same: Rules::find_rule(&attributes, Rule::same).is_some(),
+      width: Conversion::width(&attributes, &config.unit),
+      height: Conversion::height(&attributes, &config.unit),
       padding: Conversion::padding(&attributes, &config.unit).unwrap_or(shape.padding),
       radius: Conversion::radius(&attributes, &config.unit).unwrap_or_default(),
       title: Conversion::string_dig(&attributes, Rule::inner),
@@ -292,34 +338,70 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, _) = Self::closed_attributes(pair, config, &config.rectangle);
+  fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+    let (mut attrs, _) = Self::closed_var_attributes(pair, config, &config.rectangle);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Box);
 
-    let paragraph = Self::paragraph_height(attrs.title, attrs.width, config);
-    let height = paragraph.as_ref().map(|paragraph| attrs.height.max(paragraph.height)).unwrap_or(attrs.height);
+    match &attrs {
+      Attributes::Open { .. } => panic!("Wrong type"),
+      Attributes::Closed {
+        id,
+        title,
+        width,
+        height,
+        padding,
+        radius,
+        location,
+        stroke,
+        fill,
+        text,
+        ..
+      } => {
+        let width = width.unwrap_or(config.rectangle.width);
+        let height = height.unwrap_or(config.rectangle.height);
+        let paragraph = Self::paragraph_height(*title, width, config);
+        let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
 
-    let mut used = Rect::from_xywh(cursor.x, cursor.y, attrs.width, height);
-    used.bottom += attrs.padding;
-    Self::adjust_topleft(&config.flow, &mut used);
-    index.position_rect(&attrs.location, &mut used);
+        let mut used = Rect::from_xywh(cursor.x, cursor.y, width, height);
+        used.bottom += padding;
+        Self::adjust_topleft(&config.flow, &mut used);
+        index.position_rect(location, &mut used);
 
-    index.insert(ShapeName::Box, attrs.id, used);
+        index.insert(ShapeName::Box, *id, used);
+        index.add_open(ShapeName::Box, attrs.clone());
 
-    let mut rect = used;
-    if config.flow.end.x <= 0. {
-      rect.bottom += attrs.padding;
+        let mut rect = used;
+        if config.flow.end.x <= 0. {
+          rect.bottom += padding;
+        }
+
+        let rectangle = Primitive(
+          *id, rect, used, *stroke,
+          Shape::Box(*text, paragraph, radius.clone(), *fill, location.clone()));
+        Some((rect, rectangle))
+      }
     }
-
-    let rectangle = Primitive(
-      attrs.id, rect, used, attrs.stroke,
-      Shape::Box(attrs.text, paragraph, attrs.radius, attrs.fill, attrs.location));
-    Some((rect, rectangle))
   }
 
   fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config) -> (OpenAttributes<'a>, Pair<'a, Rule>) {
     let attributes = Rules::get_rule(pair, Rule::line_attributes);
 
     (OpenAttributes {
+      id: Conversion::identified(pair),
+      caption: Conversion::caption(&attributes, config),
+      length: Conversion::length(&attributes, &config.unit).unwrap_or(config.line.pixels()),
+      arrows: Conversion::arrows(&attributes),
+      source: Conversion::location_to_edge(&attributes, Rule::source),
+      target: Conversion::location_to_edge(&attributes, Rule::target),
+      movement: Conversion::rule_to_movement(&attributes, Rule::movement, &config.unit),
+      same: Rules::find_rule(&attributes, Rule::same).is_some(),
+    }, attributes)
+  }
+
+  fn open_var_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config) -> (Attributes<'a>, Pair<'a, Rule>) {
+    let attributes = Rules::get_rule(pair, Rule::line_attributes);
+
+    (Attributes::Open {
       id: Conversion::identified(pair),
       caption: Conversion::caption(&attributes, config),
       length: Conversion::length(&attributes, &config.unit).unwrap_or(config.line.pixels()),
@@ -349,44 +431,93 @@ impl<'i> Diagram<'i> {
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::open_attributes(&pair, config);
-    Self::copy_same_attributes(index, &mut attrs);
+    let (mut attrs, _) = Self::open_var_attributes(&pair, config);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
-    let start = index.point_index(attrs.source.as_ref(), &[]).unwrap_or(*cursor);
-    let end = index.point_index(attrs.target.as_ref(), &[])
-      .unwrap_or(Self::displace_from_start(start, &attrs.movement, &config.flow, attrs.length));
+    match &attrs {
+      Attributes::Closed { .. } => panic!("Wrong type"),
+      Attributes::Open {
+        id,
+        source,
+        target,
+        movement,
+        caption,
+        length,
+        ref arrows,
+        ..
+      } => {
+        let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
+        let end = index.point_index(target.as_ref(), &[])
+          .unwrap_or(Self::displace_from_start(start, movement, &config.flow, *length));
 
-    let (rect, used) = Self::rect_from_points(start, &attrs.movement, end);
+        let (rect, used) = Self::rect_from_points(start, movement, end);
 
-    if let Some((caption, movement)) = attrs.caption.as_ref().zip(attrs.movement.as_ref()) {
-      if caption.inner.vertical() && movement.edge.vertical() {
-        info!("VERTICAL! {:?}", caption.size);
+        if let Some((caption, movement)) = caption.as_ref().zip(movement.as_ref()) {
+          if caption.inner.vertical() && movement.edge.vertical() {
+            info!("VERTICAL! {:?}", caption.size);
+          }
+        }
+
+        index.insert(ShapeName::Line, *id, used);
+        index.add_open(ShapeName::Line, attrs.clone());
+        let node = Primitive(
+          *id, rect, rect, Color::BLACK,
+          Shape::Line(start, movement.clone(), end, caption.clone(), arrows.clone()));
+        Some((used, node))
       }
     }
-
-    index.insert(ShapeName::Line, attrs.id, used);
-    index.add_open(ShapeName::Line, attrs.clone());
-    let node = Primitive(
-      attrs.id, rect, rect, Color::BLACK,
-      Shape::Line(start, attrs.movement, end, attrs.caption, attrs.arrows));
-    Some((used, node))
   }
 
-  fn copy_same_attributes(index: &mut Index, attrs: &mut OpenAttributes) {
-    if !attrs.same {
-      return;
-    }
-
-    if let Some((_shape, last)) = index.last_open(ShapeName::Line) {
-      attrs.arrows = last.arrows.clone();
-      if attrs.movement.is_none() {
-        attrs.movement = last.movement.clone();
+  fn copy_same_attributes(index: &mut Index, attrs: &mut Attributes, shape: ShapeName) {
+    match attrs {
+      Attributes::Closed {
+        same,
+        width,
+        height, ..
+      } => {
+        if !*same {
+          return;
+        }
+        if let Some((_shape, Attributes::Closed {
+          width: last_width,
+          height: last_height,
+          ..
+        })) = index.last_open(shape) {
+          if width.is_none() {
+            *width = *last_width;
+          }
+          if height.is_none() {
+            *height = *last_height;
+          }
+        }
       }
-      if let Some(caption) = &mut attrs.caption {
-        if let Some(last) = last.caption.as_ref() {
-          caption.inner = last.inner.clone();
-          caption.outer = last.outer.clone();
-          caption.opaque = last.opaque;
+      Attributes::Open {
+        same,
+        arrows,
+        movement,
+        caption,
+        ..
+      } => {
+        if !*same {
+          return;
+        }
+        if let Some((_shape, Attributes::Open {
+          arrows: last_arrows,
+          movement: last_movement,
+          caption: last_caption,
+          ..
+        })) = index.last_open(shape) {
+          *arrows = last_arrows.clone();
+          if movement.is_none() {
+            *movement = last_movement.clone();
+          }
+          if let Some(caption) = &mut *caption {
+            if let Some(last) = last_caption.as_ref() {
+              caption.inner = last.inner.clone();
+              caption.outer = last.outer.clone();
+              caption.opaque = last.opaque;
+            }
+          }
         }
       }
     }
