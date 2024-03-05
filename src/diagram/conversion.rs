@@ -285,7 +285,7 @@ impl Conversion {
         for rule in p.into_inner() {
           match rule.as_rule() {
             Rule::edge => { edge = Some(Edge::from(rule.as_str())); }
-            Rule::movement => {
+            Rule::rel_movement => {
               let movement = Self::movement_from(rule, unit);
               directions.push(movement);
             }

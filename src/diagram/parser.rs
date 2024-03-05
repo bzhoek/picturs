@@ -74,7 +74,7 @@ impl<'i> Diagram<'i> {
     let rect = Rect::from_point_and_size(cursor, (0, 0));
     let node = Primitive(None, rect, rect, Color::BLACK, Shape::Font(config.font.clone()));
     let ast = vec![node];
-    let (ast, bounds) = Self::nodes_from(top.clone(), ast, &cursor, config, &mut index);
+    let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &cursor, config, &mut index);
     self.nodes = ast;
     self.bounds = bounds;
     top
@@ -390,7 +390,7 @@ impl<'i> Diagram<'i> {
       arrows: Conversion::arrows(&attributes),
       source: Conversion::location_to_edge(&attributes, Rule::source),
       target: Conversion::location_to_edge(&attributes, Rule::target),
-      movement: Conversion::rule_to_movement(&attributes, Rule::movement, &config.unit),
+      movement: Conversion::rule_to_movement(&attributes, Rule::rel_movement, &config.unit),
       same: Rules::find_rule(&attributes, Rule::same).is_some(),
     }, attributes)
   }
@@ -666,7 +666,7 @@ impl<'i> Diagram<'i> {
     let source = Conversion::location_to_edge(pair, Rule::source)
       .unwrap_or(ObjectEdge::new("source", "e"));
 
-    let movement = Conversion::rule_to_movement(pair, Rule::movement, unit);
+    let movement = Conversion::rule_to_movement(pair, Rule::rel_movement, unit);
 
     let target = Conversion::location_to_edge(pair, Rule::target)
       .unwrap_or(ObjectEdge::new("source", "w"));

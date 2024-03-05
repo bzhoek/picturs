@@ -38,7 +38,7 @@ line = { "line" ~ line_attributes }
 path = { "path" ~ identified? ~ movements ~ caption? }
 
 line_attributes = { line_attribute* }
-line_attribute = _ { length | source | movement | target | caption | arrows | same }
+line_attribute = _ { length | source | rel_movement | target | caption | arrows | same }
 length = { ("ln" | "length") ~ size }
 source = { "from" ~ fraction? ~ object_edge }
 fraction = ${ number ~ "/" ~ number }
@@ -63,8 +63,8 @@ size = _{ number ~ unit? }
 number = @{ ASCII_DIGIT* ~ ("." ~ ASCII_DIGIT+)? }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" }
 
-location = { edge? ~ movement+ ~ (last_object | from_object)? }
-movement = { offset ~ direction }
+location = { edge? ~ rel_movement+ ~ (last_object | from_object)? }
+rel_movement = { offset ~ direction }
 offset = { size }
 direction = { "up" | "down" | "left" | "right" }
 last_object = _{ "last" ~ object_edge }
@@ -73,6 +73,8 @@ from_object = _{ "from" ~ object_edge }
 flow_to = { "flow" ~ size }
 move_to = { "move" ~ movements }
 movements = { movement* }
+movement = _{ rel_movement | abs_movement }
+abs_movement = _{ "to" ~ object_edge }
 
 dot = { "dot" ~ at_object_edge? ~ dot_attributes ~ caption? }
 at_object_edge = _{ "at" ~ object_edge }
