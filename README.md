@@ -3,6 +3,17 @@
 * https://pikchr.org/home/doc/trunk/homepage.md
 * https://pikchr.org/home/doc/trunk/doc/grammar.md
 
+## Flow
+
+The `flow` statement determines where the cursor ends for the next statement:
+
+| Statement | Flow          |
+|-----------|---------------|
+| `top`     | top right     |
+| `right`   | middle right  |
+| `bottom`  | center bottom |
+| `left`    | left bottom   |
+
 ## Relative placement
 
 ```pic
@@ -29,8 +40,6 @@ move 1 right # move 1cm right
 move 1 right from box.e # move 1cm right from box east edge
 move to box.s # set current position to south edge of box
 ```
-
-```pic
 
 ### Containers
 
