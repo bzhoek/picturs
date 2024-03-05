@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Arrows, Caption, Movement, Node, ObjectEdge, Paragraph, Radius, Shape};
+use crate::diagram::types::{Arrows, Caption, Displacement, Node, ObjectEdge, Paragraph, Radius, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -42,16 +42,15 @@ impl Renderer {
       Shape::Font(font) => {
         canvas.font = font.clone();
       }
-      Shape::Path(start, movements, caption) => {
+      Shape::Path(start, points, caption) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
         canvas.move_to(start.x, start.y);
-        let mut point = *start;
-        for movement in movements.iter() {
-          point = point.add(movement.offset());
+        for point in points.iter() {
           canvas.line_to(point.x, point.y);
         }
         canvas.stroke();
+
         Self::draw_caption(canvas, used, caption);
       }
       Shape::Dot(point, radius, caption) => {
@@ -141,7 +140,7 @@ impl Renderer {
     }
   }
 
-  fn render_line(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Movement>, end: &Point, caption: &Option<Caption>, arrows: &Arrows) {
+  fn render_line(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Displacement>, end: &Point, caption: &Option<Caption>, arrows: &Arrows) {
     canvas.move_to(used.left, used.top);
     let mut point = Point::new(used.left, used.top);
     if let Some(movement) = movement {
@@ -176,7 +175,7 @@ impl Renderer {
     Rect::from_xywh(used.left.trunc() + 0.5, used.top.trunc() + 0.5, used.width().round(), used.height().round())
   }
 
-  fn render_arrow(canvas: &mut Canvas, used: &Rect, from: &ObjectEdge, movement: &Option<Movement>, to: &ObjectEdge, caption: &Option<Caption>) {
+  fn render_arrow(canvas: &mut Canvas, used: &Rect, from: &ObjectEdge, movement: &Option<Displacement>, to: &ObjectEdge, caption: &Option<Caption>) {
     canvas.move_to(used.left, used.top);
     let mut point = Point::new(used.left, used.top);
     if let Some(movement) = movement {

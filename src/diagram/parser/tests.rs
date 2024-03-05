@@ -6,7 +6,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::create_diagram;
 use crate::diagram::index::Index;
 use crate::diagram::parser::{Diagram, Rule};
-use crate::diagram::types::{Config, Edge, Movement, Node, Paragraph, Radius, Shape, Unit};
+use crate::diagram::types::{Config, Edge, Displacement, Node, Paragraph, Radius, Shape, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 
 static TQBF: &str = "the quick brown fox jumps over the lazy dog";
@@ -201,8 +201,8 @@ fn parse_multiple_directions() {
 fn offset_from_rect() {
   let rect = Rect::from_xywh(40., 40., 40., 40.);
   let movements = vec![
-    Movement::new(2., Unit::Cm, Edge::from("e")),
-    Movement::new(1., Unit::Cm, Edge::from("s")),
+    Displacement::new(2., Unit::Cm, Edge::from("e")),
+    Displacement::new(1., Unit::Cm, Edge::from("s")),
   ];
   let result = Index::offset_from_rect(&rect, &Edge::from("nw"), &movements);
   let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };

@@ -7,7 +7,7 @@ use skia_safe::Color;
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Arrows, Caption, Config, Edge, Flow, Length, Movement, ObjectEdge, Unit};
+use crate::diagram::types::{Arrows, Caption, Config, Edge, Flow, Length, Displacement, Movement, ObjectEdge, Unit};
 
 #[cfg(test)]
 mod tests;
@@ -135,11 +135,36 @@ impl Conversion {
       .unwrap_or_default()
   }
 
-  pub(crate) fn movement_from(pair: Pair<Rule>, unit: &Unit) -> Movement {
+  pub(crate) fn movement2_from(pair: Pair<Rule>, unit: &Unit) -> Movement {
+    match pair.as_rule() {
+      Rule::rel_movement => {
+        Self::rel_movement_from(pair, unit)
+      }
+      Rule::abs_movement => {
+        Self::abs_movement_from(pair)
+      }
+      _ => panic!("Unexpected {:?}", pair)
+    }
+  }
+
+  pub(crate) fn rel_movement_from(pair: Pair<Rule>, unit: &Unit) -> Movement {
+    let displacement = Self::displacement_from(pair, unit);
+    Movement::Relative { displacement }
+  }
+
+  pub(crate) fn displacement_from(pair: Pair<Rule>, unit: &Unit) -> Displacement {
     let length = Rules::find_rule(&pair, Rule::offset)
       .map(|pair| Self::length_from(pair, unit)).unwrap();
     let direction = Self::string_find(&pair, Rule::direction).unwrap();
-    Movement { length, edge: direction.into() }
+    Displacement { length, edge: direction.into() }
+  }
+
+  pub(crate) fn abs_movement_from(pair: Pair<Rule>) -> Movement {
+    let object = pair.into_inner()
+      .find(|pair| pair.as_rule() == Rule::object_edge)
+      .map(|pair| Self::pair_to_object_edge(pair))
+      .unwrap();
+    Movement::Absolute { object }
   }
 
   pub(crate) fn length_dig(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Length> {
@@ -262,31 +287,31 @@ impl Conversion {
     })
   }
 
-  pub(crate) fn rule_to_movement(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Movement> {
-    Rules::find_rule(pair, rule).map(|pair| Self::movement_from(pair, unit))
+  pub(crate) fn rule_to_displacement(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Displacement> {
+    Rules::find_rule(pair, rule).map(|pair| Self::displacement_from(pair, unit))
   }
 
-  pub(crate) fn movements_from_pair(pair: &Pair<Rule>, unit: &Unit) -> Option<Vec<Movement>> {
+  pub(crate) fn displacements_from_pair(pair: &Pair<Rule>, unit: &Unit) -> Option<Vec<Displacement>> {
     Rules::find_rule(pair, Rule::movements)
       .map(|pair| {
         pair.into_inner()
-          .map(|inner| Self::movement_from(inner, unit))
+          .map(|inner| Self::displacement_from(inner, unit))
           .collect::<Vec<_>>()
       })
   }
 
-  pub(crate) fn location_from(pair: &Pair<Rule>, end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Movement>, ObjectEdge)> {
+  pub(crate) fn location_from(pair: &Pair<Rule>, end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
     Rules::find_rule(pair, Rule::location)
       .map(|p| {
         let mut object: Option<ObjectEdge> = None;
-        let mut directions: Vec<Movement> = vec![];
+        let mut directions: Vec<Displacement> = vec![];
         let mut edge: Option<Edge> = None;
 
         for rule in p.into_inner() {
           match rule.as_rule() {
             Rule::edge => { edge = Some(Edge::from(rule.as_str())); }
             Rule::rel_movement => {
-              let movement = Self::movement_from(rule, unit);
+              let movement = Self::displacement_from(rule, unit);
               directions.push(movement);
             }
             Rule::object_edge => { object = Some(Self::object_edge_from(rule, end)); }

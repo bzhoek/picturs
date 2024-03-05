@@ -17,14 +17,14 @@ pub enum Node<'a> {
   Primitive(Option<&'a str>, Rect, Rect, Color, Shape<'a>),
 }
 
-type EdgeMovement = (Edge, Vec<Movement>, ObjectEdge);
+type EdgeMovement = (Edge, Vec<Displacement>, ObjectEdge);
 
 #[derive(Debug, PartialEq)]
 pub enum Shape<'a> {
   Move(),
   Dot(Point, Radius, Option<Caption<'a>>),
-  Arrow(ObjectEdge, Option<Movement>, ObjectEdge, Option<Caption<'a>>),
-  Line(Point, Option<Movement>, Point, Option<Caption<'a>>, Arrows),
+  Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption<'a>>),
+  Line(Point, Option<Displacement>, Point, Option<Caption<'a>>, Arrows),
   Box(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
@@ -32,8 +32,8 @@ pub enum Shape<'a> {
   Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Font(Font),
   Text(Paragraph<'a>, Option<EdgeMovement>),
-  File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Movement>, ObjectEdge)>),
-  Path(Point, Vec<Movement>, Option<Caption<'a>>),
+  File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
+  Path(Point, Vec<Point>, Option<Caption<'a>>),
 }
 
 #[derive(Debug, PartialEq)]
@@ -370,13 +370,20 @@ impl Length {
   }
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum Movement {
+  Relative { displacement: Displacement },
+  Absolute { object: ObjectEdge },
+}
+
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct Movement {
+pub struct Displacement {
   pub(crate) length: Length,
   pub edge: Edge,
 }
 
-impl Movement {
+impl Displacement {
+
   pub fn new(length: f32, unit: Unit, edge: Edge) -> Self {
     let length = Length::new(length, unit);
     Self { length, edge }

@@ -74,7 +74,7 @@ flow_to = { "flow" ~ size }
 move_to = { "move" ~ movements }
 movements = { movement* }
 movement = _{ rel_movement | abs_movement }
-abs_movement = _{ "to" ~ object_edge }
+abs_movement = { "to" ~ object_edge }
 
 dot = { "dot" ~ at_object_edge? ~ dot_attributes ~ caption? }
 at_object_edge = _{ "at" ~ object_edge }

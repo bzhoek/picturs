@@ -9,7 +9,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Arrows, BLOCK_PADDING, Caption, Config, Edge, Flow, Length, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{Arrows, BLOCK_PADDING, Caption, Config, Edge, Flow, Length, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -26,7 +26,7 @@ pub enum Attributes<'a> {
     arrows: Arrows,
     source: Option<ObjectEdge>,
     target: Option<ObjectEdge>,
-    movement: Option<Movement>,
+    movement: Option<Displacement>,
   },
   Closed {
     id: Option<&'a str>,
@@ -36,7 +36,7 @@ pub enum Attributes<'a> {
     padding: f32,
     radius: Length,
     title: Option<&'a str>,
-    location: Option<(Edge, Vec<Movement>, ObjectEdge)>,
+    location: Option<(Edge, Vec<Displacement>, ObjectEdge)>,
     stroke: Color,
     fill: Color,
     text: Color,
@@ -73,7 +73,7 @@ impl<'i> Diagram<'i> {
     let cursor = Point::new(0.5, 0.5);
     let rect = Rect::from_point_and_size(cursor, (0, 0));
     let node = Primitive(None, rect, rect, Color::BLACK, Shape::Font(config.font.clone()));
-    let ast = vec![node];
+    let _ast = vec![node];
     let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &cursor, config, &mut index);
     self.nodes = ast;
     self.bounds = bounds;
@@ -390,7 +390,7 @@ impl<'i> Diagram<'i> {
       arrows: Conversion::arrows(&attributes),
       source: Conversion::location_to_edge(&attributes, Rule::source),
       target: Conversion::location_to_edge(&attributes, Rule::target),
-      movement: Conversion::rule_to_movement(&attributes, Rule::rel_movement, &config.unit),
+      movement: Conversion::rule_to_displacement(&attributes, Rule::rel_movement, &config.unit),
       same: Rules::find_rule(&attributes, Rule::same).is_some(),
     }, attributes)
   }
@@ -465,30 +465,46 @@ impl<'i> Diagram<'i> {
 
     let pairs = pair.clone().into_inner();
     pairs.for_each(|pair| match pair.as_rule() {
-      Rule::identified => id = pair.as_str().into(),
-      Rule::caption => caption = Conversion::caption_from(pair, &config).into(),
+      Rule::identified => id = pair.into_inner().next().unwrap().as_str().into(),
+      Rule::caption => caption = Conversion::caption_from(pair, config).into(),
       Rule::movements => {
         movements = pair.into_inner()
-          .map(|inner| Conversion::movement_from(inner, &config.unit))
+          .map(|inner| Conversion::movement2_from(inner, &config.unit))
           .collect::<Vec<_>>();
       }
       _ => panic!("Unexpected {:?}", pair)
     });
 
-    let used = Self::bounds_from_movements(cursor, &movements);
+    let points = Self::points_from_movements(cursor, &movements, index);
+    let used = Self::bounds_from_points(cursor, &points);
+    index.insert(ShapeName::Path, id, used);
 
     let node = Primitive(
       id, used, used, Color::BLACK,
-      Shape::Path(*cursor, movements, caption));
+      Shape::Path(*cursor, points, caption));
     Some((used, node))
   }
 
-  fn bounds_from_movements(cursor: &Point, movements: &[Movement]) -> Rect {
-    let mut used = Rect::from_point_and_size(*cursor, (0, 0));
+  fn points_from_movements(cursor: &Point, movements: &[Movement], index: &mut Index) -> Vec<Point> {
     let mut point = *cursor;
-    for movement in movements.iter() {
-      point = point.add(movement.offset());
-      Self::bounds_from_point(&mut used, &point);
+    movements.iter().map(|movement| {
+      match movement {
+        Movement::Relative { displacement: movement } => {
+          point = point.add(movement.offset());
+          point
+        }
+        Movement::Absolute { object } => {
+          point = index.point_from(object).unwrap();
+          point
+        }
+      }
+    }).collect::<Vec<_>>()
+  }
+
+  fn bounds_from_points(cursor: &Point, points: &[Point]) -> Rect {
+    let mut used = Rect::from_point_and_size(*cursor, (0, 0));
+    for point in points.iter() {
+      Self::bounds_from_point(&mut used, point);
     }
     used
   }
@@ -633,7 +649,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn move_from<'a>(pair: &Pair<'a, Rule>, cursor: &Point, unit: &Unit) -> Option<(Rect, Node<'a>)> {
-    Conversion::movements_from_pair(pair, unit).map(|movements| {
+    Conversion::displacements_from_pair(pair, unit).map(|movements| {
       let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
       Index::offset_rect(&mut used, &movements);
       (used, Primitive(None, used, used, Color::BLACK, Shape::Move()))
@@ -662,11 +678,11 @@ impl<'i> Diagram<'i> {
     });
   }
 
-  fn source_movement_target_from_pair(pair: &Pair<Rule>, unit: &Unit) -> (ObjectEdge, Option<Movement>, ObjectEdge) {
+  fn source_movement_target_from_pair(pair: &Pair<Rule>, unit: &Unit) -> (ObjectEdge, Option<Displacement>, ObjectEdge) {
     let source = Conversion::location_to_edge(pair, Rule::source)
       .unwrap_or(ObjectEdge::new("source", "e"));
 
-    let movement = Conversion::rule_to_movement(pair, Rule::rel_movement, unit);
+    let movement = Conversion::rule_to_displacement(pair, Rule::rel_movement, unit);
 
     let target = Conversion::location_to_edge(pair, Rule::target)
       .unwrap_or(ObjectEdge::new("source", "w"));
@@ -674,16 +690,16 @@ impl<'i> Diagram<'i> {
     (source, movement, target)
   }
 
-  fn displace_from_start(start: Point, movement: &Option<Movement>, flow: &Flow, default: f32) -> Point {
+  fn displace_from_start(start: Point, movement: &Option<Displacement>, flow: &Flow, default: f32) -> Point {
     movement.as_ref()
       .map(|movement| start.add(movement.offset()))
       .unwrap_or_else(|| {
-        let movement = Movement::new(default, Unit::Px, flow.end.clone());
+        let movement = Displacement::new(default, Unit::Px, flow.end.clone());
         start.add(movement.offset())
       })
   }
 
-  fn rect_from_points(start: Point, movement: &Option<Movement>, end: Point) -> (Rect, Rect) {
+  fn rect_from_points(start: Point, movement: &Option<Displacement>, end: Point) -> (Rect, Rect) {
     let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
     let mut used = rect;
     if let Some(movement) = &movement {
@@ -706,7 +722,7 @@ impl<'i> Diagram<'i> {
     (paragraph, Size::new(width, height))
   }
 
-  fn position_rect_on_edge(start: &Edge, location: &Option<(Edge, Vec<Movement>, ObjectEdge)>, used: &mut Rect) {
+  fn position_rect_on_edge(start: &Edge, location: &Option<(Edge, Vec<Displacement>, ObjectEdge)>, used: &mut Rect) {
     let start = match location {
       Some((edge, _, _)) => edge,
       None => start
@@ -764,7 +780,7 @@ impl<'i> Diagram<'i> {
     })
   }
 
-  pub fn node_mut(&mut self, id: &str, movements: Vec<Movement>) {
+  pub fn node_mut(&mut self, id: &str, movements: Vec<Displacement>) {
     if let Primitive(_, _, ref mut rect, _, _) = Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
       for movement in movements.iter() {
         rect.offset(movement.offset());
