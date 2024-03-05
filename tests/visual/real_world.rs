@@ -30,7 +30,7 @@ mod real_world {
   }
 
   #[test]
-  fn ripestat_dependencies_serial() {
+  fn dependencies_serial() {
     let string = r#"
       right
       box.ui13 ht 1in wd 2in "jQuery"
@@ -43,9 +43,10 @@ mod real_world {
   }
 
   #[test]
-  fn ripestat_dependencies_parallel() {
+  fn dependencies_parallel() {
     let string = r#"
-      path.ui13 up 1in right 3in down 0.5in left 2in down 0.5in left 1in
+      path.ui13 1in up 3in right 0.5in down 2in left 0.5in down 1in left
+      // path.ui13 3in right 0.5in down 2in left 0.5in down 1in left 1in up
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);

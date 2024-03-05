@@ -131,7 +131,7 @@ impl Conversion {
       .unwrap_or_default()
   }
 
-  fn movement_from(pair: Pair<Rule>, unit: &Unit) -> Movement {
+  pub(crate) fn movement_from(pair: Pair<Rule>, unit: &Unit) -> Movement {
     let length = Rules::find_rule(&pair, Rule::offset)
       .map(|pair| Self::length_from(pair, unit)).unwrap();
     let direction = Self::string_find(&pair, Rule::direction).unwrap();

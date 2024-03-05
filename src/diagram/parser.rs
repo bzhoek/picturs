@@ -85,7 +85,7 @@ impl<'i> Diagram<'i> {
 
       if let Some((rect, node)) = result {
         ast.push(node);
-        Self::update_bounds(&mut bounds, rect);
+        Self::bounds_from_rect(&mut bounds, rect);
         let point = config.flow.end.edge_point(&rect);
         cursor = point
       }
@@ -104,6 +104,7 @@ impl<'i> Diagram<'i> {
       Rule::rectangle => Self::box_from(&pair, config, index, cursor),
       Rule::arrow => Self::arrow_from(pair, config, index, cursor),
       Rule::line => Self::line_from(pair, config, index, cursor),
+      Rule::path => Self::path_from(pair, config, index, cursor),
       Rule::text => Self::text_from(&pair, config, index, cursor),
       Rule::dot => Self::dot_from(&pair, config, index, cursor),
       Rule::flow_to => Self::flow_from(pair, cursor, config),
@@ -452,6 +453,39 @@ impl<'i> Diagram<'i> {
     }
   }
 
+  fn path_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+    let mut id = None;
+    let mut movements = vec![];
+
+    let pairs = pair.clone().into_inner();
+    pairs.for_each(|pair| match pair.as_rule() {
+      Rule::identified => id = pair.as_str().into(),
+      Rule::movements => {
+        movements = pair.into_inner()
+          .map(|inner| Conversion::movement_from(inner, &config.unit))
+          .collect::<Vec<_>>();
+      }
+      _ => panic!("Unexpected {:?}", pair)
+    });
+
+    let used = Self::bounds_from_movements(cursor, &movements);
+
+    let node = Primitive(
+      id, used, used, Color::BLACK,
+      Shape::Path(*cursor, movements));
+    Some((used, node))
+  }
+
+  fn bounds_from_movements(cursor: &Point, movements: &[Movement]) -> Rect {
+    let mut used = Rect::from_point_and_size(*cursor, (0, 0));
+    let mut point = *cursor;
+    for movement in movements.iter() {
+      point = point.add(movement.offset());
+      Self::bounds_from_point(&mut used, &point);
+    }
+    used
+  }
+
   fn copy_same_attributes(index: &mut Index, attrs: &mut Attributes, shape: ShapeName) {
     match attrs {
       Attributes::Closed {
@@ -570,7 +604,7 @@ impl<'i> Diagram<'i> {
     let mut bounds = Rect::from_xywh(point.x, point.y, 0., 0.);
     if let Some(caption) = &caption {
       let rect = Renderer::dot_offset_of(&point, &radius, caption);
-      Self::update_bounds(&mut bounds, rect);
+      Self::bounds_from_rect(&mut bounds, rect);
     }
 
     let node = Primitive(
@@ -677,11 +711,18 @@ impl<'i> Diagram<'i> {
     flow.start.offset(used);
   }
 
-  fn update_bounds(bounds: &mut Rect, rect: Rect) {
+  fn bounds_from_rect(bounds: &mut Rect, rect: Rect) {
     bounds.top = bounds.top.min(rect.top);
     bounds.left = bounds.left.min(rect.left);
     bounds.right = bounds.right.max(rect.right);
     bounds.bottom = bounds.bottom.max(rect.bottom);
+  }
+
+  fn bounds_from_point(bounds: &mut Rect, point: &Point) {
+    bounds.top = bounds.top.min(point.y);
+    bounds.bottom = bounds.bottom.max(point.y);
+    bounds.left = bounds.left.min(point.x);
+    bounds.right = bounds.right.max(point.x);
   }
 
   pub fn used_rect(&self, id: &str) -> Option<&Rect> {
