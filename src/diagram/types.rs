@@ -33,7 +33,7 @@ pub enum Shape<'a> {
   Font(Font),
   Text(Paragraph<'a>, Option<EdgeMovement>),
   File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Movement>, ObjectEdge)>),
-  Path(Point, Vec<Movement>),
+  Path(Point, Vec<Movement>, Option<Caption<'a>>),
 }
 
 #[derive(Debug, PartialEq)]

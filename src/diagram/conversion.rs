@@ -97,32 +97,36 @@ impl Conversion {
   #[allow(clippy::unwrap_or_default)]
   pub(crate) fn caption<'a>(pair: &Pair<'a, Rule>, config: &Config) -> Option<Caption<'a>> {
     Rules::find_rule(pair, Rule::caption).map(|caption| {
-      let mut text: Option<&str> = None;
-      let mut alignment: Option<(Edge, Edge)> = None;
-      let mut opaque = false;
-
-      let pairs = caption.clone().into_inner();
-      pairs.for_each(|pair| match pair.as_rule() {
-        Rule::string => {
-          let str = pair.as_str();
-          text = Some(&str[1..str.len() - 1]);
-        }
-        Rule::alignment => {
-          let string = pair.as_str();
-          alignment = match string {
-            "ljust" => (Edge::right(), Edge::right()),
-            _ => (string.into(), Edge::center())
-          }.into();
-        }
-        Rule::opaque => { opaque = true }
-        _ => panic!("unexpected rule {:?}", pair.as_rule())
-      });
-
-      let (inner, outer) = alignment.unwrap_or((Edge::center(), Edge::center()));
-      let text = text.unwrap();
-      let size = config.measure_string(text);
-      Caption { text, inner: inner.mirror(), outer, size, opaque }
+      Self::caption_from(caption, config)
     })
+  }
+
+  pub(crate) fn caption_from<'a>(pair: Pair<'a, Rule>, config: &Config) -> Caption<'a> {
+    let mut text: Option<&str> = None;
+    let mut alignment: Option<(Edge, Edge)> = None;
+    let mut opaque = false;
+
+    let pairs = pair.into_inner();
+    pairs.for_each(|pair| match pair.as_rule() {
+      Rule::string => {
+        let str = pair.as_str();
+        text = Some(&str[1..str.len() - 1]);
+      }
+      Rule::alignment => {
+        let string = pair.as_str();
+        alignment = match string {
+          "ljust" => (Edge::right(), Edge::right()),
+          _ => (string.into(), Edge::center())
+        }.into();
+      }
+      Rule::opaque => { opaque = true }
+      _ => panic!("unexpected rule {:?}", pair.as_rule())
+    });
+
+    let (inner, outer) = alignment.unwrap_or((Edge::center(), Edge::center()));
+    let text = text.unwrap();
+    let size = config.measure_string(text);
+    Caption { text, inner: inner.mirror(), outer, size, opaque }
   }
 
   pub(crate) fn arrows(pair: &Pair<Rule>) -> Arrows {

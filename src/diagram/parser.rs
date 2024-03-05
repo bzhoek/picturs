@@ -455,11 +455,13 @@ impl<'i> Diagram<'i> {
 
   fn path_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let mut id = None;
+    let mut caption = None;
     let mut movements = vec![];
 
     let pairs = pair.clone().into_inner();
     pairs.for_each(|pair| match pair.as_rule() {
       Rule::identified => id = pair.as_str().into(),
+      Rule::caption => caption = Conversion::caption_from(pair, &config).into(),
       Rule::movements => {
         movements = pair.into_inner()
           .map(|inner| Conversion::movement_from(inner, &config.unit))
@@ -472,7 +474,7 @@ impl<'i> Diagram<'i> {
 
     let node = Primitive(
       id, used, used, Color::BLACK,
-      Shape::Path(*cursor, movements));
+      Shape::Path(*cursor, movements, caption));
     Some((used, node))
   }
 

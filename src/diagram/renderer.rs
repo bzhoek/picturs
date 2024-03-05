@@ -42,7 +42,7 @@ impl Renderer {
       Shape::Font(font) => {
         canvas.font = font.clone();
       }
-      Shape::Path(start, movements) => {
+      Shape::Path(start, movements, caption) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
         canvas.move_to(start.x, start.y);
@@ -52,6 +52,7 @@ impl Renderer {
           canvas.line_to(point.x, point.y);
         }
         canvas.stroke();
+        Self::draw_caption(canvas, used, caption);
       }
       Shape::Dot(point, radius, caption) => {
         canvas.paint.set_style(PaintStyle::Fill);

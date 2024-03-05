@@ -35,7 +35,7 @@ text_color = { "text_color" ~ id }
 // open shapes
 arrow = { "arrow" ~ line_attributes }
 line = { "line" ~ line_attributes }
-path = { "path" ~ identified? ~ movements }
+path = { "path" ~ identified? ~ movements ~ caption? }
 
 line_attributes = { line_attribute* }
 line_attribute = _ { length | source | movement | target | caption | arrows | same }

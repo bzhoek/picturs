@@ -45,7 +45,7 @@ mod real_world {
   #[test]
   fn dependencies_parallel() {
     let string = r#"
-      path.ui13 1in up 3in right 0.5in down 2in left 0.5in down 1in left
+      path.ui13 1in up 3in right 0.5in down 2in left 0.5in down 1in left "jQuery 😇" above
       // path.ui13 3in right 0.5in down 2in left 0.5in down 1in left 1in up
       "#;
     let diagram = create_diagram(string);
