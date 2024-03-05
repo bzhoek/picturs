@@ -69,7 +69,12 @@ impl<'i> Diagram<'i> {
     let top = Conversion::pairs_for(Rule::picture, string);
     let config = Config::default();
     let mut index = Index::default();
-    let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &Point::new(0.5, 0.5), config, &mut index);
+
+    let cursor = Point::new(0.5, 0.5);
+    let rect = Rect::from_point_and_size(cursor, (0, 0));
+    let node = Primitive(None, rect, rect, Color::BLACK, Shape::Font(config.font.clone()));
+    let ast = vec![node];
+    let (ast, bounds) = Self::nodes_from(top.clone(), ast, &cursor, config, &mut index);
     self.nodes = ast;
     self.bounds = bounds;
     top
