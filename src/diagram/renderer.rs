@@ -141,6 +141,7 @@ impl Renderer {
   }
 
   fn render_line(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Displacement>, end: &Point, caption: &Option<Caption>, arrows: &Arrows) {
+    canvas.paint.set_style(PaintStyle::Stroke);
     canvas.move_to(used.left, used.top);
     let mut point = Point::new(used.left, used.top);
     if let Some(movement) = movement {

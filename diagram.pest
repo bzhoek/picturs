@@ -42,7 +42,7 @@ line_attribute = _ { length | source | rel_movement | target | caption | arrows 
 length = { ("ln" | "length") ~ size }
 source = { "from" ~ fraction? ~ object_edge }
 fraction = ${ number ~ "/" ~ number }
-target = { "to" ~ object_edge }
+target = { "to" ~ fraction? ~ object_edge }
 arrows = { "<->" | "<-" | "->"  }
 
 caption = { string ~ alignment? ~ opaque? }

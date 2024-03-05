@@ -269,7 +269,7 @@ impl Conversion {
           let mut inner = pair.into_inner();
           let x = Self::next_to_f32(&mut inner).unwrap();
           let y = Self::next_to_f32(&mut inner).unwrap();
-          fraction = Some(x / y - 0.5 / y);
+          fraction = Some(x / y);
         }
         Rule::object_edge => {
           let mut inner = pair.into_inner();
