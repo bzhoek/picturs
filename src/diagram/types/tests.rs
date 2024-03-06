@@ -52,12 +52,7 @@ mod endings {
 
   #[test]
   fn ending() {
-    let subject = "<->";
-    let start = &subject[0..2];
-    let end = &subject[1..];
-    assert_eq!(start, "<-");
-    assert_eq!(end, "->");
-    assert_eq!(Ending::from(start), Ending::Arrow);
+    assert_eq!(Ending::from("<"), Ending::Arrow);
   }
 
   #[test]

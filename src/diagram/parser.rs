@@ -387,7 +387,7 @@ impl<'i> Diagram<'i> {
       id: Conversion::identified_in(pair),
       caption: Conversion::caption(&attributes, config),
       length: Conversion::length_into(&attributes, &config.unit).unwrap_or(config.line.pixels()),
-      arrows: Conversion::arrows(&attributes),
+      arrows: Conversion::endings(&attributes),
       source: Conversion::fraction_edge_for(&attributes, Rule::source),
       target: Conversion::fraction_edge_for(&attributes, Rule::target),
       movement: Conversion::displacement_for(&attributes, Rule::rel_movement, &config.unit),

@@ -65,8 +65,8 @@ pub enum Ending {
 impl From<&str> for Ending {
   fn from(item: &str) -> Self {
     match item {
-      "<-" | "->" => Ending::Arrow,
-      "*-" | "-*" => Ending::Dot,
+      "<" | ">" => Ending::Arrow,
+      "*" => Ending::Dot,
       _ => Ending::None
     }
   }

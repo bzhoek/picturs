@@ -7,7 +7,7 @@ use skia_safe::Color;
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Caption, Config, Displacement, Edge, EdgeDirection, Endings, Flow, Length, Movement, ObjectEdge, Unit};
+use crate::diagram::types::{Caption, Config, Displacement, Edge, EdgeDirection, Ending, Endings, Flow, Length, Movement, ObjectEdge, Unit};
 
 #[cfg(test)]
 mod tests;
@@ -145,9 +145,9 @@ impl Conversion {
     Caption { text, inner: inner.mirror(), outer, size, opaque }
   }
 
-  pub(crate) fn arrows(pair: &Pair<Rule>) -> Endings {
+  pub(crate) fn endings(pair: &Pair<Rule>) -> Endings {
     Rules::find_rule(pair, Rule::endings)
-      .map(|pair| pair.as_str().into())
+      .map(Self::endings_from)
       .unwrap_or_default()
   }
 
@@ -351,5 +351,18 @@ impl Conversion {
 
         (edge.unwrap(), directions, object.unwrap())
       })
+  }
+
+  pub(crate) fn endings_from(pair: Pair<Rule>) -> Endings {
+    let mut start = Ending::None;
+    let mut end = Ending::None;
+
+    pair.into_inner().for_each(|pair| match pair.as_rule() {
+      Rule::left_end => start = Ending::from(pair.as_str()),
+      Rule::right_end => end = Ending::from(pair.as_str()),
+      _ => panic!("unexpected rule {:?}", pair.as_rule())
+    });
+
+    Endings { start, end }
   }
 }

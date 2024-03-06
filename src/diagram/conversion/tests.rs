@@ -2,6 +2,22 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Rule;
 use crate::diagram::types::{Edge, ObjectEdge};
 
+mod endings {
+  use crate::diagram::conversion::Conversion;
+  use crate::diagram::parser::Rule;
+  use crate::diagram::types::{Ending, Endings};
+
+  #[test]
+  fn mixed_endings() {
+    let endings = subject("*->");
+    assert_eq!(endings, Endings { start: Ending::Dot, end: Ending::Arrow });
+  }
+  fn subject(string: &str) -> Endings {
+    let pair = Conversion::pair_for(Rule::endings, string);
+    Conversion::endings_from(pair)
+  }
+}
+
 mod colors {
   use skia_safe::Color;
   use crate::diagram::conversion::Conversion;

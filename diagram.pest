@@ -45,11 +45,14 @@ line_attribute = _{ stroke | length | source | rel_movement | target | caption |
 
 length = { ("ln" | "length") ~ size }
 source = { ("from" | "at") ~ object_fraction }
+target = { "to" ~ object_fraction }
+
 object_fraction = _{ fraction? ~ object_edge }
 fraction = ${ number ~ "/" ~ number }
 
-target = { "to" ~ object_fraction }
-endings = { "<->" | "<-" | "->" | "*-*" | "*-" | "-*" }
+endings = ${ left_end? ~ "-" ~ right_end? }
+left_end = { "<" | "*" }
+right_end = { ">" | "*" }
 
 caption = { string ~ alignment? ~ opaque? }
 alignment = { "left" | "right" | "above" | "below" | "nw" | "ne" | "sw" | "se" | "ljust" }
