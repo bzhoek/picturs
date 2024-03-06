@@ -34,6 +34,7 @@ pub enum Shape<'a> {
   Text(Paragraph<'a>, Option<EdgeMovement>),
   File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
   Path(Point, Vec<Point>, Option<Caption<'a>>),
+  Sline(Vec<Point>, Option<Caption<'a>>),
 }
 
 #[derive(Debug, PartialEq)]

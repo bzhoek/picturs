@@ -4,6 +4,17 @@ mod real_world {
   use picturs::diagram::create_diagram;
 
   #[test]
+  fn pic8259_test() {
+    let string = r#"
+      box.pic1 ht 2in wd 1in "Primary Interrupt Controller"
+      line from 1/9 pic1.w 1.5in left "Timer" ljust opaque ->
+      box.pic2 same "Secondary Interrupt Controller" 2.5in left from pic1
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram!(diagram);
+  }
+
+  #[test]
   fn pic8259_diagram() {
     let string = r#"
       box.pic1 ht 2in wd 1in "Primary Interrupt Controller"
@@ -52,6 +63,16 @@ mod real_world {
       path.ux 1in down 1in left to fix.ne "UX" below
       line from 1/3 ui20.e to fix.ne
       line from ui20.se to 2/3 fix.e
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram!(diagram);
+  }
+
+  #[test]
+  fn timeline() {
+    let string = r#"
+      sline.time 4in right
+      sline from 1/4 time.s 1in up "Start"
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);

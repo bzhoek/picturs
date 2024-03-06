@@ -109,6 +109,7 @@ impl<'i> Diagram<'i> {
       Rule::rectangle => Self::box_from(&pair, config, index, cursor),
       Rule::arrow => Self::arrow_from(pair, config, index, cursor),
       Rule::line => Self::line_from(pair, config, index, cursor),
+      Rule::sline => Self::sline_from(pair, config, index, cursor),
       Rule::path => Self::path_from(pair, config, index, cursor),
       Rule::text => Self::text_from(&pair, config, index, cursor),
       Rule::dot => Self::dot_from(&pair, config, index, cursor),
@@ -458,6 +459,40 @@ impl<'i> Diagram<'i> {
     }
   }
 
+  fn sline_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+    let (mut attrs, _) = Self::open_attributes(&pair, config);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
+
+    match &attrs {
+      Attributes::Closed { .. } => panic!("Wrong type"),
+      Attributes::Open {
+        id,
+        source,
+        target,
+        movement,
+        caption,
+        length,
+        ref arrows,
+        ..
+      } => {
+        let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
+        let end = index.point_index(target.as_ref(), &[])
+          .unwrap_or(Self::displace_from_start(start, movement, &config.flow, *length));
+
+        let mut rect = Rect::from_point_and_size(start, (0, 0));
+        Self::bounds_from_point(&mut rect, &end);
+
+        index.insert(ShapeName::Line, *id, rect);
+        index.add_open(ShapeName::Line, attrs.clone());
+
+        let node = Primitive(
+          *id, rect, rect, Color::BLACK,
+          Shape::Sline(vec!(start, end), caption.clone()));
+        Some((rect, node))
+      }
+    }
+  }
+
   fn path_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let mut id = None;
     let mut caption = None;
@@ -699,10 +734,10 @@ impl<'i> Diagram<'i> {
       })
   }
 
-  fn rect_from_points(start: Point, movement: &Option<Displacement>, end: Point) -> (Rect, Rect) {
+  fn rect_from_points(start: Point, displacement: &Option<Displacement>, end: Point) -> (Rect, Rect) {
     let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
     let mut used = rect;
-    if let Some(movement) = &movement {
+    if let Some(movement) = &displacement {
       used.offset(movement.offset());
     }
     (rect, used)

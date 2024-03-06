@@ -3,7 +3,7 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 picture = _{ SOI ~ statements* ~ EOI }
 statements = _{ comment | container | shape | font_config | unit_config | box_config | circle_config | line_config | flow | flow_to | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
-shape = _{ dot | arrow | line | rectangle | file | circle | ellipse | cylinder | oval | text | path }
+shape = _{ dot | arrow | line | sline | rectangle | file | circle | ellipse | cylinder | oval | text | path }
 flow = { "down" | "right" | "top" | "left" }
 
 // config
@@ -34,7 +34,8 @@ text_color = { "text_color" ~ id }
 
 // open shapes
 arrow = { "arrow" ~ line_attributes }
-line = { "line" ~ line_attributes }
+line = { "line" ~ identified? ~ line_attributes }
+sline = { "sline" ~ identified? ~ line_attributes }
 path = { "path" ~ identified? ~ movements ~ caption? }
 
 line_attributes = { line_attribute* }

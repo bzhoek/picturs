@@ -53,6 +53,18 @@ impl Renderer {
 
         Self::draw_caption(canvas, used, caption);
       }
+      Shape::Sline(points, caption) => {
+        canvas.paint.set_style(PaintStyle::Stroke);
+        canvas.paint.set_color(*color);
+        let start = points.first().unwrap();
+        canvas.move_to(start.x, start.y);
+        for point in points.iter() {
+          canvas.line_to(point.x, point.y);
+        }
+        canvas.stroke();
+
+        Self::draw_caption(canvas, used, caption);
+      }
       Shape::Dot(point, radius, caption) => {
         canvas.paint.set_style(PaintStyle::Fill);
         canvas.paint.set_color(*color);
@@ -143,6 +155,38 @@ impl Renderer {
   fn render_line(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Displacement>, end: &Point, caption: &Option<Caption>, arrows: &Arrows) {
     canvas.paint.set_style(PaintStyle::Stroke);
     canvas.move_to(used.left, used.top);
+    let mut point = Point::new(used.left, used.top);
+    if let Some(movement) = movement {
+      point = point.add(movement.offset());
+
+      if movement.is_horizontal() {
+        canvas.line_to(point.x, point.y);
+        canvas.line_to(point.x, used.bottom);
+      } else {
+        canvas.line_to(point.x, point.y);
+        canvas.line_to(used.right, point.y);
+      }
+    }
+
+    canvas.line_to(used.right, used.bottom);
+    canvas.stroke();
+
+    if *arrows == Arrows::Start || *arrows == Arrows::Both {
+      let direction = end.sub(*start);
+      Self::draw_arrow_head(canvas, end, direction);
+    }
+
+    if *arrows == Arrows::End || *arrows == Arrows::Both {
+      let direction = start.sub(*end);
+      Self::draw_arrow_head(canvas, start, direction);
+    }
+
+    Self::draw_caption(canvas, used, caption);
+  }
+
+  fn render_sline(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Displacement>, end: &Point, caption: &Option<Caption>, arrows: &Arrows) {
+    canvas.paint.set_style(PaintStyle::Stroke);
+    canvas.move_to(start.x, start.y);
     let mut point = Point::new(used.left, used.top);
     if let Some(movement) = movement {
       point = point.add(movement.offset());
