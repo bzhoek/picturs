@@ -28,6 +28,7 @@ pub enum Attributes<'a> {
     target: Option<ObjectEdge>,
     movement: Option<Displacement>,
     stroke: Color,
+    thickness: f32,
   },
   Closed {
     id: Option<&'a str>,
@@ -41,6 +42,7 @@ pub enum Attributes<'a> {
     stroke: Color,
     fill: Color,
     text: Color,
+    thickness: f32,
   },
 }
 
@@ -166,6 +168,7 @@ impl<'i> Diagram<'i> {
       stroke,
       fill,
       text,
+      thickness: Conversion::thickness_for(&attributes),
     }, attributes)
   }
 
@@ -359,6 +362,7 @@ impl<'i> Diagram<'i> {
       stroke,
       fill,
       text,
+      thickness,
       ..
     } = &attrs {
       let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.rectangle);
@@ -378,7 +382,7 @@ impl<'i> Diagram<'i> {
 
       let rectangle = Primitive(
         *id, rect, used, *stroke,
-        Shape::Box(*text, paragraph, *radius, *fill, location.clone()));
+        Shape::Box(*text, paragraph, *thickness, *radius, *fill, location.clone()));
       return Some((rect, rectangle));
     }
     None
@@ -398,6 +402,7 @@ impl<'i> Diagram<'i> {
       movement: Conversion::displacement_for(&attributes, Rule::rel_movement, &config.unit),
       same: Rules::find_rule(&attributes, Rule::same).is_some(),
       stroke,
+      thickness: Conversion::thickness_for(&attributes),
     }, attributes)
   }
 
@@ -479,6 +484,7 @@ impl<'i> Diagram<'i> {
         length,
         ref arrows,
         stroke,
+        thickness,
         ..
       } => {
         let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
@@ -494,7 +500,7 @@ impl<'i> Diagram<'i> {
 
         let node = Primitive(
           *id, rect, rect, *stroke,
-          Shape::Sline(vec!(start, end), caption.clone(), arrows.clone()));
+          Shape::Sline(*thickness, vec!(start, end), caption.clone(), arrows.clone()));
         Some((rect, node))
       }
     }

@@ -23,7 +23,7 @@ cylinder = { "cylinder" ~ identified? ~ attributes }
 oval = { "oval" ~ identified? ~ attributes }
 
 attributes = { attribute* }
-attribute = _{ string | stroke | fill | width | height | padding | radius | location | text_color | flow | same }
+attribute = _{ string | stroke | fill | width | height | padding | radius | location | text_color | flow | same | thickness }
 stroke = { "color" ~ color }
 fill = { "fill" ~ id }
 width = { ("wd" | "wid" | "width") ~ size }
@@ -31,6 +31,7 @@ height = { ("ht" | "height") ~ size }
 padding = { ("pd" | "padding") ~ size }
 radius = { ("rd" | "rad" | "radius") ~ size }
 text_color = { "text_color" ~ id }
+
 color = _{ ( id | rgb) }
 rgb = ${ "#" ~ ASCII_HEX_DIGIT{6} }
 
@@ -41,7 +42,7 @@ sline = { "sline" ~ identified? ~ line_attributes }
 path = { "path" ~ identified? ~ movements ~ caption? }
 
 line_attributes = { line_attribute* }
-line_attribute = _{ stroke | length | source | rel_movement | target | caption | endings | same }
+line_attribute = _{ stroke | length | source | rel_movement | target | caption | endings | same | thickness }
 
 length = { ("ln" | "length") ~ size }
 source = { ("from" | "at") ~ object_fraction }
@@ -79,6 +80,9 @@ direction = { "up" | "down" | "left" | "right" }
 last_object = { "last" ~ object_fraction }
 from_object = { "from" ~ object_fraction }
 
+same = { "same" }
+thickness = { "thin" | "normal" | "thick" | "thicker" | "thickest" }
+
 flow_to = { "flow" ~ size }
 move_to = { "move" ~ movements }
 movements = { movement* }
@@ -88,7 +92,6 @@ abs_movement = { "to" ~ object_edge }
 dot = { "dot" ~ identified? ~ dot_attributes }
 dot_attributes = { dot_attribute* }
 dot_attribute = _{ source | stroke | radius | same | caption }
-same = { "same" }
 
 object_edge = ${ id ~ edge? }
 edge = ${ "." ~ (compass | hours | degrees) }

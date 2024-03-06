@@ -2,16 +2,32 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Rule;
 use crate::diagram::types::{Edge, ObjectEdge};
 
+mod thickness {
+  use super::*;
+
+  #[test]
+  fn thick() {
+    let thickness = subject("thick");
+    assert_eq!(thickness, 4.);
+  }
+
+  fn subject(string: &str) -> f32 {
+    let pair = Conversion::pair_for(Rule::thickness, string);
+    Conversion::thickness_from(pair)
+  }
+}
+
 mod endings {
-  use crate::diagram::conversion::Conversion;
-  use crate::diagram::parser::Rule;
   use crate::diagram::types::{Ending, Endings};
+
+  use super::*;
 
   #[test]
   fn mixed_endings() {
     let endings = subject("*->");
     assert_eq!(endings, Endings { start: Ending::Dot, end: Ending::Arrow });
   }
+
   fn subject(string: &str) -> Endings {
     let pair = Conversion::pair_for(Rule::endings, string);
     Conversion::endings_from(pair)
@@ -20,6 +36,7 @@ mod endings {
 
 mod colors {
   use skia_safe::Color;
+
   use crate::diagram::conversion::Conversion;
   use crate::diagram::parser::Rule;
 

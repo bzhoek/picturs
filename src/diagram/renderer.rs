@@ -14,6 +14,8 @@ pub struct Renderer {}
 impl Renderer {
   pub fn render_to_canvas(canvas: &mut Canvas, nodes: &[Node]) {
     for node in nodes.iter() {
+      canvas.paint.set_stroke_width(1.0);
+
       match node {
         Container(_id, radius, title, _rect, used, nodes) => {
           Self::render_to_canvas(canvas, nodes);
@@ -53,7 +55,8 @@ impl Renderer {
 
         Self::draw_caption(canvas, used, caption);
       }
-      Shape::Sline(points, caption, endings) => {
+      Shape::Sline(thickness, points, caption, endings) => {
+        canvas.paint.set_stroke_width(*thickness);
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
         let mut points_iter = points.iter();
@@ -78,9 +81,11 @@ impl Renderer {
         Self::render_arrow(canvas, used, from, movement, to, caption),
       Shape::Line(start, movement, end, caption, arrows) =>
         Self::render_line(canvas, used, start, movement, end, caption, arrows),
-      Shape::Box(text_color, paragraph, radius, fill, _) => {
+      Shape::Box(text_color, paragraph, thickness, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
+        canvas.paint.set_stroke_width(*thickness);
+
         canvas.rectangle(used, *radius);
 
         canvas.paint.set_style(PaintStyle::Fill);

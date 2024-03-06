@@ -370,4 +370,18 @@ impl Conversion {
 
     Endings { start, end }
   }
+
+  pub(crate) fn thickness_for(pair: &Pair<Rule>) -> f32 {
+    Rules::find_rule(pair, Rule::thickness)
+      .map(Self::thickness_from)
+      .unwrap_or(1.0)
+  }
+  pub(crate) fn thickness_from(pair: Pair<Rule>) -> f32 {
+    match pair.as_str() {
+      "thin" => 1.0,
+      "normal" => 2.0,
+      "thick" => 4.0,
+      _ => panic!("unknown thickness {:?}", pair.as_str()),
+    }
+  }
 }
