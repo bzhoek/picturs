@@ -70,8 +70,8 @@ location = { edge? ~ rel_movement+ ~ (last_object | from_object)? }
 rel_movement = { offset ~ direction }
 offset = { size }
 direction = { "up" | "down" | "left" | "right" }
-last_object = _{ "last" ~ object_edge }
-from_object = _{ "from" ~ object_fraction }
+last_object = { "last" ~ object_fraction }
+from_object = { "from" ~ object_fraction }
 
 flow_to = { "flow" ~ size }
 move_to = { "move" ~ movements }

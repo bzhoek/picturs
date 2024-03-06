@@ -305,14 +305,15 @@ impl Conversion {
         let mut directions: Vec<Displacement> = vec![];
         let mut edge: Option<Edge> = None;
 
-        for rule in p.into_inner() {
-          match rule.as_rule() {
-            Rule::edge => { edge = Some(Edge::from(rule.as_str())); }
+        for pair in p.into_inner() {
+          match pair.as_rule() {
+            Rule::edge => { edge = Some(Edge::from(pair.as_str())); }
             Rule::rel_movement => {
-              let movement = Self::displacement_from(rule, unit);
+              let movement = Self::displacement_from(pair, unit);
               directions.push(movement);
             }
-            Rule::object_edge => { object = Some(Self::object_edge_from_default(rule, end)); }
+            Rule::last_object => { object = Some(Self::fraction_edge_from(pair)); }
+            Rule::from_object => { object = Some(Self::fraction_edge_from(pair)); }
             _ => {}
           }
         };
