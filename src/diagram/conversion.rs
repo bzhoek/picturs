@@ -152,13 +152,6 @@ impl Conversion {
     Movement::Relative { displacement }
   }
 
-  pub(crate) fn displacement_from(pair: Pair<Rule>, unit: &Unit) -> Displacement {
-    let length = Rules::find_rule(&pair, Rule::offset)
-      .map(|pair| Self::length_from(pair, unit)).unwrap();
-    let direction = Self::string_find(&pair, Rule::direction).unwrap();
-    Displacement { length, edge: direction.into() }
-  }
-
   pub(crate) fn abs_movement_from(pair: Pair<Rule>) -> Movement {
     let object = pair.into_inner()
       .find(|pair| pair.as_rule() == Rule::object_edge)
@@ -200,10 +193,11 @@ impl Conversion {
   }
 
   fn object_edge_from(pair: Pair<Rule>) -> ObjectEdge {
-    Self::object_edge_from_default(pair, &Edge::center())
+    Self::object_edge_from_default(pair, &Edge::default())
   }
 
   fn object_edge_from_default(pair: Pair<Rule>, default: &Edge) -> ObjectEdge {
+    dbg!(&pair);
     let mut inner = pair.into_inner();
     let id = Self::next_to_string(&mut inner).unwrap();
     let edge = Self::next_to_string(&mut inner);
@@ -253,40 +247,49 @@ impl Conversion {
       .map(|pair| Flow::new(pair.as_str()))
   }
 
-  pub(crate) fn fraction_edge_from(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
-    Rules::find_rule(pair, rule).map(|pair| {
-      let mut fraction: Option<f32> = None;
-      let mut object: Option<ObjectEdge> = None;
-
-      pair.into_inner().for_each(|pair| match pair.as_rule() {
-        Rule::fraction => {
-          let mut inner = pair.into_inner();
-          let x = Self::next_to_f32(&mut inner).unwrap();
-          let y = Self::next_to_f32(&mut inner).unwrap();
-          fraction = Some(x / y);
-        }
-        Rule::object_edge => {
-          object = Some(Self::object_edge_from_degrees(pair));
-        }
-        _ => panic!("Unexpected rule {:?}", pair.as_rule())
-      });
-
-      let mut object = object.unwrap();
-      if let Some(fraction) = fraction {
-        match object.edge.direction {
-          EdgeDirection::Horizontal => { object.edge.y = fraction - 0.5 }
-          EdgeDirection::Vertical => { object.edge.x = fraction - 0.5 }
-        }
-      }
-      object
-    })
+  pub(crate) fn fraction_edge_for(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
+    Rules::find_rule(pair, rule).map(Self::fraction_edge_from)
   }
 
-  pub(crate) fn rule_to_displacement(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Displacement> {
+  pub(crate) fn fraction_edge_from(pair: Pair<Rule>) -> ObjectEdge {
+    let mut fraction: Option<f32> = None;
+    let mut object: Option<ObjectEdge> = None;
+
+    pair.into_inner().for_each(|pair| match pair.as_rule() {
+      Rule::fraction => {
+        let mut inner = pair.into_inner();
+        let x = Self::next_to_f32(&mut inner).unwrap();
+        let y = Self::next_to_f32(&mut inner).unwrap();
+        fraction = Some(x / y);
+      }
+      Rule::object_edge => {
+          object = Some(Self::object_edge_from_degrees(pair));
+      }
+      _ => panic!("Unexpected rule {:?}", pair.as_rule())
+    });
+
+    let mut object = object.unwrap();
+    if let Some(fraction) = fraction {
+      match object.edge.direction {
+        EdgeDirection::Horizontal => { object.edge.y = fraction - 0.5 }
+        EdgeDirection::Vertical => { object.edge.x = fraction - 0.5 }
+      }
+    }
+    object
+  }
+
+  pub(crate) fn displacement_for(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Displacement> {
     Rules::find_rule(pair, rule).map(|pair| Self::displacement_from(pair, unit))
   }
 
-  pub(crate) fn displacements_from_pair(pair: &Pair<Rule>, unit: &Unit) -> Option<Vec<Displacement>> {
+  pub(crate) fn displacement_from(pair: Pair<Rule>, unit: &Unit) -> Displacement {
+    let length = Rules::find_rule(&pair, Rule::offset)
+      .map(|pair| Self::length_from(pair, unit)).unwrap();
+    let direction = Self::string_find(&pair, Rule::direction).unwrap();
+    Displacement { length, edge: direction.into() }
+  }
+
+  pub(crate) fn displacements_from(pair: &Pair<Rule>, unit: &Unit) -> Option<Vec<Displacement>> {
     Rules::find_rule(pair, Rule::movements)
       .map(|pair| {
         pair.into_inner()

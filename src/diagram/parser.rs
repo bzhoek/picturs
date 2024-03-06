@@ -164,7 +164,7 @@ impl<'i> Diagram<'i> {
       padding: Conversion::padding(&attributes, &config.unit).unwrap_or(shape.padding),
       radius: Conversion::radius(&attributes, &config.unit).unwrap_or_default(),
       title: Conversion::string_dig(&attributes, Rule::inner),
-      location: Conversion::location_from(&attributes, &Edge::from("c"), &config.unit),
+      location: Conversion::location_from(&attributes, &Edge::default(), &config.unit),
       stroke,
       fill,
       text,
@@ -389,9 +389,9 @@ impl<'i> Diagram<'i> {
       caption: Conversion::caption(&attributes, config),
       length: Conversion::length(&attributes, &config.unit).unwrap_or(config.line.pixels()),
       arrows: Conversion::arrows(&attributes),
-      source: Conversion::fraction_edge_from(&attributes, Rule::source),
-      target: Conversion::fraction_edge_from(&attributes, Rule::target),
-      movement: Conversion::rule_to_displacement(&attributes, Rule::rel_movement, &config.unit),
+      source: Conversion::fraction_edge_for(&attributes, Rule::source),
+      target: Conversion::fraction_edge_for(&attributes, Rule::target),
+      movement: Conversion::displacement_for(&attributes, Rule::rel_movement, &config.unit),
       same: Rules::find_rule(&attributes, Rule::same).is_some(),
     }, attributes)
   }
@@ -642,7 +642,7 @@ impl<'i> Diagram<'i> {
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
     let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot);
 
-    let object = Conversion::fraction_edge_from(pair, Rule::at_object);
+    let object = Conversion::fraction_edge_for(pair, Rule::at_object);
     let point = match object {
       Some(object) => {
         index.point_index(Some(&object), &[]).unwrap()
@@ -675,7 +675,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn move_from<'a>(pair: &Pair<'a, Rule>, cursor: &Point, unit: &Unit) -> Option<(Rect, Node<'a>)> {
-    Conversion::displacements_from_pair(pair, unit).map(|movements| {
+    Conversion::displacements_from(pair, unit).map(|movements| {
       let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
       Index::offset_rect(&mut used, &movements);
       (used, Primitive(None, used, used, Color::BLACK, Shape::Move()))
@@ -705,12 +705,12 @@ impl<'i> Diagram<'i> {
   }
 
   fn source_movement_target_from_pair(pair: &Pair<Rule>, unit: &Unit) -> (ObjectEdge, Option<Displacement>, ObjectEdge) {
-    let source = Conversion::fraction_edge_from(pair, Rule::source)
+    let source = Conversion::fraction_edge_for(pair, Rule::source)
       .unwrap_or(ObjectEdge::new("source", "e"));
 
-    let movement = Conversion::rule_to_displacement(pair, Rule::rel_movement, unit);
+    let movement = Conversion::displacement_for(pair, Rule::rel_movement, unit);
 
-    let target = Conversion::fraction_edge_from(pair, Rule::target)
+    let target = Conversion::fraction_edge_for(pair, Rule::target)
       .unwrap_or(ObjectEdge::new("source", "w"));
 
     (source, movement, target)
