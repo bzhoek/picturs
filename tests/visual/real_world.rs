@@ -94,7 +94,7 @@ mod real_world {
       box "1981" .s .5in up from 8/12 time.s color #E24B7E normal
 
       dot.y98 at 11/12 time.n "1998" above color #214F79
-      sline from y98.s 1cm down color #214F79
+      sline from y98.s 1cm down color #214F79 invisible
       box "1998" .n 1cm down from 11/12 time.s color #214F79 normal
       "#;
     let diagram = create_diagram(string);

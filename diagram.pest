@@ -81,7 +81,7 @@ last_object = { "last" ~ object_fraction }
 from_object = { "from" ~ object_fraction }
 
 same = { "same" }
-thickness = { "thin" | "normal" | "thick" | "thicker" | "thickest" }
+thickness = { "invisible" | "thin" | "normal" | "thicker" | "thickest" | "thick" }
 
 flow_to = { "flow" ~ size }
 move_to = { "move" ~ movements }

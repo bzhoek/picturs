@@ -62,12 +62,15 @@ impl Renderer {
         let mut points_iter = points.iter();
         let start = points_iter.next().unwrap();
         let start = Self::align_point(start, *thickness);
-        canvas.move_to(start.x, start.y);
-        for point in points_iter {
-          let point = Self::align_point(point, *thickness);
-          canvas.line_to(point.x, point.y);
+
+        if *thickness > 0. {
+          canvas.move_to(start.x, start.y);
+          for point in points_iter {
+            let point = Self::align_point(point, *thickness);
+            canvas.line_to(point.x, point.y);
+          }
+          canvas.stroke();
         }
-        canvas.stroke();
 
         let end = points.last().unwrap();
         Self::draw_endings(endings, &start, end, canvas);
