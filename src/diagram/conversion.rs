@@ -162,7 +162,7 @@ impl Conversion {
   pub(crate) fn abs_movement_from(pair: Pair<Rule>) -> Movement {
     let object = pair.into_inner()
       .find(|pair| pair.as_rule() == Rule::object_edge)
-      .map(|pair| Self::pair_to_object_edge(pair))
+      .map(Self::object_edge_from)
       .unwrap();
     Movement::Absolute { object }
   }
@@ -199,21 +199,19 @@ impl Conversion {
     Conversion::length_dig(attributes, Rule::padding, unit).map(|length| length.pixels())
   }
 
-  pub(crate) fn object_edge_from_pair(pair: &Pair<Rule>) -> Option<ObjectEdge> {
-    Rules::dig_rule(pair, Rule::object_edge).map(Self::pair_to_object_edge)
+  pub(crate) fn object_edge_dig(pair: &Pair<Rule>) -> Option<ObjectEdge> {
+    Rules::dig_rule(pair, Rule::object_edge).map(Self::object_edge_from)
   }
 
-  fn pair_to_object_edge(pair: Pair<Rule>) -> ObjectEdge {
-    let id = Self::string_dig(&pair, Rule::id).unwrap();
-    let edge = Self::string_dig(&pair, Rule::edge).unwrap();
-    ObjectEdge::new(id, edge)
+  fn object_edge_from(pair: Pair<Rule>) -> ObjectEdge {
+    Self::object_edge_from_default(pair, &Edge::center())
   }
 
-  fn object_edge_from(pair: Pair<Rule>, default: &Edge) -> ObjectEdge {
-    let id = Self::string_dig(&pair, Rule::id).unwrap();
-    let edge = Self::string_dig(&pair, Rule::edge)
-      .map(Edge::from)
-      .unwrap_or(default.clone());
+  fn object_edge_from_default(pair: Pair<Rule>, default: &Edge) -> ObjectEdge {
+    let mut inner = pair.into_inner();
+    let id = Self::next_to_string(&mut inner).unwrap();
+    let edge = Self::next_to_string(&mut inner);
+    let edge = edge.map(Edge::from).unwrap_or(default.clone());
     ObjectEdge::new(id, edge)
   }
 
@@ -272,10 +270,7 @@ impl Conversion {
           fraction = Some(x / y);
         }
         Rule::object_edge => {
-          let mut inner = pair.into_inner();
-          let id = Self::next_to_string(&mut inner).unwrap();
-          let edge = Self::next_to_string(&mut inner).unwrap_or("c");
-          object = Some(ObjectEdge::new(id, edge));
+          object = Some(Self::object_edge_from(pair));
         }
         _ => panic!("Unexpected rule {:?}", pair.as_rule())
       });
@@ -318,7 +313,7 @@ impl Conversion {
               let movement = Self::displacement_from(rule, unit);
               directions.push(movement);
             }
-            Rule::object_edge => { object = Some(Self::object_edge_from(rule, end)); }
+            Rule::object_edge => { object = Some(Self::object_edge_from_default(rule, end)); }
             _ => {}
           }
         };

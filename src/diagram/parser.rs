@@ -642,9 +642,9 @@ impl<'i> Diagram<'i> {
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
     let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot);
 
-    let mut point = match Conversion::object_edge_from_pair(pair) {
+    let mut point = match Conversion::object_edge_dig(pair) {
       Some(_) => {
-        let object = Conversion::object_edge_from_pair(pair).unwrap();
+        let object = Conversion::object_edge_dig(pair).unwrap();
         index.point_index(Some(&object), &[]).unwrap()
       }
       None => *cursor

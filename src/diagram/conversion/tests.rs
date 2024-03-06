@@ -1,10 +1,25 @@
 use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Rule;
+use crate::diagram::types::{Edge, ObjectEdge};
+
+mod object_edge {
+  use super::*;
+
+  #[test]
+  fn with_vertical_fraction() {
+    let object = subject("a.w");
+    assert_eq!(object, ObjectEdge::new("a", Edge::left()));
+  }
+
+  fn subject(string: &str) -> ObjectEdge {
+    let pair = Conversion::pair_for(Rule::object_edge, string);
+    Conversion::object_edge_from(pair)
+  }
+
+}
 
 mod fractions {
-  use crate::diagram::conversion::Conversion;
-  use crate::diagram::parser::Rule;
-  use crate::diagram::types::{Edge, ObjectEdge};
+  use super::*;
 
   #[test]
   fn with_horizontal_fraction() {
