@@ -105,7 +105,7 @@ fn nested_box_id() {
   assert_eq!(
     diagram.nodes,
     vec![Container(
-      Some("parent"), Radius::default(), None,
+      Some("parent"), 0., None,
       Rect::from_xywh(0.5, 0.5, 104., 99.),
       Rect::from_xywh(0.5, 0.5, 104., 91.),
       vec![Primitive(
@@ -126,7 +126,7 @@ fn nested_box_with_title() {
   assert_eq!(
     diagram.nodes,
     vec![Container(
-      None, Radius::default(), Some("parent"),
+      None, 0., Some("parent"),
       Rect::from_xywh(0.5, 0.5, 104., 112.),
       Rect::from_xywh(0.5, 0.5, 104., 104.),
       vec![Primitive(

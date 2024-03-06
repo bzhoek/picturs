@@ -188,24 +188,29 @@ impl Conversion {
     Length::new(length, unit)
   }
 
-  pub(crate) fn radius_in(attributes: &Pair<Rule>, unit: &Unit) -> Option<Length> {
+  pub(crate) fn radius_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_in(attributes, Rule::radius, unit)
+      .map(|length| length.pixels())
   }
 
   pub(crate) fn width_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
-    Conversion::length_in(attributes, Rule::width, unit).map(|length| length.pixels())
+    Conversion::length_in(attributes, Rule::width, unit)
+      .map(|length| length.pixels())
   }
 
   pub(crate) fn height_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
-    Conversion::length_in(attributes, Rule::height, unit).map(|length| length.pixels())
+    Conversion::length_in(attributes, Rule::height, unit)
+      .map(|length| length.pixels())
   }
 
   pub(crate) fn length_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
-    Conversion::length_in(attributes, Rule::length, unit).map(|length| length.pixels())
+    Conversion::length_in(attributes, Rule::length, unit)
+      .map(|length| length.pixels())
   }
 
   pub(crate) fn padding_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
-    Conversion::length_in(attributes, Rule::padding, unit).map(|length| length.pixels())
+    Conversion::length_in(attributes, Rule::padding, unit)
+      .map(|length| length.pixels())
   }
 
   fn object_edge_from(pair: Pair<Rule>) -> ObjectEdge {

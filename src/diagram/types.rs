@@ -18,6 +18,7 @@ pub enum Node<'a> {
 }
 
 type EdgeMovement = (Edge, Vec<Displacement>, ObjectEdge);
+pub type Radius = f32;
 
 #[derive(Debug, PartialEq)]
 pub enum Shape<'a> {
@@ -32,7 +33,7 @@ pub enum Shape<'a> {
   Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Font(Font),
   Text(Paragraph<'a>, Option<EdgeMovement>),
-  File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
+  File(Color, Option<Paragraph<'a>>, Radius, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
   Path(Point, Vec<Point>, Option<Caption<'a>>),
   Sline(Vec<Point>, Option<Caption<'a>>, Endings),
 }
@@ -116,11 +117,12 @@ pub struct ShapeConfig {
   pub(crate) padding: f32,
   pub(crate) width: f32,
   pub(crate) height: f32,
+  pub(crate) radius: f32,
 }
 
 impl Default for ShapeConfig {
   fn default() -> Self {
-    Self { padding: BLOCK_PADDING, width: WIDTH.trunc(), height: HEIGHT.trunc() }
+    Self { padding: BLOCK_PADDING, width: WIDTH.trunc(), height: HEIGHT.trunc(), radius: 0. }
   }
 }
 
@@ -136,7 +138,7 @@ impl Config {
     let font = Font::from_typeface(typeface, 17.0);
     Self {
       flow,
-      dot: Radius::new(4., Unit::Px),
+      dot: Length::new(4., Unit::Px),
       circle: ShapeConfig::default(),
       cylinder: ShapeConfig::default(),
       ellipse: ShapeConfig::default(),
@@ -149,6 +151,7 @@ impl Config {
         padding: 8.0,
         width: HEIGHT.trunc(),
         height: WIDTH.trunc(),
+        radius: 8.0,
       },
       font,
     }
@@ -367,8 +370,6 @@ impl From<&str> for Unit {
     }
   }
 }
-
-pub type Radius = Length;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Length {

@@ -9,7 +9,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Endings, BLOCK_PADDING, Caption, Config, Edge, Flow, Length, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{Endings, BLOCK_PADDING, Caption, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, Radius};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -35,7 +35,7 @@ pub enum Attributes<'a> {
     width: Option<f32>,
     height: Option<f32>,
     padding: f32,
-    radius: Length,
+    radius: Radius,
     title: Option<&'a str>,
     location: Option<(Edge, Vec<Displacement>, ObjectEdge)>,
     stroke: Color,
@@ -160,7 +160,7 @@ impl<'i> Diagram<'i> {
       width: Conversion::width_into(&attributes, &config.unit),
       height: Conversion::height_into(&attributes, &config.unit),
       padding: Conversion::padding_into(&attributes, &config.unit).unwrap_or(shape.padding),
-      radius: Conversion::radius_in(&attributes, &config.unit).unwrap_or_default(),
+      radius: Conversion::radius_into(&attributes, &config.unit).unwrap_or(shape.radius),
       title: Conversion::string_in(&attributes, Rule::inner),
       location: Conversion::location_for(&attributes, &Edge::default(), &config.unit),
       stroke,
@@ -349,11 +349,16 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Box);
 
     if let Attributes::Closed {
-      id, title,
-      width, height,
-      padding, radius,
+      id,
+      title,
+      width,
+      height,
+      padding,
+      radius,
       location,
-      stroke, fill, text,
+      stroke,
+      fill,
+      text,
       ..
     } = &attrs {
       let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.rectangle);
@@ -650,7 +655,7 @@ impl<'i> Diagram<'i> {
         ..
       } => {
         let color = Conversion::stroke_color_in(&attributes).unwrap_or(Color::BLUE);
-        let radius = Conversion::radius_in(&attributes, &config.unit).unwrap_or(config.dot);
+        let radius = Conversion::radius_into(&attributes, &config.unit).unwrap_or(config.dot.pixels());
 
         let point = match source {
           Some(object) => {
@@ -709,6 +714,10 @@ impl<'i> Diagram<'i> {
         Rule::width => {
           let length = Conversion::length_from(pair, unit);
           config.width = length.pixels();
+        }
+        Rule::radius => {
+          let length = Conversion::length_from(pair, unit);
+          config.radius = length.pixels();
         }
         _ => {
           warn!("Ignored {:?}", pair);

@@ -28,7 +28,7 @@ impl Renderer {
 
           canvas.paint.set_style(PaintStyle::Stroke);
           canvas.paint.set_color(Color::RED);
-          canvas.rectangle(used, radius.pixels());
+          canvas.rectangle(used, *radius);
         }
         Primitive(_id, _, used, color, shape) => {
           let used = Self::pixel_align(used);
@@ -71,7 +71,7 @@ impl Renderer {
       Shape::Dot(point, radius, caption) => {
         canvas.paint.set_style(PaintStyle::Fill);
         canvas.paint.set_color(*color);
-        canvas.circle(point, radius.pixels());
+        canvas.circle(point, *radius);
         Self::draw_dot_caption(canvas, point, radius, caption);
       }
       Shape::Arrow(from, movement, to, caption) =>
@@ -81,11 +81,11 @@ impl Renderer {
       Shape::Box(text_color, paragraph, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
-        canvas.rectangle(used, radius.pixels());
+        canvas.rectangle(used, *radius);
 
         canvas.paint.set_style(PaintStyle::Fill);
         canvas.paint.set_color(*fill);
-        canvas.rectangle(used, radius.pixels());
+        canvas.rectangle(used, *radius);
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
@@ -248,7 +248,7 @@ impl Renderer {
 
   pub fn dot_offset_of(point: &Point, radius: &Radius, caption: &Caption) -> Rect {
     let mut dot = Rect::from_point_and_size(*point, (0., 0.));
-    dot.outset((radius.pixels() * 2., radius.pixels() * 2.));
+    dot.outset((radius * 2., radius * 2.));
     let point = caption.inner.mirror().edge_point(&dot);
     let mut rect = Rect::from_point_and_size(point, caption.size);
     caption.inner.offset(&mut rect);

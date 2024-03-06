@@ -71,11 +71,31 @@ mod real_world {
   #[test]
   fn timeline() {
     let string = r#"
+      set box rd 4px
       sline.time 4in right *-> color dgrey
-      dot.y49 at 1/10 time.n "1949" below color #645590
+      dot.y49 at 1/12 time.n "1949" below color #645590
       sline from y49.n .5in up color #645590
-      box "1949" .s .5in up from 1/10 time.s color #645590
-      sline from 3/4 time.s 1in up "Start" *-
+      box "1949" .s .5in up from 1/12 time.s color #645590
+
+      dot.y50 at 2/12 time.n "1950" above color #27A8BE
+      sline from y50.s 1cm down color #27A8BE
+      box "1950" .n 1cm down from 2/12 time.s color #27A8BE
+
+      dot.y72 at 4/12 time.n "1972" below color #D6A02A
+      sline from y72.n .5in up color #D6A02A
+      box "1972 " .s .5in up from 4/12 time.s color #D6A02A
+
+      dot.y80 at 7/12 time.n "1980" above color #E47958
+      sline from y80.s 1cm down color #E47958
+      box "1980" .n 1cm down from 7/12 time.s color #E47958
+
+      dot.y81 at 8/12 time.n "1981" below color #E24B7E
+      sline from y81.n .5in up color #E24B7E
+      box "1981" .s .5in up from 8/12 time.s color #E24B7E
+
+      dot.y98 at 11/12 time.n "1998" above color #214F79
+      sline from y98.s 1cm down color #214F79
+      box "1998" .n 1cm down from 11/12 time.s color #214F79
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);

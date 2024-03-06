@@ -9,7 +9,7 @@ flow = { "down" | "right" | "top" | "left" }
 // config
 unit_config = { "set unit" ~ unit }
 font_config = { "set font" ~ string }
-box_config = { "set box" ~ (padding | width| height)* }
+box_config = { "set box" ~ (padding | width| height | radius )* }
 circle_config = { "set circle" ~ (height) }
 line_config = { "set line" ~ length }
 
