@@ -481,6 +481,7 @@ impl<'i> Diagram<'i> {
 
         let mut rect = Rect::from_point_and_size(start, (0, 0));
         Self::bounds_from_point(&mut rect, &end);
+        debug!("rect {:?} {:?}", id, rect);
 
         index.insert(ShapeName::Line, *id, rect);
         index.add_open(ShapeName::Line, attrs.clone());

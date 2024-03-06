@@ -72,6 +72,7 @@ mod real_world {
   fn timeline() {
     let string = r#"
       sline.time 4in right ->
+      dot at 1/10 time.n "1949" below
       sline from 1/4 time.s 1in up "Start" *-
       "#;
     let diagram = create_diagram(string);

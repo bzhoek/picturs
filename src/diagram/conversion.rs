@@ -7,7 +7,7 @@ use skia_safe::Color;
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Endings, Caption, Config, Edge, Flow, Length, Displacement, Movement, ObjectEdge, Unit};
+use crate::diagram::types::{Endings, Caption, Config, Edge, Flow, Length, Displacement, Movement, ObjectEdge, Unit, EdgeDirection};
 
 #[cfg(test)]
 mod tests;
@@ -279,9 +279,13 @@ impl Conversion {
         }
         _ => panic!("Unexpected rule {:?}", pair.as_rule())
       });
+
       let mut object = object.unwrap();
       if let Some(fraction) = fraction {
-        object.edge.y = fraction - 0.5;
+        match object.edge.direction {
+          EdgeDirection::Horizontal => { object.edge.y = fraction - 0.5 }
+          EdgeDirection::Vertical => { object.edge.x = fraction - 0.5 }
+        }
       }
       object
     })
