@@ -7,7 +7,7 @@ use skia_safe::Color;
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Endings, Caption, Config, Edge, Flow, Length, Displacement, Movement, ObjectEdge, Unit, EdgeDirection};
+use crate::diagram::types::{Caption, Config, Displacement, Edge, EdgeDirection, Endings, Flow, Length, Movement, ObjectEdge, Unit};
 
 #[cfg(test)]
 mod tests;
@@ -50,33 +50,50 @@ impl Conversion {
   }
 
   pub(crate) fn stroke_color_in(pair: &Pair<Rule>) -> Option<Color> {
-    Rules::dig_rule(pair, Rule::color).and_then(Self::color)
+    Rules::dig_rule(pair, Rule::stroke).and_then(Self::color_from)
   }
 
   pub(crate) fn fill_color_in(pair: &Pair<Rule>) -> Option<Color> {
-    Rules::dig_rule(pair, Rule::fill).and_then(Self::color)
+    Rules::dig_rule(pair, Rule::fill).and_then(Self::color_from)
   }
 
   pub(crate) fn text_color_in(pair: &Pair<Rule>) -> Option<Color> {
-    Rules::dig_rule(pair, Rule::text_color).and_then(Self::color)
+    Rules::dig_rule(pair, Rule::text_color).and_then(Self::color_from)
   }
 
-  fn color(pair: Pair<Rule>) -> Option<Color> {
-    Self::string_for(&pair, Rule::id)
-      .map(|color| match color {
-        "white" => Color::WHITE,
-        "lgray" => Color::LIGHT_GRAY,
-        "dgray" => Color::DARK_GRAY,
-        "black" => Color::BLACK,
-        "yellow" => Color::YELLOW,
-        "red" => Color::RED,
-        "green" => Color::GREEN,
-        "blue" => Color::BLUE,
-        "gray" => Color::GRAY,
-        "cyan" => Color::CYAN,
-        "magenta" => Color::MAGENTA,
-        _ => panic!("unknown color {}", color)
-      })
+  fn color_from(pair: Pair<Rule>) -> Option<Color> {
+    let mut pairs = pair.into_inner();
+    pairs.find_map(|pair| {
+      match pair.as_rule() {
+        Rule::id => {
+          let str = pair.as_str();
+          match str {
+            "white" => Color::WHITE,
+            "lgray" => Color::LIGHT_GRAY,
+            "dgray" | "dgrey" => Color::DARK_GRAY,
+            "black" => Color::BLACK,
+            "yellow" => Color::YELLOW,
+            "red" => Color::RED,
+            "green" => Color::GREEN,
+            "blue" => Color::BLUE,
+            "gray" | "grey" => Color::GRAY,
+            "cyan" => Color::CYAN,
+            "magenta" => Color::MAGENTA,
+            _ => panic!("unknown color {:?}", pair)
+          }
+        }
+        Rule::rgb => {
+          let str = pair.as_str();
+          let hex = &str[1..];
+          let hex = u32::from_str_radix(hex, 16).unwrap();
+          let r = (hex >> 16) as u8;
+          let g = (hex >> 8) as u8;
+          let b = hex as u8;
+          Color::from_argb(0xFF, r, g, b)
+        }
+        _ => panic!("unexpected rule {:?}", pair.as_rule())
+      }.into()
+    })
   }
 
   pub(crate) fn string_in<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {

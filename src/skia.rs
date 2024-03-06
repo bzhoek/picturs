@@ -82,6 +82,7 @@ impl Canvas {
   pub fn stroke(&mut self) {
     self.paint.set_style(PaintStyle::Stroke);
     self.surface.canvas().draw_path(&self.path, &self.paint);
+    self.path.reset();
   }
 
   pub fn fill(&mut self) {

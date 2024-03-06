@@ -27,6 +27,7 @@ pub enum Attributes<'a> {
     source: Option<ObjectEdge>,
     target: Option<ObjectEdge>,
     movement: Option<Displacement>,
+    stroke: Color,
   },
   Closed {
     id: Option<&'a str>,
@@ -144,10 +145,7 @@ impl<'i> Diagram<'i> {
         config.flow = Flow::new(pair.as_str());
         None
       }
-      _ => {
-        debug!("Unmatched {:?}", pair);
-        None
-      }
+      _ => None
     };
     result
   }
@@ -383,6 +381,7 @@ impl<'i> Diagram<'i> {
 
   fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, rule: Rule) -> (Attributes<'a>, Pair<'a, Rule>) {
     let attributes = Rules::get_rule(pair, rule);
+    let (stroke, _fill, _text) = Conversion::colors_from(&attributes);
 
     (Attributes::Open {
       id: Conversion::identified_in(pair),
@@ -393,6 +392,7 @@ impl<'i> Diagram<'i> {
       target: Conversion::fraction_edge_for(&attributes, Rule::target),
       movement: Conversion::displacement_for(&attributes, Rule::rel_movement, &config.unit),
       same: Rules::find_rule(&attributes, Rule::same).is_some(),
+      stroke,
     }, attributes)
   }
 
@@ -473,6 +473,7 @@ impl<'i> Diagram<'i> {
         caption,
         length,
         ref arrows,
+        stroke,
         ..
       } => {
         let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
@@ -481,13 +482,13 @@ impl<'i> Diagram<'i> {
 
         let mut rect = Rect::from_point_and_size(start, (0, 0));
         Self::bounds_from_point(&mut rect, &end);
-        debug!("rect {:?} {:?}", id, rect);
+        debug!("sline_from {:?} {:?}", pair.as_str(), stroke);
 
         index.insert(ShapeName::Line, *id, rect);
         index.add_open(ShapeName::Line, attrs.clone());
 
         let node = Primitive(
-          *id, rect, rect, Color::BLACK,
+          *id, rect, rect, *stroke,
           Shape::Sline(vec!(start, end), caption.clone(), arrows.clone()));
         Some((rect, node))
       }

@@ -71,10 +71,10 @@ mod real_world {
   #[test]
   fn timeline() {
     let string = r#"
-      sline.time 4in right ->
-      dot.y49 at 1/10 time.n "1949" below
-      sline from y49.n .5in up
-      box "1949" .s .5in up from 1/10 time.s
+      sline.time 4in right -> color dgrey
+      dot.y49 at 1/10 time.n "1949" below color #645590
+      sline from y49.n .5in up color #645590
+      box "1949" .s .5in up from 1/10 time.s color #645590
       sline from 3/4 time.s 1in up "Start" *-
       "#;
     let diagram = create_diagram(string);

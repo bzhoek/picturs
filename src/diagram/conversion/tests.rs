@@ -2,6 +2,29 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Rule;
 use crate::diagram::types::{Edge, ObjectEdge};
 
+mod colors {
+  use skia_safe::Color;
+  use crate::diagram::conversion::Conversion;
+  use crate::diagram::parser::Rule;
+
+  #[test]
+  fn named_color() {
+    let color = subject("color red");
+    assert_eq!(color, Some(Color::RED));
+  }
+
+  #[test]
+  fn rgb_color() {
+    let color = subject("color #645590");
+    assert_eq!(color, Some(Color::from(0xFF645590)));
+  }
+
+  fn subject(string: &str) -> Option<Color> {
+    let pair = Conversion::pair_for(Rule::stroke, string);
+    Conversion::color_from(pair)
+  }
+}
+
 mod object_edge_degrees {
   use super::*;
 

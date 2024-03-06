@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Endings, Caption, Displacement, Node, ObjectEdge, Paragraph, Radius, Shape, Ending};
+use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
