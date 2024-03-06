@@ -7,7 +7,7 @@ use skia_safe::Color;
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Arrows, Caption, Config, Edge, Flow, Length, Displacement, Movement, ObjectEdge, Unit};
+use crate::diagram::types::{Endings, Caption, Config, Edge, Flow, Length, Displacement, Movement, ObjectEdge, Unit};
 
 #[cfg(test)]
 mod tests;
@@ -129,8 +129,8 @@ impl Conversion {
     Caption { text, inner: inner.mirror(), outer, size, opaque }
   }
 
-  pub(crate) fn arrows(pair: &Pair<Rule>) -> Arrows {
-    Rules::find_rule(pair, Rule::arrows)
+  pub(crate) fn arrows(pair: &Pair<Rule>) -> Endings {
+    Rules::find_rule(pair, Rule::endings)
       .map(|pair| pair.as_str().into())
       .unwrap_or_default()
   }

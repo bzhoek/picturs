@@ -24,7 +24,7 @@ pub enum Shape<'a> {
   Move(),
   Dot(Point, Radius, Option<Caption<'a>>),
   Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption<'a>>),
-  Line(Point, Option<Displacement>, Point, Option<Caption<'a>>, Arrows),
+  Line(Point, Option<Displacement>, Point, Option<Caption<'a>>, Endings),
   Box(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
@@ -34,7 +34,7 @@ pub enum Shape<'a> {
   Text(Paragraph<'a>, Option<EdgeMovement>),
   File(Color, Option<Paragraph<'a>>, Length, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
   Path(Point, Vec<Point>, Option<Caption<'a>>),
-  Sline(Vec<Point>, Option<Caption<'a>>),
+  Sline(Vec<Point>, Option<Caption<'a>>, Endings),
 }
 
 #[derive(Debug, PartialEq)]
@@ -55,21 +55,26 @@ pub struct Caption<'a> {
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub enum Arrows {
+pub enum Endings {
   #[default]
   None,
-  Start,
-  End,
-  Both,
+  StartArrow,
+  EndArrow,
+  BothArrow,
+  EndDot,
+  StartDot,
+  BothDot,
 }
 
-impl From<&str> for Arrows {
+impl From<&str> for Endings {
   fn from(item: &str) -> Self {
     match item {
-      "<-" => Arrows::Start,
-      "->" => Arrows::End,
-      "<->" => Arrows::Both,
-      _ => panic!("Unknown arrows {}", item)
+      "<-" => Endings::StartArrow,
+      "->" => Endings::EndArrow,
+      "-*" => Endings::EndDot,
+      "*-" => Endings::StartDot,
+      "<->" => Endings::BothArrow,
+      _ => panic!("Unknown ending {}", item)
     }
   }
 }
@@ -384,7 +389,6 @@ pub struct Displacement {
 }
 
 impl Displacement {
-
   pub fn new(length: f32, unit: Unit, edge: Edge) -> Self {
     let length = Length::new(length, unit);
     Self { length, edge }

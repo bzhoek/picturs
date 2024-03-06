@@ -9,7 +9,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Arrows, BLOCK_PADDING, Caption, Config, Edge, Flow, Length, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{Endings, BLOCK_PADDING, Caption, Config, Edge, Flow, Length, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -23,7 +23,7 @@ pub enum Attributes<'a> {
     same: bool,
     caption: Option<Caption<'a>>,
     length: f32,
-    arrows: Arrows,
+    arrows: Endings,
     source: Option<ObjectEdge>,
     target: Option<ObjectEdge>,
     movement: Option<Displacement>,
@@ -487,7 +487,7 @@ impl<'i> Diagram<'i> {
 
         let node = Primitive(
           *id, rect, rect, Color::BLACK,
-          Shape::Sline(vec!(start, end), caption.clone()));
+          Shape::Sline(vec!(start, end), caption.clone(), arrows.clone()));
         Some((rect, node))
       }
     }

@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Arrows, Caption, Displacement, Node, ObjectEdge, Paragraph, Radius, Shape};
+use crate::diagram::types::{Endings, Caption, Displacement, Node, ObjectEdge, Paragraph, Radius, Shape};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -53,16 +53,19 @@ impl Renderer {
 
         Self::draw_caption(canvas, used, caption);
       }
-      Shape::Sline(points, caption) => {
+      Shape::Sline(points, caption, endings) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
-        let start = points.first().unwrap();
+        let mut points_iter = points.iter();
+        let start = points_iter.next().unwrap();
         canvas.move_to(start.x, start.y);
-        for point in points.iter() {
+        for point in points_iter {
           canvas.line_to(point.x, point.y);
         }
         canvas.stroke();
 
+        let end = points.last().unwrap();
+        Self::draw_endings(canvas, start, end, endings);
         Self::draw_caption(canvas, used, caption);
       }
       Shape::Dot(point, radius, caption) => {
@@ -152,7 +155,7 @@ impl Renderer {
     }
   }
 
-  fn render_line(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Displacement>, end: &Point, caption: &Option<Caption>, arrows: &Arrows) {
+  fn render_line(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Displacement>, end: &Point, caption: &Option<Caption>, endings: &Endings) {
     canvas.paint.set_style(PaintStyle::Stroke);
     canvas.move_to(used.left, used.top);
     let mut point = Point::new(used.left, used.top);
@@ -171,49 +174,28 @@ impl Renderer {
     canvas.line_to(used.right, used.bottom);
     canvas.stroke();
 
-    if *arrows == Arrows::Start || *arrows == Arrows::Both {
-      let direction = end.sub(*start);
-      Self::draw_arrow_head(canvas, end, direction);
-    }
-
-    if *arrows == Arrows::End || *arrows == Arrows::Both {
-      let direction = start.sub(*end);
-      Self::draw_arrow_head(canvas, start, direction);
-    }
-
+    Self::draw_endings(canvas, start, end, endings);
     Self::draw_caption(canvas, used, caption);
   }
 
-  fn render_sline(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Displacement>, end: &Point, caption: &Option<Caption>, arrows: &Arrows) {
-    canvas.paint.set_style(PaintStyle::Stroke);
-    canvas.move_to(start.x, start.y);
-    let mut point = Point::new(used.left, used.top);
-    if let Some(movement) = movement {
-      point = point.add(movement.offset());
-
-      if movement.is_horizontal() {
-        canvas.line_to(point.x, point.y);
-        canvas.line_to(point.x, used.bottom);
-      } else {
-        canvas.line_to(point.x, point.y);
-        canvas.line_to(used.right, point.y);
-      }
+  fn draw_endings(canvas: &mut Canvas, start: &Point, end: &Point, endings: &Endings) {
+    if *endings == Endings::StartDot || *endings == Endings::BothDot {
+      Self::draw_dot(canvas, start);
     }
 
-    canvas.line_to(used.right, used.bottom);
-    canvas.stroke();
+    if *endings == Endings::EndDot || *endings == Endings::BothDot {
+      Self::draw_dot(canvas, end);
+    }
 
-    if *arrows == Arrows::Start || *arrows == Arrows::Both {
+    if *endings == Endings::StartArrow || *endings == Endings::BothArrow {
       let direction = end.sub(*start);
       Self::draw_arrow_head(canvas, end, direction);
     }
 
-    if *arrows == Arrows::End || *arrows == Arrows::Both {
+    if *endings == Endings::EndArrow || *endings == Endings::BothArrow {
       let direction = start.sub(*end);
       Self::draw_arrow_head(canvas, start, direction);
     }
-
-    Self::draw_caption(canvas, used, caption);
   }
 
   pub fn pixel_align(used: &Rect) -> Rect {
@@ -355,5 +337,10 @@ impl Renderer {
         }
       }
     }
+  }
+  fn draw_dot(canvas: &mut Canvas, point: &Point) {
+    canvas.paint.set_style(PaintStyle::Fill);
+    canvas.paint.set_color(Color::BLACK);
+    canvas.circle(point, 4.);
   }
 }

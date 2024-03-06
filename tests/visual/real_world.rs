@@ -71,8 +71,8 @@ mod real_world {
   #[test]
   fn timeline() {
     let string = r#"
-      sline.time 4in right
-      sline from 1/4 time.s 1in up "Start"
+      sline.time 4in right ->
+      sline from 1/4 time.s 1in up "Start" *-
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
