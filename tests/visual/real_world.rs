@@ -74,6 +74,7 @@ mod real_world {
       sline.time 4in right ->
       dot at 1/10 time.n "1949" below
       sline from 1/4 time.s 1in up "Start" *-
+      box "1949" .s .5in up from 1/10 time.s
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);

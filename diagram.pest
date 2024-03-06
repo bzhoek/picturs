@@ -41,9 +41,11 @@ path = { "path" ~ identified? ~ movements ~ caption? }
 line_attributes = { line_attribute* }
 line_attribute = _ { length | source | rel_movement | target | caption | endings | same }
 length = { ("ln" | "length") ~ size }
-source = { "from" ~ fraction? ~ object_edge }
+source = { "from" ~ object_fraction }
+object_fraction = _{ fraction? ~ object_edge }
 fraction = ${ number ~ "/" ~ number }
-target = { "to" ~ fraction? ~ object_edge }
+
+target = { "to" ~ object_fraction }
 endings = { "<->" | "<-" | "->" | "*-*" | "*-" | "-*" }
 
 caption = { string ~ alignment? ~ opaque? }
@@ -69,7 +71,7 @@ rel_movement = { offset ~ direction }
 offset = { size }
 direction = { "up" | "down" | "left" | "right" }
 last_object = _{ "last" ~ object_edge }
-from_object = _{ "from" ~ object_edge }
+from_object = _{ "from" ~ object_fraction }
 
 flow_to = { "flow" ~ size }
 move_to = { "move" ~ movements }
@@ -79,7 +81,6 @@ abs_movement = { "to" ~ object_edge }
 
 dot = { "dot" ~ at_object? ~ dot_attributes ~ caption? }
 at_object = { "at" ~ object_fraction }
-object_fraction = _{ fraction? ~ object_edge }
 
 dot_attributes = { dot_attribute* }
 dot_attribute = { color | radius | same }
