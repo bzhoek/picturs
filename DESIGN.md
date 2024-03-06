@@ -27,3 +27,11 @@ box.pic2 same "Primary Interrupt Controller"
 ```
 
 In this example, the second `line` gets the `1.5in left` movement and `ljust opaque ->` from the first `line`. The `same` attributes only takes values for empty `Option`s
+
+## Naming
+
+Om de inhoud van paren te parsen, worden er verschillende strategiën gebruikt. Het achtervoegsel van een methode geeft aan hoe gewerkt wordt:
+
+1. `<T>_from` vertaalt het gegeven `pair` direct naar `<T>`
+2. `<T>_for` zoekt binnen het `pair` naar `Rule::` en vertaalt naar `Option<T>`
+3. `<T>_in` zoekt recursief in het `pair` naar `Rule::` en vertaalt naar `Option<T>`
