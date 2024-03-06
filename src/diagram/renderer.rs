@@ -5,7 +5,7 @@ use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Endings, Caption, Displacement, Node, ObjectEdge, Paragraph, Radius, Shape};
+use crate::diagram::types::{Endings, Caption, Displacement, Node, ObjectEdge, Paragraph, Radius, Shape, Ending};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -65,7 +65,7 @@ impl Renderer {
         canvas.stroke();
 
         let end = points.last().unwrap();
-        Self::draw_endings(canvas, start, end, endings);
+        Self::draw_endings(endings, start, end, canvas);
         Self::draw_caption(canvas, used, caption);
       }
       Shape::Dot(point, radius, caption) => {
@@ -174,27 +174,23 @@ impl Renderer {
     canvas.line_to(used.right, used.bottom);
     canvas.stroke();
 
-    Self::draw_endings(canvas, start, end, endings);
+    Self::draw_endings(endings, end, start, canvas); // FIXME the endings are reverted
     Self::draw_caption(canvas, used, caption);
   }
 
-  fn draw_endings(canvas: &mut Canvas, start: &Point, end: &Point, endings: &Endings) {
-    if *endings == Endings::StartDot || *endings == Endings::BothDot {
-      Self::draw_dot(canvas, start);
-    }
+  fn draw_endings(endings: &Endings, start: &Point, end: &Point, canvas: &mut Canvas) {
+    Self::draw_ending(&endings.start, start, end, canvas);
+    Self::draw_ending(&endings.end, end, start, canvas);
+  }
 
-    if *endings == Endings::EndDot || *endings == Endings::BothDot {
-      Self::draw_dot(canvas, end);
-    }
-
-    if *endings == Endings::StartArrow || *endings == Endings::BothArrow {
-      let direction = end.sub(*start);
-      Self::draw_arrow_head(canvas, end, direction);
-    }
-
-    if *endings == Endings::EndArrow || *endings == Endings::BothArrow {
-      let direction = start.sub(*end);
-      Self::draw_arrow_head(canvas, start, direction);
+  fn draw_ending(ending: &Ending, at: &Point, from: &Point, canvas: &mut Canvas) {
+    match ending {
+      Ending::Dot => Self::draw_dot(canvas, at),
+      Ending::Arrow => {
+        let direction = at.sub(*from);
+        Self::draw_arrow_head(canvas, at, direction);
+      }
+      _ => {}
     }
   }
 

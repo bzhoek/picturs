@@ -55,27 +55,43 @@ pub struct Caption<'a> {
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub enum Endings {
+pub enum Ending {
   #[default]
   None,
-  StartArrow,
-  EndArrow,
-  BothArrow,
-  EndDot,
-  StartDot,
-  BothDot,
+  Arrow,
+  Dot,
+}
+
+impl From<&str> for Ending {
+  fn from(item: &str) -> Self {
+    match item {
+      "<-" | "->" => Ending::Arrow,
+      "*-" | "-*" => Ending::Dot,
+      _ => Ending::None
+    }
+  }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Endings {
+  pub start: Ending,
+  pub end: Ending,
 }
 
 impl From<&str> for Endings {
-  fn from(item: &str) -> Self {
-    match item {
-      "<-" => Endings::StartArrow,
-      "->" => Endings::EndArrow,
-      "-*" => Endings::EndDot,
-      "*-" => Endings::StartDot,
-      "<->" => Endings::BothArrow,
-      _ => panic!("Unknown ending {}", item)
-    }
+  fn from(str: &str) -> Self {
+    let mut chars = str.chars();
+    let start = match chars.next().unwrap() {
+      '<' => Ending::Arrow,
+      '*' => Ending::Dot,
+      _ => Ending::None
+    };
+    let end = match chars.last().unwrap() {
+      '>' => Ending::Arrow,
+      '*' => Ending::Dot,
+      _ => Ending::None
+    };
+    Self { start, end }
   }
 }
 

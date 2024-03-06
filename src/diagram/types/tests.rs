@@ -1,4 +1,5 @@
 use skia_safe::{Point, Rect};
+
 use crate::diagram::types::Edge;
 
 #[test]
@@ -29,3 +30,23 @@ fn to_edge_from_negative() {
   assert_eq!(nw, Point::new(0., 30.));
 }
 
+mod endings {
+  use crate::diagram::types::{Ending, Endings};
+
+  #[test]
+  fn ending() {
+    let subject = "<->";
+    let start = &subject[0..2];
+    let end = &subject[1..];
+    assert_eq!(start, "<-");
+    assert_eq!(end, "->");
+    assert_eq!(Ending::from(start), Ending::Arrow);
+  }
+
+  #[test]
+  fn endings() {
+    assert_eq!(Endings::from("<->"), Endings { start: Ending::Arrow, end: Ending::Arrow });
+    assert_eq!(Endings::from("<-"), Endings { start: Ending::Arrow, end: Ending::None });
+    assert_eq!(Endings::from("->"), Endings { start: Ending::None, end: Ending::Arrow });
+  }
+}
