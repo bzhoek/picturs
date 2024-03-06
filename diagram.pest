@@ -59,7 +59,7 @@ text_attribute = _{ string | color | fill | width | location | fit }
 fit = { "fit" }
 
 // common
-identified = { "." ~ id }
+identified = ${ "." ~ id }
 id = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
 
 size = _{ number ~ unit? }

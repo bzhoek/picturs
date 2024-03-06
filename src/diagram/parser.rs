@@ -116,7 +116,7 @@ impl<'i> Diagram<'i> {
       Rule::flow_to => Self::flow_from(pair, cursor, config),
       Rule::move_to => Self::move_from(&pair, cursor, &config.unit),
       Rule::font_config => {
-        let name = Conversion::string_dig(&pair, Rule::inner).unwrap();
+        let name = Conversion::string_in(&pair, Rule::inner).unwrap();
         let typeface = FontMgr::default().match_family_style(name, FontStyle::default()).unwrap();
         config.font = Font::from_typeface(typeface, 17.0);
         let rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
@@ -136,7 +136,7 @@ impl<'i> Diagram<'i> {
         None
       }
       Rule::line_config => {
-        let length = Conversion::length_dig(&pair, Rule::length, &config.unit).unwrap();
+        let length = Conversion::length_in(&pair, Rule::length, &config.unit).unwrap();
         config.line = length;
         None
       }
@@ -157,14 +157,14 @@ impl<'i> Diagram<'i> {
     let (stroke, fill, text) = Conversion::colors_from(&attributes);
 
     (Attributes::Closed {
-      id: Conversion::identified(pair),
+      id: Conversion::identified_in(pair),
       same: Rules::find_rule(&attributes, Rule::same).is_some(),
-      width: Conversion::width(&attributes, &config.unit),
-      height: Conversion::height(&attributes, &config.unit),
-      padding: Conversion::padding(&attributes, &config.unit).unwrap_or(shape.padding),
-      radius: Conversion::radius(&attributes, &config.unit).unwrap_or_default(),
-      title: Conversion::string_dig(&attributes, Rule::inner),
-      location: Conversion::location_from(&attributes, &Edge::default(), &config.unit),
+      width: Conversion::width_into(&attributes, &config.unit),
+      height: Conversion::height_into(&attributes, &config.unit),
+      padding: Conversion::padding_into(&attributes, &config.unit).unwrap_or(shape.padding),
+      radius: Conversion::radius_in(&attributes, &config.unit).unwrap_or_default(),
+      title: Conversion::string_in(&attributes, Rule::inner),
+      location: Conversion::location_for(&attributes, &Edge::default(), &config.unit),
       stroke,
       fill,
       text,
@@ -189,7 +189,7 @@ impl<'i> Diagram<'i> {
 
       let (nodes, inner) = {
         let mut config = config.clone();
-        Conversion::flow(&attributes).into_iter().for_each(|flow| {
+        Conversion::flow_in(&attributes).into_iter().for_each(|flow| {
           config.flow = flow;
         });
         Self::nodes_from(pair.clone().into_inner(), vec![], &inset, config, index)
@@ -385,9 +385,9 @@ impl<'i> Diagram<'i> {
     let attributes = Rules::get_rule(pair, rule);
 
     (Attributes::Open {
-      id: Conversion::identified(pair),
+      id: Conversion::identified_in(pair),
       caption: Conversion::caption(&attributes, config),
-      length: Conversion::length(&attributes, &config.unit).unwrap_or(config.line.pixels()),
+      length: Conversion::length_into(&attributes, &config.unit).unwrap_or(config.line.pixels()),
       arrows: Conversion::arrows(&attributes),
       source: Conversion::fraction_edge_for(&attributes, Rule::source),
       target: Conversion::fraction_edge_for(&attributes, Rule::target),
@@ -500,12 +500,13 @@ impl<'i> Diagram<'i> {
     let mut movements = vec![];
 
     let pairs = pair.clone().into_inner();
+
     pairs.for_each(|pair| match pair.as_rule() {
       Rule::identified => id = pair.into_inner().next().unwrap().as_str().into(),
       Rule::caption => caption = Conversion::caption_from(pair, config).into(),
       Rule::movements => {
         movements = pair.into_inner()
-          .map(|inner| Conversion::movement2_from(inner, &config.unit))
+          .map(|inner| Conversion::movement_from(inner, &config.unit))
           .collect::<Vec<_>>();
       }
       _ => panic!("Unexpected {:?}", pair)
@@ -602,10 +603,10 @@ impl<'i> Diagram<'i> {
   }
 
   fn text_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let id = Conversion::identified(pair);
-    let title = Conversion::string_dig(pair, Rule::inner).unwrap();
+    let id = Conversion::identified_in(pair);
+    let title = Conversion::string_in(pair, Rule::inner).unwrap();
     let attributes = Rules::find_rule(pair, Rule::text_attributes).unwrap();
-    let location = Conversion::location_from(pair, &config.flow.end, &config.unit);
+    let location = Conversion::location_for(pair, &config.flow.end, &config.unit);
 
     let fit = Rules::dig_rule(&attributes, Rule::fit);
     let paragraph = match fit {
@@ -614,7 +615,7 @@ impl<'i> Diagram<'i> {
         Paragraph { text: title, widths: vec![size.width], height: size.height, size }
       }
       None => {
-        let width = Conversion::width(&attributes, &config.unit).unwrap_or(config.text.width);
+        let width = Conversion::width_into(&attributes, &config.unit).unwrap_or(config.text.width);
         let (widths, height) = config.measure_strings(title, width - 2. * TEXT_PADDING);
         let size = Size::new(width, height);
         Paragraph { text: title, widths, height, size }
@@ -647,8 +648,8 @@ impl<'i> Diagram<'i> {
         source,
         ..
       } => {
-        let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
-        let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot);
+        let color = Conversion::stroke_color_in(&attributes).unwrap_or(Color::BLUE);
+        let radius = Conversion::radius_in(&attributes, &config.unit).unwrap_or(config.dot);
 
         let point = match source {
           Some(object) => {
