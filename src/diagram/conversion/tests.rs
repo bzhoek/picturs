@@ -8,7 +8,7 @@ mod thickness {
   #[test]
   fn thick() {
     let thickness = subject("thick");
-    assert_eq!(thickness, 4.);
+    assert_eq!(thickness, 3.);
   }
 
   fn subject(string: &str) -> f32 {

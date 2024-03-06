@@ -9,6 +9,7 @@ pub mod conversion;
 pub mod renderer;
 pub mod index;
 pub mod edges;
+mod attributes;
 
 pub fn create_diagram(string: &str) -> Diagram {
   init_logging();

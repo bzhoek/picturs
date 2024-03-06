@@ -4,47 +4,18 @@ use log::{debug, info, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Color, Font, FontMgr, FontStyle, ISize, Point, Rect, Size};
+use crate::diagram::attributes::Attributes;
 
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Endings, BLOCK_PADDING, Caption, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, Radius};
+use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
 #[cfg(test)]
 mod tests;
-
-#[derive(Clone, Debug)]
-pub enum Attributes<'a> {
-  Open {
-    id: Option<&'a str>,
-    same: bool,
-    caption: Option<Caption<'a>>,
-    length: f32,
-    arrows: Endings,
-    source: Option<ObjectEdge>,
-    target: Option<ObjectEdge>,
-    movement: Option<Displacement>,
-    stroke: Color,
-    thickness: f32,
-  },
-  Closed {
-    id: Option<&'a str>,
-    same: bool,
-    width: Option<f32>,
-    height: Option<f32>,
-    padding: f32,
-    radius: Radius,
-    title: Option<&'a str>,
-    location: Option<(Edge, Vec<Displacement>, ObjectEdge)>,
-    stroke: Color,
-    fill: Color,
-    text: Color,
-    thickness: f32,
-  },
-}
 
 #[derive(Parser)]
 #[grammar = "diagram.pest"]
@@ -152,28 +123,8 @@ impl<'i> Diagram<'i> {
     result
   }
 
-  fn closed_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> (Attributes<'a>, Pair<'a, Rule>) {
-    let attributes = Rules::get_rule(pair, Rule::attributes);
-    let (stroke, fill, text) = Conversion::colors_from(&attributes);
-
-    (Attributes::Closed {
-      id: Conversion::identified_in(pair),
-      same: Rules::find_rule(&attributes, Rule::same).is_some(),
-      width: Conversion::width_into(&attributes, &config.unit),
-      height: Conversion::height_into(&attributes, &config.unit),
-      padding: Conversion::padding_into(&attributes, &config.unit).unwrap_or(shape.padding),
-      radius: Conversion::radius_into(&attributes, &config.unit).unwrap_or(shape.radius),
-      title: Conversion::string_in(&attributes, Rule::inner),
-      location: Conversion::location_for(&attributes, &Edge::default(), &config.unit),
-      stroke,
-      fill,
-      text,
-      thickness: Conversion::thickness_for(&attributes),
-    }, attributes)
-  }
-
   fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, attributes) = Self::closed_attributes(pair, config, &config.rectangle);
+    let (mut attrs, attributes) = Attributes::closed_attributes(pair, config, &config.rectangle);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Container);
 
     if let Attributes::Closed {
@@ -214,7 +165,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn circle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.circle);
+    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.circle);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Circle);
 
     if let Attributes::Closed {
@@ -241,7 +192,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn cylinder_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.cylinder);
+    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.cylinder);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Cylinder);
 
     if let Attributes::Closed {
@@ -268,7 +219,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.ellipse);
+    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.ellipse);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Ellipse);
 
     if let Attributes::Closed {
@@ -295,7 +246,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn file_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.file);
+    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.file);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::File);
 
     if let Attributes::Closed {
@@ -322,7 +273,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn oval_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.oval);
+    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.oval);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Oval);
     if let Attributes::Closed {
       id, title,
@@ -348,7 +299,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::closed_attributes(pair, config, &config.rectangle);
+    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.rectangle);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Box);
 
     if let Attributes::Closed {
@@ -388,26 +339,8 @@ impl<'i> Diagram<'i> {
     None
   }
 
-  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, rule: Rule) -> (Attributes<'a>, Pair<'a, Rule>) {
-    let attributes = Rules::get_rule(pair, rule);
-    let (stroke, _fill, _text) = Conversion::colors_from(&attributes);
-
-    (Attributes::Open {
-      id: Conversion::identified_in(pair),
-      caption: Conversion::caption(&attributes, config),
-      length: Conversion::length_into(&attributes, &config.unit).unwrap_or(config.line.pixels()),
-      arrows: Conversion::endings(&attributes),
-      source: Conversion::fraction_edge_for(&attributes, Rule::source),
-      target: Conversion::fraction_edge_for(&attributes, Rule::target),
-      movement: Conversion::displacement_for(&attributes, Rule::rel_movement, &config.unit),
-      same: Rules::find_rule(&attributes, Rule::same).is_some(),
-      stroke,
-      thickness: Conversion::thickness_for(&attributes),
-    }, attributes)
-  }
-
   fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, attributes) = Self::open_attributes(&pair, config, Rule::line_attributes);
+    let (mut attrs, attributes) = Attributes::open_attributes(&pair, config, Rule::line_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Arrow);
 
     if let Attributes::Open {
@@ -431,7 +364,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::open_attributes(&pair, config, Rule::line_attributes);
+    let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::line_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
     match &attrs {
@@ -470,7 +403,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn sline_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::open_attributes(&pair, config, Rule::line_attributes);
+    let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::line_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
     match &attrs {
@@ -649,7 +582,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn dot_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, attributes) = Self::open_attributes(pair, config, Rule::dot_attributes);
+    let (mut attrs, attributes) = Attributes::open_attributes(pair, config, Rule::dot_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Dot);
 
     match &attrs {

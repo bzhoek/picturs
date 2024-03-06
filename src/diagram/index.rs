@@ -3,12 +3,11 @@ use std::ops::Add;
 
 use log::error;
 use skia_safe::{Point, Rect};
-use crate::diagram::parser::{Attributes};
 
+use crate::diagram::attributes::Attributes;
 use crate::diagram::types::{Displacement, Edge, ObjectEdge};
 
-#[derive(Debug)]
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum ShapeName {
   Box,
   Dot,
@@ -60,11 +59,11 @@ impl<'a> Index<'a> {
     self.shapes.push((name, rect));
   }
 
-  pub fn add_open(&mut self, name: ShapeName, attrs: Attributes<'a>) {
+  pub(crate) fn add_open(&mut self, name: ShapeName, attrs: Attributes<'a>) {
     self.open.push((name, attrs));
   }
 
-  pub fn last_open(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes)> {
+  pub(crate) fn last_open(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes)> {
     self.open.iter().filter(|(name, _)| {
       shape == *name
     }).last()
