@@ -11,6 +11,7 @@ use crate::diagram::types::{Displacement, Edge, ObjectEdge};
 #[derive(PartialEq)]
 pub enum ShapeName {
   Box,
+  Dot,
   Container,
   Circle,
   Ellipse,

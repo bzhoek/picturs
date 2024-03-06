@@ -381,8 +381,8 @@ impl<'i> Diagram<'i> {
     None
   }
 
-  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config) -> (Attributes<'a>, Pair<'a, Rule>) {
-    let attributes = Rules::get_rule(pair, Rule::line_attributes);
+  fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, rule: Rule) -> (Attributes<'a>, Pair<'a, Rule>) {
+    let attributes = Rules::get_rule(pair, rule);
 
     (Attributes::Open {
       id: Conversion::identified(pair),
@@ -397,7 +397,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, attributes) = Self::open_attributes(&pair, config);
+    let (mut attrs, attributes) = Self::open_attributes(&pair, config, Rule::line_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Arrow);
 
     if let Attributes::Open {
@@ -421,7 +421,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::open_attributes(&pair, config);
+    let (mut attrs, _) = Self::open_attributes(&pair, config, Rule::line_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
     match &attrs {
@@ -460,7 +460,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn sline_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Self::open_attributes(&pair, config);
+    let (mut attrs, _) = Self::open_attributes(&pair, config, Rule::line_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
     match &attrs {
@@ -636,33 +636,41 @@ impl<'i> Diagram<'i> {
   }
 
   fn dot_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let caption = Conversion::caption(pair, config);
-    let id = Conversion::identified(pair);
-    let attributes = Rules::find_rule(pair, Rule::dot_attributes).unwrap();
-    let _same = Rules::dig_rule(&attributes, Rule::same);
-    let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
-    let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot);
+    let (mut attrs, attributes) = Self::open_attributes(pair, config, Rule::dot_attributes);
+    Self::copy_same_attributes(index, &mut attrs, ShapeName::Dot);
 
-    let object = Conversion::fraction_edge_for(pair, Rule::at_object);
-    let point = match object {
-      Some(object) => {
-        index.point_index(Some(&object), &[]).unwrap()
+    match &attrs {
+      Attributes::Closed { .. } => panic!("Wrong type"),
+      Attributes::Open {
+        id,
+        caption,
+        source,
+        ..
+      } => {
+        let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
+        let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot);
+
+        let point = match source {
+          Some(object) => {
+            index.point_index(Some(object), &[]).unwrap()
+          }
+          None => *cursor
+        };
+
+        let mut bounds = Rect::from_xywh(point.x, point.y, 0., 0.);
+        if let Some(caption) = &caption {
+          let rect = Renderer::dot_offset_of(&point, &radius, caption);
+          Self::bounds_from_rect(&mut bounds, rect);
+        }
+
+        index.insert(ShapeName::Dot, *id, bounds);
+
+        let node = Primitive(
+          None, bounds, bounds, color,
+          Shape::Dot(point, radius, caption.clone()));
+        Some((bounds, node))
       }
-      None => *cursor
-    };
-
-    let mut bounds = Rect::from_xywh(point.x, point.y, 0., 0.);
-    if let Some(caption) = &caption {
-      let rect = Renderer::dot_offset_of(&point, &radius, caption);
-      Self::bounds_from_rect(&mut bounds, rect);
     }
-
-    index.insert(ShapeName::Text, id, bounds);
-
-    let node = Primitive(
-      None, bounds, bounds, color,
-      Shape::Dot(point, radius, caption));
-    Some((bounds, node))
   }
 
   fn flow_from<'a>(pair: Pair<'a, Rule>, cursor: &Point, config: &mut Config) -> Option<(Rect, Node<'a>)> {
