@@ -33,7 +33,7 @@ impl Renderer {
           canvas.rectangle(used, *radius);
         }
         Primitive(_id, _, used, color, shape) => {
-          let used = Self::pixel_align(used);
+          let used = Self::align_rect(used);
           Self::render_shape(canvas, &used, color, shape);
         }
       }
@@ -61,14 +61,16 @@ impl Renderer {
         canvas.paint.set_color(*color);
         let mut points_iter = points.iter();
         let start = points_iter.next().unwrap();
+        let start = Self::align_point(start, *thickness);
         canvas.move_to(start.x, start.y);
         for point in points_iter {
+          let point = Self::align_point(point, *thickness);
           canvas.line_to(point.x, point.y);
         }
         canvas.stroke();
 
         let end = points.last().unwrap();
-        Self::draw_endings(endings, start, end, canvas);
+        Self::draw_endings(endings, &start, end, canvas);
         Self::draw_caption(canvas, used, caption);
       }
       Shape::Dot(point, radius, caption) => {
@@ -199,7 +201,15 @@ impl Renderer {
     }
   }
 
-  pub fn pixel_align(used: &Rect) -> Rect {
+  fn align_point(point: &Point, thickness: f32) -> Point {
+    if thickness.trunc() % 2. != 0. {
+      Point::new(point.x.trunc() + 0.5, point.y.trunc() + 0.5)
+    } else {
+      Point::new(point.x.trunc(), point.y.trunc())
+    }
+  }
+
+  fn align_rect(used: &Rect) -> Rect {
     Rect::from_xywh(used.left.trunc() + 0.5, used.top.trunc() + 0.5, used.width().round(), used.height().round())
   }
 
@@ -240,7 +250,7 @@ impl Renderer {
   fn draw_dot_caption(canvas: &mut Canvas, point: &Point, radius: &Radius, caption: &Option<Caption>) {
     if let Some(caption) = caption {
       let rect = Self::dot_offset_of(point, radius, caption);
-      let rect = Self::pixel_align(&rect);
+      let rect = Self::align_rect(&rect);
 
       canvas.paint.set_style(PaintStyle::Fill);
       canvas.text(caption.text, (rect.left, rect.bottom - (canvas.get_font_descent() / 2.)));
@@ -265,7 +275,7 @@ impl Renderer {
       let (topleft, rect) = Self::topleft_of(caption, used);
 
       if caption.opaque {
-        let rect = Self::pixel_align(&rect);
+        let rect = Self::align_rect(&rect);
         canvas.paint.set_color(Color::LIGHT_GRAY);
         canvas.paint.set_style(PaintStyle::StrokeAndFill);
         canvas.rectangle(&rect, 0.);
@@ -301,7 +311,7 @@ impl Renderer {
       } else {
         rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
       }
-      let rect = Self::pixel_align(&rect);
+      let rect = Self::align_rect(&rect);
       canvas.paragraph(paragraph.text, (rect.left, rect.top), rect.width());
     }
   }
@@ -343,5 +353,32 @@ impl Renderer {
     canvas.paint.set_style(PaintStyle::Fill);
     canvas.paint.set_color(Color::BLACK);
     canvas.circle(point, 4.);
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use skia_safe::{Point, Rect};
+  use crate::diagram::renderer::Renderer;
+
+  #[test]
+  fn align_rect() {
+    let aligned = Renderer::align_rect(&Rect::from_xywh(0., 0., 1., 1.));
+    assert_eq!(aligned, Rect::from_xywh(0.5, 0.5, 1., 1.));
+
+    let aligned = Renderer::align_rect(&Rect::from_xywh(0.5, 0.5, 1., 1.));
+    assert_eq!(aligned, Rect::from_xywh(0.5, 0.5, 1., 1.));
+  }
+
+  #[test]
+  fn align_point() {
+    let aligned = Renderer::align_point(&Point::new(0., 0.), 1.);
+    assert_eq!(aligned, Point::new(0.5, 0.5));
+
+    let aligned = Renderer::align_point(&Point::new(0., 0.), 2.);
+    assert_eq!(aligned, Point::new(0.0, 0.0));
+
+    let aligned = Renderer::align_point(&Point::new(0., 0.), 4.);
+    assert_eq!(aligned, Point::new(0.0, 0.0));
   }
 }
