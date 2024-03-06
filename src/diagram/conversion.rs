@@ -197,7 +197,6 @@ impl Conversion {
   }
 
   fn object_edge_from_default(pair: Pair<Rule>, default: &Edge) -> ObjectEdge {
-    dbg!(&pair);
     let mut inner = pair.into_inner();
     let id = Self::next_to_string(&mut inner).unwrap();
     let edge = Self::next_to_string(&mut inner);

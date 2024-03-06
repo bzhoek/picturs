@@ -79,7 +79,7 @@ movements = { movement* }
 movement = _{ rel_movement | abs_movement }
 abs_movement = { "to" ~ object_edge }
 
-dot = { "dot" ~ at_object? ~ dot_attributes ~ caption? }
+dot = { "dot" ~ identified? ~ at_object? ~ dot_attributes ~ caption? }
 at_object = { "at" ~ object_fraction }
 
 dot_attributes = { dot_attribute* }

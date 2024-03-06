@@ -72,9 +72,10 @@ mod real_world {
   fn timeline() {
     let string = r#"
       sline.time 4in right ->
-      dot at 1/10 time.n "1949" below
-      sline from 1/4 time.s 1in up "Start" *-
+      dot.y49 at 1/10 time.n "1949" below
+      sline from y49.n .5in up
       box "1949" .s .5in up from 1/10 time.s
+      sline from 3/4 time.s 1in up "Start" *-
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);

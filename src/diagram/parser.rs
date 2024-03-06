@@ -637,6 +637,7 @@ impl<'i> Diagram<'i> {
 
   fn dot_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let caption = Conversion::caption(pair, config);
+    let id = Conversion::identified(pair);
     let attributes = Rules::find_rule(pair, Rule::dot_attributes).unwrap();
     let _same = Rules::dig_rule(&attributes, Rule::same);
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
@@ -655,6 +656,8 @@ impl<'i> Diagram<'i> {
       let rect = Renderer::dot_offset_of(&point, &radius, caption);
       Self::bounds_from_rect(&mut bounds, rect);
     }
+
+    index.insert(ShapeName::Text, id, bounds);
 
     let node = Primitive(
       None, bounds, bounds, color,
