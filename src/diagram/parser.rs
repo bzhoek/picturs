@@ -389,8 +389,8 @@ impl<'i> Diagram<'i> {
       caption: Conversion::caption(&attributes, config),
       length: Conversion::length(&attributes, &config.unit).unwrap_or(config.line.pixels()),
       arrows: Conversion::arrows(&attributes),
-      source: Conversion::location_to_edge(&attributes, Rule::source),
-      target: Conversion::location_to_edge(&attributes, Rule::target),
+      source: Conversion::fraction_edge_from(&attributes, Rule::source),
+      target: Conversion::fraction_edge_from(&attributes, Rule::target),
       movement: Conversion::rule_to_displacement(&attributes, Rule::rel_movement, &config.unit),
       same: Rules::find_rule(&attributes, Rule::same).is_some(),
     }, attributes)
@@ -642,22 +642,12 @@ impl<'i> Diagram<'i> {
     let color = Conversion::stroke_color(&attributes).unwrap_or(Color::BLUE);
     let radius = Conversion::radius(&attributes, &config.unit).unwrap_or(config.dot);
 
-    let mut point = match Conversion::object_edge_dig(pair) {
-      Some(_) => {
-        let object = Conversion::object_edge_dig(pair).unwrap();
+    let object = Conversion::fraction_edge_from(pair, Rule::at_object);
+    let point = match object {
+      Some(object) => {
         index.point_index(Some(&object), &[]).unwrap()
       }
       None => *cursor
-    };
-
-    let inner = pair.clone().into_inner().next().unwrap();
-    if inner.as_rule() == Rule::object_edge {
-      let (id, degrees) = Conversion::object_edge_in_degrees_from(inner);
-      if let Some(degrees) = degrees {
-        let edge = Edge::from(degrees as f32);
-        let object = ObjectEdge::new(id, edge);
-        point = index.point_index(Some(&object), &[]).unwrap()
-      }
     };
 
     let mut bounds = Rect::from_xywh(point.x, point.y, 0., 0.);
@@ -715,12 +705,12 @@ impl<'i> Diagram<'i> {
   }
 
   fn source_movement_target_from_pair(pair: &Pair<Rule>, unit: &Unit) -> (ObjectEdge, Option<Displacement>, ObjectEdge) {
-    let source = Conversion::location_to_edge(pair, Rule::source)
+    let source = Conversion::fraction_edge_from(pair, Rule::source)
       .unwrap_or(ObjectEdge::new("source", "e"));
 
     let movement = Conversion::rule_to_displacement(pair, Rule::rel_movement, unit);
 
-    let target = Conversion::location_to_edge(pair, Rule::target)
+    let target = Conversion::fraction_edge_from(pair, Rule::target)
       .unwrap_or(ObjectEdge::new("source", "w"));
 
     (source, movement, target)

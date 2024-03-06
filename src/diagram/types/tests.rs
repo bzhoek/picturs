@@ -2,6 +2,23 @@ use skia_safe::{Point, Rect};
 
 use crate::diagram::types::Edge;
 
+mod edge {
+  use crate::diagram::types::Edge;
+  use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
+
+  #[test]
+  fn degrees() {
+    let edge = Edge::from(90.);
+    assert_eq!(edge.direction, Horizontal);
+
+    let edge = Edge::from(360.);
+    assert_eq!(edge.direction, Vertical);
+
+    let edge = Edge::from(0.);
+    assert_eq!(edge.direction, Vertical);
+  }
+}
+
 #[test]
 fn to_edge() {
   let rect = Rect::from_xywh(40., 40., 100., 200.);

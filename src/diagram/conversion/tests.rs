@@ -2,6 +2,30 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Rule;
 use crate::diagram::types::{Edge, ObjectEdge};
 
+mod object_edge_degrees {
+  use super::*;
+
+  #[test]
+  fn with_vertical_fraction() {
+    let object = subject("a.e");
+    assert_eq!(object, ObjectEdge::new("a", Edge::right()));
+
+    let object = subject("a.90");
+    assert_eq!(object, ObjectEdge::new("a", Edge::right()));
+
+    let object = subject("a.s");
+    assert_eq!(object, ObjectEdge::new("a", Edge::below()));
+
+    let object = subject("a.180");
+    assert_eq!(object, ObjectEdge::new("a", Edge::below()));
+  }
+
+  fn subject(string: &str) -> ObjectEdge {
+    let pair = Conversion::pair_for(Rule::object_edge, string);
+    Conversion::object_edge_from_degrees(pair)
+  }
+}
+
 mod object_edge {
   use super::*;
 
@@ -15,7 +39,6 @@ mod object_edge {
     let pair = Conversion::pair_for(Rule::object_edge, string);
     Conversion::object_edge_from(pair)
   }
-
 }
 
 mod fractions {
@@ -39,33 +62,6 @@ mod fractions {
 
   fn subject(string: &str) -> Option<ObjectEdge> {
     let pair = Conversion::pair_for(Rule::line_attributes, string);
-    Conversion::location_to_edge(&pair, Rule::source)
-  }
-}
-
-mod degrees {
-  use super::*;
-
-  #[test]
-  fn with_edge() {
-    let edge = subject("a.20");
-    assert_eq!(edge, ("a", Some(20)));
-
-    let edge = subject("b.nw");
-    assert_eq!(edge, ("b", Some(315)));
-
-    let edge = subject("c.3:");
-    assert_eq!(edge, ("c", Some(90)))
-  }
-
-  #[test]
-  fn without_edge() {
-    let edge = subject("d");
-    assert_eq!(edge, ("d", None))
-  }
-
-  fn subject(string: &str) -> (&str, Option<i32>) {
-    let pair = Conversion::pair_for(Rule::object_edge, string);
-    Conversion::object_edge_in_degrees_from(pair)
+    Conversion::fraction_edge_from(&pair, Rule::source)
   }
 }

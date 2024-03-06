@@ -199,10 +199,6 @@ impl Conversion {
     Conversion::length_dig(attributes, Rule::padding, unit).map(|length| length.pixels())
   }
 
-  pub(crate) fn object_edge_dig(pair: &Pair<Rule>) -> Option<ObjectEdge> {
-    Rules::dig_rule(pair, Rule::object_edge).map(Self::object_edge_from)
-  }
-
   fn object_edge_from(pair: Pair<Rule>) -> ObjectEdge {
     Self::object_edge_from_default(pair, &Edge::center())
   }
@@ -215,13 +211,13 @@ impl Conversion {
     ObjectEdge::new(id, edge)
   }
 
-  pub(crate) fn object_edge_in_degrees_from(pair: Pair<Rule>) -> (&str, Option<i32>) {
+  fn object_edge_from_degrees(pair: Pair<Rule>) -> ObjectEdge {
     let mut inner = pair.into_inner();
-    let id = inner.next().unwrap().as_str();
+    let id = Self::next_to_string(&mut inner).unwrap();
 
     let edge = inner.next();
     if edge.is_none() {
-      return (id, None);
+      return ObjectEdge::new(id, Edge::center());
     }
 
     let mut inner = edge.unwrap().into_inner();
@@ -249,7 +245,7 @@ impl Conversion {
       }
       _ => panic!("unexpected rule")
     };
-    (id, Some(degrees))
+    ObjectEdge::new(id, Edge::from(degrees as f32))
   }
 
   pub(crate) fn flow(pair: &Pair<Rule>) -> Option<Flow> {
@@ -257,7 +253,7 @@ impl Conversion {
       .map(|pair| Flow::new(pair.as_str()))
   }
 
-  pub(crate) fn location_to_edge(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
+  pub(crate) fn fraction_edge_from(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {
     Rules::find_rule(pair, rule).map(|pair| {
       let mut fraction: Option<f32> = None;
       let mut object: Option<ObjectEdge> = None;
@@ -270,7 +266,7 @@ impl Conversion {
           fraction = Some(x / y);
         }
         Rule::object_edge => {
-          object = Some(Self::object_edge_from(pair));
+          object = Some(Self::object_edge_from_degrees(pair));
         }
         _ => panic!("Unexpected rule {:?}", pair.as_rule())
       });

@@ -24,7 +24,7 @@ pub fn x_from_degrees(degrees: f32) -> f32 {
 
 pub fn y_from_degrees(degrees: f32) -> f32 {
   match degrees as i32 {
-    1..=45 => 1.,
+    0..=45 => 1.,
     46..=134 => (90. - degrees) / 45.,
     135..=225 => -1.,
     226..=314 => (degrees - 270.) / 45.,

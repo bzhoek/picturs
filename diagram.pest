@@ -77,8 +77,10 @@ movements = { movement* }
 movement = _{ rel_movement | abs_movement }
 abs_movement = { "to" ~ object_edge }
 
-dot = { "dot" ~ at_object_edge? ~ dot_attributes ~ caption? }
-at_object_edge = _{ "at" ~ fraction? ~ object_edge }
+dot = { "dot" ~ at_object? ~ dot_attributes ~ caption? }
+at_object = { "at" ~ object_fraction }
+object_fraction = _{ fraction? ~ object_edge }
+
 dot_attributes = { dot_attribute* }
 dot_attribute = { color | radius | same }
 same = { "same" }

@@ -265,7 +265,7 @@ impl From<f32> for Edge {
   fn from(degrees: f32) -> Self {
     let x = x_from_degrees(degrees) / 2.;
     let y = y_from_degrees(degrees) / -2.; // TODO: check with tests/types.rs:80
-    let direction = if x == 1. {
+    let direction = if y.abs() == 0. {
       Horizontal
     } else {
       Vertical
