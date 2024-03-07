@@ -54,7 +54,7 @@ mod tests {
     canvas.rectangle(&Rect::from_xywh(0.5, 0.5, 320., 240.), 0.);
 
     canvas.paint.set_style(PaintStyle::Fill);
-    let (widths, height) = canvas.paragraph(TQBF, (40, 40), 320.);
+    let (widths, height) = canvas.draw_paragraph(TQBF, (40, 40), 320.);
     assert_canvas!(canvas);
 
     assert_eq!(widths, vec!(299.0, 33.0));

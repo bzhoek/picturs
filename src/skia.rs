@@ -3,6 +3,7 @@ use std::io::Write;
 use std::mem;
 
 use skia_safe::{Color, Data, EncodedImageFormat, Font, FontMgr, FontStyle, ISize, Paint, PaintStyle, Path, PathEffect, Point, Rect, scalar, Surface, surfaces};
+use skia_safe::textlayout::{FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, StrutStyle, TextAlign, TextStyle};
 
 pub static A5: (i32, i32) = (798, 562);
 
@@ -98,7 +99,37 @@ impl Canvas {
     self.surface.canvas().draw_str(text, origin, &self.font, &self.paint);
   }
 
-  pub fn paragraph(&mut self, text: &str, origin: impl Into<Point>, width: f32) -> (Vec<scalar>, scalar) {
+  pub fn paragraph(text: &str, width: f32) -> Paragraph {
+    let mut font_collection = FontCollection::new();
+    font_collection.set_default_font_manager(FontMgr::new(), None);
+
+    let mut textstyle = TextStyle::new();
+    textstyle.set_foreground_paint(&Paint::default());
+    textstyle.set_font_size(17.);
+
+    let mut strutstyle = StrutStyle::new();
+    strutstyle.set_font_size(23.);
+    strutstyle.set_strut_enabled(true);
+    strutstyle.set_force_strut_height(true);
+
+    let mut paragraph_style = ParagraphStyle::new();
+    paragraph_style.set_text_align(TextAlign::Center);
+    paragraph_style.set_strut_style(strutstyle);
+
+    let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+    paragraph_builder.push_style(&textstyle);
+    paragraph_builder.add_text(text);
+
+    let mut paragraph = paragraph_builder.build();
+    paragraph.layout(width);
+    paragraph
+  }
+
+  pub fn paint_paragraph(&mut self, paragraph: &Paragraph, origin: impl Into<Point>) {
+    paragraph.paint(self.surface.canvas(), origin);
+  }
+
+  pub fn draw_paragraph(&mut self, text: &str, origin: impl Into<Point>, width: f32) -> (Vec<scalar>, scalar) {
     let (font_height, _font_metrics) = self.font.metrics();
     let advance = font_height / 4.;
 
