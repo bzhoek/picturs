@@ -118,4 +118,5 @@ mod tests {
 
     assert_canvas!(canvas);
   }
+
 }

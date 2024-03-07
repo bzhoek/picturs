@@ -1,7 +1,6 @@
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
-use log::warn;
 use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::parser::TEXT_PADDING;
@@ -32,7 +31,6 @@ impl Renderer {
           canvas.paint.set_color(Color::RED);
           canvas.rectangle(used, *radius);
         }
-        // Primitive(_id, used, color, shape) => {
         Primitive(common, shape) => {
           let used = Self::align_rect(&common.used, common.thickness);
           Self::render_shape(canvas, &used, &common.stroke, shape, &common.thickness);
