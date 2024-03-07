@@ -37,6 +37,8 @@ impl<'a> CommonAttributes<'a> {
 pub enum Node<'a> {
   Container(Option<&'a str>, Radius, Option<&'a str>, Used, Vec<Node<'a>>),
   Primitive(CommonAttributes<'a>, Shape<'a>),
+  Font(Font),
+  Move(Rect),
 }
 
 type EdgeMovement = (Edge, Vec<Displacement>, ObjectEdge);
@@ -44,7 +46,6 @@ pub type Radius = f32;
 
 #[derive(Debug, PartialEq)]
 pub enum Shape<'a> {
-  Move(),
   Dot(Point, Radius, Option<Caption<'a>>),
   Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption<'a>>),
   Line(Point, Option<Displacement>, Point, Option<Caption<'a>>, Endings),
@@ -53,7 +54,6 @@ pub enum Shape<'a> {
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Cylinder(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
-  Font(Font),
   Text(Paragraph<'a>, Option<EdgeMovement>),
   File(Color, Option<Paragraph<'a>>, Radius, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
   Path(Point, Vec<Point>, Option<Caption<'a>>),

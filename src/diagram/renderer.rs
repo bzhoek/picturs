@@ -37,14 +37,13 @@ impl Renderer {
           let used = Self::align_rect(&common.used, common.thickness);
           Self::render_shape(canvas, &used, &common.stroke, shape, &common.thickness);
         }
+        Node::Font(font) => canvas.font = font.clone(),
+        Node::Move(_used) => {}
       }
     }
   }
   fn render_shape(canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape, thickness: &f32) {
     match shape {
-      Shape::Font(font) => {
-        canvas.font = font.clone();
-      }
       Shape::Path(start, points, caption) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
@@ -162,7 +161,6 @@ impl Renderer {
           canvas.text(paragraph.text, (used.left, used.top + canvas.font.metrics().0));
         }
       }
-      _ => warn!("unmatched shape {:?}", shape)
     }
   }
 
@@ -351,6 +349,7 @@ impl Renderer {
         Primitive(common, _) => {
           common.used.top += 16.;
         }
+        _ => {}
       }
     }
   }

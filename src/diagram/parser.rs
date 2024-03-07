@@ -45,9 +45,7 @@ impl<'i> Diagram<'i> {
     let mut index = Index::default();
 
     let cursor = Point::new(0.5, 0.5);
-    let rect = Rect::from_point_and_size(cursor, (0, 0));
-    let common = CommonAttributes::new(None, rect, Color::BLACK, 1.);
-    let node = Primitive(common, Shape::Font(config.font.clone()));
+    let node = Node::Font(config.font.clone());
     let _ast = vec![node];
     let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &cursor, config, &mut index);
     self.nodes = ast;
@@ -95,8 +93,7 @@ impl<'i> Diagram<'i> {
         let typeface = FontMgr::default().match_family_style(name, FontStyle::default()).unwrap();
         config.font = Font::from_typeface(typeface, 17.0);
         let rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-        let common = CommonAttributes::new(None, rect, Color::BLACK, 1.);
-        let node = Primitive(common, Shape::Font(config.font.clone()));
+        let node = Node::Font(config.font.clone());
         Some((rect, node))
       }
       Rule::unit_config => {
@@ -642,8 +639,7 @@ impl<'i> Diagram<'i> {
     } else {
       used.bottom += length.pixels();
     }
-    let common = CommonAttributes::new(None, used, Color::BLACK, 1.);
-    let node = Primitive(common, Shape::Move());
+    let node = Node::Move(used);
     Some((used, node))
   }
 
@@ -651,8 +647,7 @@ impl<'i> Diagram<'i> {
     Conversion::displacements_from(pair, unit).map(|movements| {
       let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
       Index::offset_rect(&mut used, &movements);
-      let common = CommonAttributes::new(None, used, Color::BLACK, 1.);
-      (used, Primitive(common, Shape::Move()))
+      (used, Node::Move(used))
     })
   }
 
@@ -779,6 +774,7 @@ impl<'i> Diagram<'i> {
           }
           Self::find_nodes(nodes, node_id).is_some()
         }
+        _ => false,
       }
     })
   }
@@ -804,6 +800,7 @@ impl<'i> Diagram<'i> {
             return Some(node);
           }
         }
+        _ => {}
       }
     }
     None
