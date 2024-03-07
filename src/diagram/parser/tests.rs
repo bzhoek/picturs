@@ -35,11 +35,14 @@ fn should_parse_untitled_box() {
     diagram.nodes,
     vec![Primitive(
       None,
-      Rect::from_xywh(0.5, 0.5, 88., 75.),
-      Rect::from_xywh(0.5, 0.5, 88., 67.),
+      box_used(),
       Color::BLUE,
       rectangle(None)),
     ]);
+}
+
+fn box_used() -> Rect {
+  Rect::from_xywh(0.5, 0.5, 88., 67.)
 }
 
 #[test]
@@ -51,8 +54,7 @@ fn should_parse_title() {
     diagram.nodes,
     vec![Primitive(
       None,
-      Rect::from_xywh(0.5, 0.5, 88., 75.),
-      Rect::from_xywh(0.5, 0.5, 88., 67.),
+      box_used(),
       Color::BLUE,
       rectangle(Some(("title", 31.)))),
     ]);
@@ -67,8 +69,7 @@ fn should_parse_box_id() {
     diagram.nodes,
     vec![Primitive(
       Some("first"),
-      Rect::from_xywh(0.5, 0.5, 88., 75.),
-      Rect::from_xywh(0.5, 0.5, 88., 67.),
+      box_used(),
       Color::BLUE,
       rectangle(Some(("title", 31.)))),
     ]);
@@ -84,13 +85,11 @@ fn double_box() {
     diagram.nodes,
     vec![Primitive(
       None,
-      Rect::from_xywh(0.5, 0.5, 88., 75.),
-      Rect::from_xywh(0.5, 0.5, 88., 67.),
+      box_used(),
       Color::BLUE,
       rectangle(None)),
          Primitive(
            None,
-           Rect::from_xywh(0.5, 75.5, 88., 75.),
            Rect::from_xywh(0.5, 75.5, 88., 67.),
            Color::BLUE,
            rectangle(None)),
@@ -106,11 +105,9 @@ fn nested_box_id() {
     diagram.nodes,
     vec![Container(
       Some("parent"), 0., None,
-      Rect::from_xywh(0.5, 0.5, 104., 99.),
       Rect::from_xywh(0.5, 0.5, 104., 91.),
       vec![Primitive(
         None,
-        Rect::from_xywh(8.5, 8.5, 88., 75.),
         Rect::from_xywh(8.5, 8.5, 88., 67.),
         Color::BLUE,
         rectangle(None))
@@ -127,11 +124,9 @@ fn nested_box_with_title() {
     diagram.nodes,
     vec![Container(
       None, 0., Some("parent"),
-      Rect::from_xywh(0.5, 0.5, 104., 112.),
       Rect::from_xywh(0.5, 0.5, 104., 104.),
       vec![Primitive(
         None,
-        Rect::from_xywh(8.5, 8.5, 88., 75.),
         Rect::from_xywh(8.5, 8.5, 88., 67.),
         Color::BLUE,
         rectangle(Some(("child", 40.))))
@@ -143,11 +138,10 @@ fn nested_box_with_title() {
 fn box_with_wrapping_title() {
   let string = format!(r#"box "{}""#, TQBF);
   let diagram = create_diagram(&string);
-  let paragraph1_rect = Rect::from_xywh(0.5, 0.5, 88.0, 101.);
-  let paragraph2_rect = Rect::from_xywh(0.5, 0.5, 88.0, 93.);
+  let paragraph1_rect = Rect::from_xywh(0.5, 0.5, 88.0, 93.);
 
   let size = Size::new(88., 85.);
-  let tqbf = crate::diagram::types::Shape::Box(
+  let tqbf = Shape::Box(
     Color::BLACK,
     Some(Paragraph { text: TQBF, widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
     1.0, Radius::default(), Color::TRANSPARENT, None);
@@ -157,7 +151,6 @@ fn box_with_wrapping_title() {
     vec![Primitive(
       None,
       paragraph1_rect,
-      paragraph2_rect,
       Color::BLUE,
       tqbf),
     ]);
@@ -173,7 +166,7 @@ fn layout_node() {
   let diagram = create_diagram(string);
 
   let left = diagram.used_rect("left").unwrap();
-  let expected = Rect::from_xywh(0.5, 0.5, 88., 67.);
+  let expected = box_used();
   assert_eq!(left, &expected);
 
   let right = diagram.used_rect("right").unwrap();
@@ -213,12 +206,11 @@ fn offset_from_rect() {
 fn test_primitives_mut() {
   let mut primitive = Primitive(None,
                                 Rect::from_xywh(0., 0., 88.5, 75.),
-                                Rect::from_xywh(0., 0., 88.5, 67.),
                                 Color::BLACK,
                                 rectangle(None));
 
   match primitive {
-    Primitive(_, ref mut rect, _, _, _) => {
+    Primitive(_, ref mut rect, _, _) => {
       rect.bottom += 8.;
     }
     _ => {}
@@ -246,7 +238,7 @@ impl Primitives<'_> {
   fn find_primitive(&mut self) -> Option<&mut Rect> {
     let first = self.primitives.first_mut();
     let rect = match first.unwrap() {
-      Primitive(_, ref mut rect, _, _, _) => {
+      Primitive(_, ref mut rect, ..) => {
         rect.bottom += 8.;
         Some(rect)
       }
@@ -259,11 +251,11 @@ impl Primitives<'_> {
 fn find_rect<'a>(nodes: &'a mut Vec<Node>) -> Option<&'a mut Rect> {
   for node in nodes.iter_mut() {
     match node {
-      Primitive(_, ref mut rect, _, _, _) => {
+      Primitive(_, ref mut rect, ..) => {
         rect.bottom += 8.;
         return Some(rect);
       }
-      Container(_, _, _, _, _, nodes) => {
+      Container(_, _, _, _, nodes) => {
         find_rect(nodes);
       }
     }

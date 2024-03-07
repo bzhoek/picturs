@@ -11,10 +11,12 @@ use crate::trig::{x_from_degrees, y_from_degrees};
 
 pub const BLOCK_PADDING: f32 = 8.;
 
+pub type Used = Rect;
+
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
-  Container(Option<&'a str>, Radius, Option<&'a str>, Rect, Rect, Vec<Node<'a>>),
-  Primitive(Option<&'a str>, Rect, Rect, Color, Shape<'a>),
+  Container(Option<&'a str>, Radius, Option<&'a str>, Used, Vec<Node<'a>>),
+  Primitive(Option<&'a str>, Used, Color, Shape<'a>),
 }
 
 type EdgeMovement = (Edge, Vec<Displacement>, ObjectEdge);

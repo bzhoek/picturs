@@ -17,7 +17,7 @@ impl Renderer {
       canvas.paint.set_stroke_width(1.0);
 
       match node {
-        Container(_id, radius, title, _rect, used, nodes) => {
+        Container(_id, radius, title, used, nodes) => {
           Self::render_to_canvas(canvas, nodes);
 
           if let Some(title) = title {
@@ -32,7 +32,7 @@ impl Renderer {
           canvas.paint.set_color(Color::RED);
           canvas.rectangle(used, *radius);
         }
-        Primitive(_id, _, used, color, shape) => {
+        Primitive(_id, used, color, shape) => {
           let used = Self::align_rect(used);
           Self::render_shape(canvas, &used, color, shape);
         }
@@ -342,11 +342,11 @@ impl Renderer {
   fn final_placement(nodes: &mut [Node]) {
     for node in nodes.iter_mut() {
       match node {
-        Container(_id, _, _, _rect, used, nodes) => {
+        Container(_id, _, _, used, nodes) => {
           used.top += 16.;
           Self::final_placement(nodes);
         }
-        Primitive(_id, _, used, _, _) => {
+        Primitive(_id, used, _, _) => {
           used.top += 16.;
         }
       }
