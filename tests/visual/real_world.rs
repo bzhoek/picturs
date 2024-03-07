@@ -75,27 +75,28 @@ mod real_world {
       sline.time 4in right *-> color dgrey thick
       dot.y49 at 1/12 time.n "1949" below color #645590
       sline from y49.n .5in up color #645590
-      box "1949" .s .5in up from 1/12 time.s color #645590 thick
+      box "QCリサーチ グループ 結成" .s .5in up from 1/12 time.s color #645590 thick
 
-      dot.y50 at 2/12 time.n "1950" above color #27A8BE
+      dot.y50 at 2/12 time.n "1950年代 後半" above color #27A8BE
       sline from y50.s 1cm down color #27A8BE
-      box "1950" .n 1cm down from 2/12 time.s color #27A8BE normal
+      box "新製品開発 の品質管理 を始める" .n 1cm down from 2/12 time.s color #27A8BE normal
 
       dot.y72 at 4/12 time.n "1972" below color #D6A02A
       sline from y72.n .5in up color #D6A02A
-      box "1972 " .s .5in up from 4/12 time.s color #D6A02A normal
+      box wd 1in "ソフトウェアの 検査の考え方 発表" .s .5in up from 4/12 time.s color #D6A02A normal
 
       dot.y80 at 7/12 time.n "1980" above color #E47958
       sline from y80.s 1cm down color #E47958
-      box "1980" .n 1cm down from 7/12 time.s color #E47958 normal
+      box wd 1.5in "ソフトウェア製品生産管理: ソフトウェア工学における 品質管理(QC)と品質保証 (QA) 発表" .n 1cm down from 7/12 time.s color #E47958 normal
 
       dot.y81 at 8/12 time.n "1981" below color #E24B7E
-      sline from y81.n .5in up color #E24B7E
-      box "1981" .s .5in up from 8/12 time.s color #E24B7E normal
+      sline from y81.n .3in up color #E24B7E
+      box wd 1in "ソフトウェアの 品質管理推進 について 発表" .s .3in up from 8/12 time.s color #E24B7E normal
+      box wd 1in ht .2in "日本的品質管理刊行" .s 1in up from 8/12 time.s color #E24B7E normal
 
       dot.y98 at 11/12 time.n "1998" above color #214F79
       sline from y98.s 1cm down color #214F79 invisible
-      box "1998" .n 1cm down from 11/12 time.s color #214F79 normal
+      box "ISTQBの 前身が 発足" .n 1cm down from 11/12 time.s color #214F79 normal
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
