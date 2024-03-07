@@ -32,9 +32,10 @@ impl Renderer {
           canvas.paint.set_color(Color::RED);
           canvas.rectangle(used, *radius);
         }
-        Primitive(_id, used, color, shape) => {
-          let used = Self::align_rect(used);
-          Self::render_shape(canvas, &used, color, shape);
+        // Primitive(_id, used, color, shape) => {
+        Primitive(common, shape) => {
+          let used = Self::align_rect(&common.used);
+          Self::render_shape(canvas, &used, &common.stroke, shape);
         }
       }
     }
@@ -205,11 +206,11 @@ impl Renderer {
   }
 
   fn align_point(point: &Point, thickness: f32) -> Point {
+    let mut aligned = Point::new(point.x.trunc(), point.y.trunc());
     if thickness.trunc() % 2. != 0. {
-      Point::new(point.x.trunc() + 0.5, point.y.trunc() + 0.5)
-    } else {
-      Point::new(point.x.trunc(), point.y.trunc())
+      aligned.offset((0.5, 0.5));
     }
+    aligned
   }
 
   fn align_rect(used: &Rect) -> Rect {
@@ -346,8 +347,8 @@ impl Renderer {
           used.top += 16.;
           Self::final_placement(nodes);
         }
-        Primitive(_id, used, _, _) => {
-          used.top += 16.;
+        Primitive(common, _) => {
+          common.used.top += 16.;
         }
       }
     }
@@ -361,7 +362,8 @@ impl Renderer {
 
 #[cfg(test)]
 mod tests {
-  use skia_safe::{Point, Rect};
+  use skia_safe::Rect;
+
   use crate::diagram::renderer::Renderer;
 
   #[test]
@@ -375,13 +377,25 @@ mod tests {
 
   #[test]
   fn align_point() {
-    let aligned = Renderer::align_point(&Point::new(0., 0.), 1.);
-    assert_eq!(aligned, Point::new(0.5, 0.5));
+    let aligned = Renderer::align_point(&(0, 0).into(), 1.);
+    assert_eq!(aligned, (0.5, 0.5).into());
 
-    let aligned = Renderer::align_point(&Point::new(0., 0.), 2.);
-    assert_eq!(aligned, Point::new(0.0, 0.0));
+    let aligned = Renderer::align_point(&(0.5, 0.5).into(), 1.);
+    assert_eq!(aligned, (0.5, 0.5).into());
 
-    let aligned = Renderer::align_point(&Point::new(0., 0.), 4.);
-    assert_eq!(aligned, Point::new(0.0, 0.0));
+    let aligned = Renderer::align_point(&(0, 0).into(), 2.);
+    assert_eq!(aligned, (0, 0).into());
+
+    let aligned = Renderer::align_point(&(0.5, 0.5).into(), 2.);
+    assert_eq!(aligned, (0, 0).into());
+
+    let aligned = Renderer::align_point(&(0, 0).into(), 3.);
+    assert_eq!(aligned, (0.5, 0.5).into());
+
+    let aligned = Renderer::align_point(&(0.5, 0.5).into(), 3.);
+    assert_eq!(aligned, (0.5, 0.5).into());
+
+    let aligned = Renderer::align_point(&(0, 0).into(), 4.);
+    assert_eq!(aligned, (0, 0).into());
   }
 }

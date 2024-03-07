@@ -10,7 +10,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, CommonAttributes};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -46,7 +46,8 @@ impl<'i> Diagram<'i> {
 
     let cursor = Point::new(0.5, 0.5);
     let rect = Rect::from_point_and_size(cursor, (0, 0));
-    let node = Primitive(None, rect, Color::BLACK, Shape::Font(config.font.clone()));
+    let common = CommonAttributes::new(None, rect, Color::BLACK, 1.);
+    let node = Primitive(common, Shape::Font(config.font.clone()));
     let _ast = vec![node];
     let (ast, bounds) = Self::nodes_from(top.clone(), vec![], &cursor, config, &mut index);
     self.nodes = ast;
@@ -94,7 +95,8 @@ impl<'i> Diagram<'i> {
         let typeface = FontMgr::default().match_family_style(name, FontStyle::default()).unwrap();
         config.font = Font::from_typeface(typeface, 17.0);
         let rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-        let node = Primitive(None, rect, Color::BLACK, Shape::Font(config.font.clone()));
+        let common = CommonAttributes::new(None, rect, Color::BLACK, 1.);
+        let node = Primitive(common, Shape::Font(config.font.clone()));
         Some((rect, node))
       }
       Rule::unit_config => {
@@ -180,11 +182,11 @@ impl<'i> Diagram<'i> {
 
       Self::adjust_topleft(&config.flow, &mut used);
       index.position_rect(location, &mut used);
-
       index.insert(ShapeName::Circle, *id, used);
 
+      let common = CommonAttributes::new(*id, used, *stroke, 1.);
       let circle = Primitive(
-        *id, used, *stroke,
+        common,
         Shape::Circle(*text, paragraph, *fill, location.clone()));
       return Some((used, circle));
     }
@@ -210,8 +212,9 @@ impl<'i> Diagram<'i> {
 
       index.insert(ShapeName::Cylinder, *id, used);
 
+      let common = CommonAttributes::new(*id, used, *stroke, 1.);
       let cylinder = Primitive(
-        *id, used, *stroke,
+        common,
         Shape::Cylinder(*text, paragraph, *fill, location.clone()));
       return Some((used, cylinder));
     }
@@ -237,8 +240,9 @@ impl<'i> Diagram<'i> {
 
       index.insert(ShapeName::Ellipse, *id, used);
 
+      let common = CommonAttributes::new(*id, used, *stroke, 1.);
       let ellipse = Primitive(
-        *id, used, *stroke,
+        common,
         Shape::Ellipse(*text, paragraph, *fill, location.clone()));
       return Some((used, ellipse));
     }
@@ -264,8 +268,9 @@ impl<'i> Diagram<'i> {
 
       index.insert(ShapeName::File, *id, used);
 
+      let common = CommonAttributes::new(*id, used, *stroke, 1.);
       let file = Primitive(
-        *id, used, *stroke,
+        common,
         Shape::File(*text, paragraph, *radius, *fill, location.clone()));
       return Some((used, file));
     }
@@ -287,11 +292,11 @@ impl<'i> Diagram<'i> {
 
       Self::position_rect_on_edge(&config.flow.start, location, &mut used);
       index.position_rect(location, &mut used);
-
       index.insert(ShapeName::Oval, *id, used);
 
+      let common = CommonAttributes::new(*id, used, *stroke, 1.);
       let node = Primitive(
-        *id, used, *stroke,
+        common,
         Shape::Oval(*text, paragraph, *fill, location.clone()));
       return Some((used, node));
     }
@@ -327,8 +332,10 @@ impl<'i> Diagram<'i> {
       index.insert(ShapeName::Box, *id, used);
       index.add_open(ShapeName::Box, attrs.clone());
 
+
+      let common = CommonAttributes::new(*id, used, *stroke, *thickness);
       let rectangle = Primitive(
-        *id, used, *stroke,
+        common,
         Shape::Box(*text, paragraph, *thickness, *radius, *fill, location.clone()));
 
       let mut rect = used;
@@ -357,8 +364,9 @@ impl<'i> Diagram<'i> {
       index.insert(ShapeName::Arrow, *id, used);
       index.add_open(ShapeName::Arrow, attrs.clone());
 
+      let common = CommonAttributes::new(*id, rect, Color::BLACK, 1.);
       let node = Primitive(
-        *id, rect, Color::BLACK,
+        common,
         Shape::Arrow(source_edge, movement, target_edge, caption.clone()));
       return Some((used, node));
     }
@@ -396,8 +404,9 @@ impl<'i> Diagram<'i> {
         index.insert(ShapeName::Line, *id, used);
         index.add_open(ShapeName::Line, attrs.clone());
 
+        let common = CommonAttributes::new(*id, rect, Color::BLACK, 1.);
         let node = Primitive(
-          *id, rect, Color::BLACK,
+          common,
           Shape::Line(start, movement.clone(), end, caption.clone(), arrows.clone()));
         Some((used, node))
       }
@@ -433,8 +442,9 @@ impl<'i> Diagram<'i> {
         index.insert(ShapeName::Line, *id, rect);
         index.add_open(ShapeName::Line, attrs.clone());
 
+        let common = CommonAttributes::new(*id, rect, *stroke, *thickness);
         let node = Primitive(
-          *id, rect, *stroke,
+          common,
           Shape::Sline(*thickness, vec!(start, end), caption.clone(), arrows.clone()));
         Some((rect, node))
       }
@@ -463,8 +473,9 @@ impl<'i> Diagram<'i> {
     let used = Self::bounds_from_points(cursor, &points);
     index.insert(ShapeName::Path, id, used);
 
+    let common = CommonAttributes::new(id, used, Color::BLACK, 1.);
     let node = Primitive(
-      id, used, Color::BLACK,
+      common,
       Shape::Path(*cursor, points, caption));
     Some((used, node))
   }
@@ -577,8 +588,9 @@ impl<'i> Diagram<'i> {
 
     index.insert(ShapeName::Text, id, used);
 
+    let common = CommonAttributes::new(id, used, Color::BLACK, 1.);
     let text = Primitive(
-      id, used, Color::BLACK,
+      common,
       Shape::Text(paragraph, location));
     Some((used, text))
   }
@@ -613,8 +625,9 @@ impl<'i> Diagram<'i> {
 
         index.insert(ShapeName::Dot, *id, bounds);
 
+        let common = CommonAttributes::new(None, bounds, color, 1.);
         let node = Primitive(
-          None, bounds, color,
+          common,
           Shape::Dot(point, radius, caption.clone()));
         Some((bounds, node))
       }
@@ -629,7 +642,8 @@ impl<'i> Diagram<'i> {
     } else {
       used.bottom += length.pixels();
     }
-    let node = Primitive(None, used, Color::BLACK, Shape::Move());
+    let common = CommonAttributes::new(None, used, Color::BLACK, 1.);
+    let node = Primitive(common, Shape::Move());
     Some((used, node))
   }
 
@@ -637,7 +651,8 @@ impl<'i> Diagram<'i> {
     Conversion::displacements_from(pair, unit).map(|movements| {
       let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
       Index::offset_rect(&mut used, &movements);
-      (used, Primitive(None, used, Color::BLACK, Shape::Move()))
+      let common = CommonAttributes::new(None, used, Color::BLACK, 1.);
+      (used, Primitive(common, Shape::Move()))
     })
   }
 
@@ -740,7 +755,7 @@ impl<'i> Diagram<'i> {
   pub fn used_rect(&self, id: &str) -> Option<&Rect> {
     self.find_node(id).map(|node| {
       match node {
-        Primitive(_, used, _, _) => used,
+        Primitive(used, _) => &used.used,
         _ => panic!("not a primitive")
       }
     })
@@ -753,8 +768,8 @@ impl<'i> Diagram<'i> {
   fn find_nodes<'a>(nodes: &'a [Node], node_id: &str) -> Option<&'a Node<'a>> {
     nodes.iter().find(|node| {
       match node {
-        Primitive(Some(id), _, _, _) => {
-          id == &node_id
+        Primitive(common, ..) => {
+          common.id == Some(node_id)
         }
         Container(id, _, _, _, nodes) => {
           if let Some(id) = id {
@@ -764,15 +779,14 @@ impl<'i> Diagram<'i> {
           }
           Self::find_nodes(nodes, node_id).is_some()
         }
-        _ => false
       }
     })
   }
 
   pub fn node_mut(&mut self, id: &str, movements: Vec<Displacement>) {
-    if let Primitive(_, ref mut rect, _, _) = Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
+    if let Primitive(ref mut rect, _) = Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
       for movement in movements.iter() {
-        rect.offset(movement.offset());
+        rect.used.offset(movement.offset());
       }
     }
   }
@@ -780,8 +794,8 @@ impl<'i> Diagram<'i> {
   fn find_nodes_mut<'a: 'i>(nodes: &'i mut [Node<'a>], node_id: &str) -> Option<&'i mut Node<'a>> {
     for node in nodes.iter_mut() {
       match node {
-        Primitive(Some(id), _, _, _) => {
-          if id == &node_id {
+        Primitive(common, _) => {
+          if common.id == Some(node_id) {
             return Some(node);
           }
         }
@@ -790,7 +804,6 @@ impl<'i> Diagram<'i> {
             return Some(node);
           }
         }
-        _ => {}
       }
     }
     None

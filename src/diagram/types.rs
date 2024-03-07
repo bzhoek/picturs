@@ -12,16 +12,35 @@ use crate::trig::{x_from_degrees, y_from_degrees};
 pub const BLOCK_PADDING: f32 = 8.;
 
 pub type Used = Rect;
+pub type Thickness = f32;
+
+#[derive(Debug, PartialEq)]
+pub struct CommonAttributes<'a> {
+  pub(crate) id: Option<&'a str>,
+  pub used: Rect,
+  pub(crate) stroke: Color,
+  pub(crate) thickness: f32,
+}
+
+impl<'a> CommonAttributes<'a> {
+  pub(crate) fn new(id: Option<&'a str>, used: Rect, stroke: Color, thickness: f32) -> Self {
+    Self {
+      id,
+      used,
+      stroke,
+      thickness,
+    }
+  }
+}
 
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
   Container(Option<&'a str>, Radius, Option<&'a str>, Used, Vec<Node<'a>>),
-  Primitive(Option<&'a str>, Used, Color, Shape<'a>),
+  Primitive(CommonAttributes<'a>, Shape<'a>),
 }
 
 type EdgeMovement = (Edge, Vec<Displacement>, ObjectEdge);
 pub type Radius = f32;
-pub type Thickness = f32;
 
 #[derive(Debug, PartialEq)]
 pub enum Shape<'a> {

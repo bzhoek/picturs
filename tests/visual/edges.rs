@@ -18,8 +18,8 @@ mod edges {
       dot at b.nw color green rad 4pt
       "#;
     let diagram = create_diagram(string);
-    assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0.5 && rect.y() == 0.5);
-    assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.y() == 0.5);
+    assert_matches!(&diagram.nodes[0], Primitive(common, ..) if common.used.x() == 0.5 && common.used.y() == 0.5);
+    assert_matches!(&diagram.nodes[2], Primitive(common, ..) if common.used.y() == 0.5);
     assert_diagram!(diagram);
   }
 
@@ -32,8 +32,8 @@ mod edges {
       arrow from a.sw to b.nw
       "#;
     let diagram = create_diagram(string);
-    assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() == 0.5);
-    assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.x() == 0.5);
+    assert_matches!(&diagram.nodes[0], Primitive(common, ..) if common.used.x() == 0.5);
+    assert_matches!(&diagram.nodes[2], Primitive(common, ..) if common.used.x() == 0.5);
     assert_diagram!(diagram);
   }
 
@@ -50,8 +50,8 @@ mod edges {
       line from b.s to c.n "Caption right" right
       "#;
     let diagram = create_diagram(string);
-    assert_matches!(diagram.nodes[0], Primitive(_, rect, ..) if rect.x() < 0.);
-    assert_matches!(diagram.nodes[2], Primitive(_, rect, ..) if rect.x() < 0.);
+    assert_matches!(&diagram.nodes[0], Primitive(common, ..) if common.used.x() < 0.);
+    assert_matches!(&diagram.nodes[2], Primitive(common, ..) if common.used.x() < 0.);
     assert_diagram!(diagram);
   }
 }
