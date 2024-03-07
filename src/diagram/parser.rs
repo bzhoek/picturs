@@ -336,7 +336,7 @@ impl<'i> Diagram<'i> {
       let common = CommonAttributes::new(*id, used, *stroke, *thickness);
       let rectangle = Primitive(
         common,
-        Shape::Box(*text, paragraph, *thickness, *radius, *fill, location.clone()));
+        Shape::Box(*text, paragraph, *radius, *fill, location.clone()));
 
       let mut rect = used;
       if config.flow.end.x <= 0. {
@@ -445,7 +445,7 @@ impl<'i> Diagram<'i> {
         let common = CommonAttributes::new(*id, rect, *stroke, *thickness);
         let node = Primitive(
           common,
-          Shape::Sline(*thickness, vec!(start, end), caption.clone(), arrows.clone()));
+          Shape::Sline(vec!(start, end), caption.clone(), arrows.clone()));
         Some((rect, node))
       }
     }

@@ -34,13 +34,13 @@ impl Renderer {
         }
         // Primitive(_id, used, color, shape) => {
         Primitive(common, shape) => {
-          let used = Self::align_rect(&common.used);
-          Self::render_shape(canvas, &used, &common.stroke, shape);
+          let used = Self::align_rect(&common.used, common.thickness);
+          Self::render_shape(canvas, &used, &common.stroke, shape, &common.thickness);
         }
       }
     }
   }
-  fn render_shape(canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape) {
+  fn render_shape(canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape, thickness: &f32) {
     match shape {
       Shape::Font(font) => {
         canvas.font = font.clone();
@@ -56,7 +56,7 @@ impl Renderer {
 
         Self::draw_caption(canvas, used, caption);
       }
-      Shape::Sline(thickness, points, caption, endings) => {
+      Shape::Sline(points, caption, endings) => {
         canvas.paint.set_stroke_width(*thickness);
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
@@ -87,7 +87,7 @@ impl Renderer {
         Self::render_arrow(canvas, used, from, movement, to, caption),
       Shape::Line(start, movement, end, caption, arrows) =>
         Self::render_line(canvas, used, start, movement, end, caption, arrows),
-      Shape::Box(text_color, paragraph, thickness, radius, fill, _) => {
+      Shape::Box(text_color, paragraph, radius, fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
         canvas.paint.set_stroke_width(*thickness);
@@ -213,8 +213,9 @@ impl Renderer {
     aligned
   }
 
-  fn align_rect(used: &Rect) -> Rect {
-    Rect::from_xywh(used.left.trunc() + 0.5, used.top.trunc() + 0.5, used.width().round(), used.height().round())
+  fn align_rect(rect: &Rect, thickness: f32) -> Rect {
+    let aligned = Self::align_point(&(rect.left, rect.top).into(), thickness);
+    Rect::from_point_and_size(aligned, (rect.width().round(), rect.height().round()))
   }
 
   fn render_arrow(canvas: &mut Canvas, used: &Rect, from: &ObjectEdge, movement: &Option<Displacement>, to: &ObjectEdge, caption: &Option<Caption>) {
@@ -254,7 +255,7 @@ impl Renderer {
   fn draw_dot_caption(canvas: &mut Canvas, point: &Point, radius: &Radius, caption: &Option<Caption>) {
     if let Some(caption) = caption {
       let rect = Self::dot_offset_of(point, radius, caption);
-      let rect = Self::align_rect(&rect);
+      let rect = Self::align_rect(&rect, 1.);
 
       canvas.paint.set_style(PaintStyle::Fill);
       canvas.text(caption.text, (rect.left, rect.bottom - (canvas.get_font_descent() / 2.)));
@@ -279,7 +280,7 @@ impl Renderer {
       let (topleft, rect) = Self::topleft_of(caption, used);
 
       if caption.opaque {
-        let rect = Self::align_rect(&rect);
+        let rect = Self::align_rect(&rect, 1.);
         canvas.paint.set_color(Color::LIGHT_GRAY);
         canvas.paint.set_style(PaintStyle::StrokeAndFill);
         canvas.rectangle(&rect, 0.);
@@ -315,7 +316,7 @@ impl Renderer {
       } else {
         rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
       }
-      let rect = Self::align_rect(&rect);
+      let rect = Self::align_rect(&rect, 1.);
       canvas.paragraph(paragraph.text, (rect.left, rect.top), rect.width());
     }
   }
@@ -368,10 +369,10 @@ mod tests {
 
   #[test]
   fn align_rect() {
-    let aligned = Renderer::align_rect(&Rect::from_xywh(0., 0., 1., 1.));
+    let aligned = Renderer::align_rect(&Rect::from_xywh(0., 0., 1., 1.), 1.);
     assert_eq!(aligned, Rect::from_xywh(0.5, 0.5, 1., 1.));
 
-    let aligned = Renderer::align_rect(&Rect::from_xywh(0.5, 0.5, 1., 1.));
+    let aligned = Renderer::align_rect(&Rect::from_xywh(0.5, 0.5, 1., 1.), 1.);
     assert_eq!(aligned, Rect::from_xywh(0.5, 0.5, 1., 1.));
   }
 

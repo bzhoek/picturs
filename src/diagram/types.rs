@@ -48,7 +48,7 @@ pub enum Shape<'a> {
   Dot(Point, Radius, Option<Caption<'a>>),
   Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption<'a>>),
   Line(Point, Option<Displacement>, Point, Option<Caption<'a>>, Endings),
-  Box(Color, Option<Paragraph<'a>>, Thickness, Radius, Color, Option<EdgeMovement>),
+  Box(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),
   Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
   Cylinder(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
@@ -57,7 +57,7 @@ pub enum Shape<'a> {
   Text(Paragraph<'a>, Option<EdgeMovement>),
   File(Color, Option<Paragraph<'a>>, Radius, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
   Path(Point, Vec<Point>, Option<Caption<'a>>),
-  Sline(Thickness, Vec<Point>, Option<Caption<'a>>, Endings),
+  Sline(Vec<Point>, Option<Caption<'a>>, Endings),
 }
 
 #[derive(Debug, PartialEq)]

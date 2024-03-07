@@ -6,7 +6,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::create_diagram;
 use crate::diagram::index::Index;
 use crate::diagram::parser::{Diagram, Rule};
-use crate::diagram::types::{Config, Edge, Displacement, Node, Paragraph, Radius, Shape, Unit, CommonAttributes};
+use crate::diagram::types::{CommonAttributes, Config, Displacement, Edge, Paragraph, Radius, Shape, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 
 static TQBF: &str = "the quick brown fox jumps over the lazy dog";
@@ -135,7 +135,7 @@ fn box_with_wrapping_title() {
   let tqbf = Shape::Box(
     Color::BLACK,
     Some(Paragraph { text: TQBF, widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
-    1.0, Radius::default(), Color::TRANSPARENT, None);
+    Radius::default(), Color::TRANSPARENT, None);
 
   assert_eq!(
     diagram.nodes,
@@ -196,6 +196,6 @@ fn rectangle(title: Option<(&str, f32)>) -> Shape {
     let size = Size::new(88., 17.);
     Paragraph { text: title, widths: vec!(width), height: size.height, size }
   });
-  Shape::Box(Color::BLACK, paragraph, 1.0, Radius::default(), Color::TRANSPARENT, None)
+  Shape::Box(Color::BLACK, paragraph, Radius::default(), Color::TRANSPARENT, None)
 }
 
