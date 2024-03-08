@@ -2,6 +2,22 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Rule;
 use crate::diagram::types::{Edge, ObjectEdge};
 
+mod string {
+  use super::*;
+
+  #[test]
+  fn newline() {
+    let string = "\"ソフトウェア製品生産管理: \\nソフトウェア工学における\"";
+    let string = subject(string);
+    assert_eq!(string.as_str(), "ソフトウェア製品生産管理: \nソフトウェア工学における");
+  }
+
+  fn subject(string: &str) -> String {
+    let pair = Conversion::pair_for(Rule::string, string);
+    Conversion::string_from(&pair)
+  }
+}
+
 mod thickness {
   use super::*;
 

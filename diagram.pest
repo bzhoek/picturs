@@ -100,6 +100,11 @@ hours = ${ ASCII_DIGIT{1,2} ~ ":" }
 degrees = { ASCII_DIGIT{1,3} }
 
 title = { string? }
+
 string = ${ "\"" ~ inner ~ "\"" }
 inner = @{ char* }
-char = { !("\"" | "\\") ~ ANY }
+char = {
+  !("\"" | "\\") ~ ANY
+  | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+  | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}

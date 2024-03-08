@@ -106,6 +106,12 @@ impl Conversion {
       .map(|p| p.as_str())
   }
 
+  pub(crate) fn string_from(pair: &Pair<Rule>) -> String {
+    let str = pair.clone().into_inner()
+      .next().unwrap().as_str();
+    str.replace("\\n", "\n").into()
+  }
+
   pub(crate) fn identified_in<'a>(pair: &Pair<'a, Rule>) -> Option<&'a str> {
     Rules::dig_rule(pair, Rule::identified)
       .map(|p| p.into_inner().next().unwrap().as_str())
