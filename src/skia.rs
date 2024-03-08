@@ -154,12 +154,6 @@ impl Canvas {
   }
 
   pub fn rectangle(&mut self, rect: &Rect, radius: f32) {
-    // let matrix = self.surface.canvas().total_matrix();
-    // let top_left = Point::new(rect.left, rect.top);
-    // let mut points = vec![top_left];
-    // let mut pixels = vec![top_left];
-    // matrix.map_points(&mut *pixels, &*points);
-    // let invert = matrix.invert();
     self.surface.canvas().draw_round_rect(rect, radius, radius, &self.paint);
   }
 

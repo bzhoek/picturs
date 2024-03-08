@@ -250,6 +250,7 @@ impl Renderer {
     }
   }
 
+  #[allow(unreachable_code)]
   fn draw_dot_caption(canvas: &mut Canvas, point: &Point, radius: &Radius, caption: &Option<Caption>) {
     if let Some(caption) = caption {
       canvas.paint.set_style(PaintStyle::Fill);
