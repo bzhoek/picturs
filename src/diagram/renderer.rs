@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
-use skia_safe::{Color, Paint, PaintStyle, Point, Rect};
+use skia_safe::{Color, PaintStyle, Point, Rect, Size};
 use skia_safe::textlayout::TextAlign;
 
 use crate::diagram::parser::TEXT_PADDING;
@@ -252,15 +252,26 @@ impl Renderer {
 
   fn draw_dot_caption(canvas: &mut Canvas, point: &Point, radius: &Radius, caption: &Option<Caption>) {
     if let Some(caption) = caption {
+      canvas.paint.set_style(PaintStyle::Fill);
+
       let rect = Self::dot_offset_of(point, radius, caption);
       let rect = Self::align_rect(&rect, 1.);
 
       canvas.paint.set_style(PaintStyle::Fill);
-      canvas.text(caption.text, (rect.left, rect.bottom - (canvas.get_font_descent() / 2.)));
+      canvas.text(&caption.text, (rect.left, rect.bottom - (canvas.get_font_descent() / 2.)));
+      return;
 
-      // canvas.paint.set_style(PaintStyle::Stroke);
-      // canvas.paint.set_color(Color::BLACK);
-      // canvas.rectangle(&rect, 0.);
+      let mut dot = Rect::from_point_and_size(*point, (0., 0.));
+      dot.outset((radius * 2., radius * 2.));
+      let dot_edge = caption.inner.mirror().edge_point(&dot);
+
+      let paragraph = canvas.paragraph(&caption.text, 120., TextAlign::Center);
+      let size = Size::from((120., paragraph.height()));
+
+      let mut rect = Rect::from_point_and_size(dot_edge, size);
+      caption.inner.offset(&mut rect);
+
+      canvas.paint_paragraph(&paragraph, (rect.left, rect.top));
     }
   }
 
@@ -286,7 +297,7 @@ impl Renderer {
 
       canvas.paint.set_color(Color::BLACK);
       canvas.paint.set_style(PaintStyle::Fill);
-      canvas.text(caption.text, topleft);
+      canvas.text(&caption.text, topleft);
     }
   }
 
@@ -303,14 +314,11 @@ impl Renderer {
     (topleft, rect)
   }
 
-  #[allow(dead_code)]
   fn paint_paragraph(canvas: &mut Canvas, used: &Rect, text_color: &Color, paragraph: &Option<Paragraph>) {
     if let Some(paragraph) = paragraph {
       canvas.paint.set_color(*text_color);
       canvas.paint.set_style(PaintStyle::Fill);
       let paragraph = canvas.paragraph(&paragraph.text, used.width() - TEXT_PADDING * 2., TextAlign::Center);
-      let mut paint = Paint::default();
-      paint.set_color(Color::WHITE);
 
       let mut top_left = Point::from((used.left, used.top));
       top_left.offset((TEXT_PADDING, (used.height() - paragraph.height()) / 2.));

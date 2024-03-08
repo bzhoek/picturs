@@ -20,10 +20,25 @@ mod tests {
   }
 
   #[test]
+  fn size() {
+    let mut canvas = Canvas::new((420, 420));
+
+    let mut paragraph = canvas.paragraph("LOREM\nIPSUM", 256.0, TextAlign::Left);
+    assert_eq!(paragraph.min_intrinsic_width(), 60.45);
+    assert_eq!(paragraph.height(), 34.);
+  }
+
+  #[test]
   fn layout_japanese() {
     let mut canvas = Canvas::new((420, 420));
 
-    let paragraph = canvas.paragraph(LOREM_IPSUM, 256.0, TextAlign::Left);
+    let mut paragraph = canvas.paragraph("LOREM_IPSUM", 256.0, TextAlign::Left);
+    assert_eq!(paragraph.min_intrinsic_width(), 123.75);
+    assert_eq!(paragraph.max_intrinsic_width(), 123.75);
+
+    let mut paragraph = canvas.paragraph(LOREM_IPSUM, 256.0, TextAlign::Left);
+    assert_eq!(paragraph.min_intrinsic_width(), 96.41);
+    assert_eq!(paragraph.max_intrinsic_width(), 3276.11); // apparently the whole line
     assert_eq!(paragraph.height(), 255.);
 
     let paragraph = canvas.paragraph(EMOJI_IPSUM, 320.0, TextAlign::Left);

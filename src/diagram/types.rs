@@ -36,7 +36,7 @@ impl<'a> CommonAttributes<'a> {
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
   Container(Option<&'a str>, Radius, Option<String>, Used, Vec<Node<'a>>),
-  Primitive(CommonAttributes<'a>, Shape<'a>),
+  Primitive(CommonAttributes<'a>, Shape),
   Font(Font),
   Move(Rect),
 }
@@ -45,10 +45,10 @@ type EdgeMovement = (Edge, Vec<Displacement>, ObjectEdge);
 pub type Radius = f32;
 
 #[derive(Debug, PartialEq)]
-pub enum Shape<'a> {
-  Dot(Point, Radius, Option<Caption<'a>>),
-  Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption<'a>>),
-  Line(Point, Option<Displacement>, Point, Option<Caption<'a>>, Endings),
+pub enum Shape {
+  Dot(Point, Radius, Option<Caption>),
+  Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption>),
+  Line(Point, Option<Displacement>, Point, Option<Caption>, Endings),
   Box(Color, Option<Paragraph>, Radius, Color, Option<EdgeMovement>),
   Circle(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
   Ellipse(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
@@ -56,8 +56,8 @@ pub enum Shape<'a> {
   Oval(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
   Text(Paragraph, Option<EdgeMovement>),
   File(Color, Option<Paragraph>, Radius, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
-  Path(Point, Vec<Point>, Option<Caption<'a>>),
-  Sline(Vec<Point>, Option<Caption<'a>>, Endings),
+  Path(Point, Vec<Point>, Option<Caption>),
+  Sline(Vec<Point>, Option<Caption>, Endings),
 }
 
 #[derive(Debug, PartialEq)]
@@ -69,8 +69,8 @@ pub struct Paragraph {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Caption<'a> {
-  pub text: &'a str,
+pub struct Caption {
+  pub text: String,
   pub inner: Edge,
   pub outer: Edge,
   pub size: Size,

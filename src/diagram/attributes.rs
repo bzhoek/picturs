@@ -10,7 +10,7 @@ pub(crate) enum Attributes<'a> {
   Open {
     id: Option<&'a str>,
     same: bool,
-    caption: Option<Caption<'a>>,
+    caption: Option<Caption>,
     length: f32,
     arrows: Endings,
     source: Option<ObjectEdge>,

@@ -123,21 +123,20 @@ impl Conversion {
   }
 
   #[allow(clippy::unwrap_or_default)]
-  pub(crate) fn caption<'a>(pair: &Pair<'a, Rule>, config: &Config) -> Option<Caption<'a>> {
+  pub(crate) fn caption(pair: &Pair<Rule>, config: &Config) -> Option<Caption> {
     Rules::find_rule(pair, Rule::caption)
       .map(|caption| { Self::caption_from(caption, config) })
   }
 
-  pub(crate) fn caption_from<'a>(pair: Pair<'a, Rule>, config: &Config) -> Caption<'a> {
-    let mut text: Option<&str> = None;
+  pub(crate) fn caption_from(pair: Pair<Rule>, config: &Config) -> Caption {
+    let mut text: Option<String> = None;
     let mut alignment: Option<(Edge, Edge)> = None;
     let mut opaque = false;
 
     let pairs = pair.into_inner();
     pairs.for_each(|pair| match pair.as_rule() {
       Rule::string => {
-        let str = pair.as_str();
-        text = Some(&str[1..str.len() - 1]);
+        text = Self::string_from(pair).into();
       }
       Rule::alignment => {
         let string = pair.as_str();
@@ -152,7 +151,7 @@ impl Conversion {
 
     let (inner, outer) = alignment.unwrap_or((Edge::center(), Edge::center()));
     let text = text.unwrap();
-    let size = config.measure_string(text);
+    let size = config.measure_string(&text);
     Caption { text, inner: inner.mirror(), outer, size, opaque }
   }
 
