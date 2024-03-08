@@ -2,6 +2,7 @@ use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
 use skia_safe::{Color, PaintStyle, Point, Rect};
+use skia_safe::textlayout::TextAlign;
 
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
@@ -307,9 +308,11 @@ impl Renderer {
     if let Some(paragraph) = paragraph {
       canvas.paint.set_style(PaintStyle::Fill);
       canvas.paint.set_color(*text_color);
-      let paragraph = Canvas::paragraph(&paragraph.text, used.width());
-      let rect = Self::align_rect(used, 1.);
-      canvas.paint_paragraph(&paragraph, (rect.left, rect.top));
+      let paragraph = Canvas::paragraph(&paragraph.text, used.width() - TEXT_PADDING * 4., TextAlign::Center);
+      let mut top_left = Point::from((used.left, used.top));
+      top_left.offset((TEXT_PADDING * 2., TEXT_PADDING));
+      let top_left = Self::align_point(&top_left, 1.);
+      canvas.paint_paragraph(&paragraph, top_left);
     }
   }
 

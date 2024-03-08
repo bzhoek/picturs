@@ -99,7 +99,7 @@ impl Canvas {
     self.surface.canvas().draw_str(text, origin, &self.font, &self.paint);
   }
 
-  pub fn paragraph(text: &str, width: f32) -> Paragraph {
+  pub fn paragraph(text: &str, width: f32, align: TextAlign) -> Paragraph {
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(FontMgr::new(), None);
 
@@ -113,7 +113,7 @@ impl Canvas {
     strutstyle.set_force_strut_height(true);
 
     let mut paragraph_style = ParagraphStyle::new();
-    paragraph_style.set_text_align(TextAlign::Center);
+    paragraph_style.set_text_align(align);
     paragraph_style.set_strut_style(strutstyle);
 
     let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);

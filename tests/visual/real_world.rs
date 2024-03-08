@@ -71,15 +71,15 @@ mod real_world {
   #[test]
   fn timeline() {
     let string = r#"
-      set box rd 8pt
+      set box rd 8pt ht .6in
       sline.time 4in right *-> color dgrey thick
       dot.y49 at 1/12 time.n "1949" below color #645590
       sline from y49.n .5in up color #645590
-      box "QCリサーチ グループ 結成" .s .5in up from 1/12 time.s color #645590 thick
+      box wd 1in "QCリサーチ\nグループ\n結成" .s .5in up from 1/12 time.s color #645590 thick
 
-      dot.y50 at 2/12 time.n "1950年代 後半" above color #27A8BE
+      dot.y50 at 2/12 time.n "1950年代\n後半" above color #27A8BE
       sline from y50.s 1cm down color #27A8BE
-      box "新製品開発 の品質管理 を始める" .n 1cm down from 2/12 time.s color #27A8BE normal
+      box wd 1in "新製品開発\nの品質管理\nを始める" .n 1cm down from 2/12 time.s color #27A8BE normal
 
       dot.y72 at 4/12 time.n "1972" below color #D6A02A
       sline from y72.n .5in up color #D6A02A

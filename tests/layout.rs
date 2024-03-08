@@ -5,7 +5,7 @@ mod tests {
   use std::fs;
 
   use skia_safe::{FontMgr, Paint, Point};
-  use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle, TypefaceFontProvider};
+  use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextAlign, TextStyle, TypefaceFontProvider};
 
   use picturs::assert_canvas;
   use picturs::skia::Canvas;
@@ -14,10 +14,10 @@ mod tests {
   fn textlayout() {
     let mut canvas = Canvas::new((420, 420));
 
-    let paragraph = Canvas::paragraph(LOREM_IPSUM, 256.0);
+    let paragraph = Canvas::paragraph(LOREM_IPSUM, 256.0, TextAlign::Left);
     assert_eq!(paragraph.height(), 345.);
 
-    let paragraph = Canvas::paragraph(EMOJI_IPSUM, 320.0);
+    let paragraph = Canvas::paragraph(EMOJI_IPSUM, 320.0, TextAlign::Left);
     assert_eq!(paragraph.height(), 69.);
 
     canvas.paint_paragraph(&paragraph, (16, 16));
