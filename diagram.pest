@@ -30,7 +30,7 @@ width = { ("wd" | "wid" | "width") ~ size }
 height = { ("ht" | "height") ~ size }
 padding = { ("pd" | "padding") ~ size }
 radius = { ("rd" | "rad" | "radius") ~ size }
-text_color = { "text_color" ~ id }
+text_color = { "text" ~ id }
 
 color = _{ ( id | rgb) }
 rgb = ${ "#" ~ ASCII_HEX_DIGIT{6} }

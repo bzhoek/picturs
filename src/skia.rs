@@ -12,10 +12,14 @@ pub struct Canvas {
   path: Path,
   pub paint: Paint,
   pub font: Font,
+  font_collection: FontCollection,
 }
 
 impl Canvas {
   pub fn new(size: impl Into<ISize>) -> Canvas {
+    let mut font_collection = FontCollection::new();
+    font_collection.set_default_font_manager(FontMgr::new(), None);
+
     let mut surface = surfaces::raster_n32_premul(size).expect("surface");
     let path = Path::new();
     let mut paint = Paint::default();
@@ -31,6 +35,7 @@ impl Canvas {
       path,
       paint,
       font,
+      font_collection,
     }
   }
 
@@ -99,24 +104,21 @@ impl Canvas {
     self.surface.canvas().draw_str(text, origin, &self.font, &self.paint);
   }
 
-  pub fn paragraph(text: &str, width: f32, align: TextAlign) -> Paragraph {
-    let mut font_collection = FontCollection::new();
-    font_collection.set_default_font_manager(FontMgr::new(), None);
-
+  pub fn paragraph(&self, text: &str, width: f32, align: TextAlign) -> Paragraph {
     let mut textstyle = TextStyle::new();
-    textstyle.set_foreground_paint(&Paint::default());
-    textstyle.set_font_size(17.);
+    textstyle.set_font_size(self.font.size());
+    textstyle.set_foreground_paint(&self.paint);
 
     let mut strutstyle = StrutStyle::new();
-    strutstyle.set_font_size(23.);
+    strutstyle.set_font_size(self.font.size() * 1.0);
     strutstyle.set_strut_enabled(true);
     strutstyle.set_force_strut_height(true);
 
     let mut paragraph_style = ParagraphStyle::new();
     paragraph_style.set_text_align(align);
-    paragraph_style.set_strut_style(strutstyle);
+    // paragraph_style.set_strut_style(strutstyle);
 
-    let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, font_collection);
+    let mut paragraph_builder = ParagraphBuilder::new(&paragraph_style, &self.font_collection);
     paragraph_builder.push_style(&textstyle);
     paragraph_builder.add_text(text);
 

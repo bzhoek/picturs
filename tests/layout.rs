@@ -11,14 +11,23 @@ mod tests {
   use picturs::skia::Canvas;
 
   #[test]
-  fn textlayout() {
+  fn layout_lorem() {
     let mut canvas = Canvas::new((420, 420));
 
-    let paragraph = Canvas::paragraph(LOREM_IPSUM, 256.0, TextAlign::Left);
-    assert_eq!(paragraph.height(), 345.);
+    let paragraph = canvas.paragraph(LOREM_IPSUM, 256.0, TextAlign::Left);
+    canvas.paint_paragraph(&paragraph, (16, 16));
+    assert_canvas!(canvas);
+  }
 
-    let paragraph = Canvas::paragraph(EMOJI_IPSUM, 320.0, TextAlign::Left);
-    assert_eq!(paragraph.height(), 69.);
+  #[test]
+  fn layout_japanese() {
+    let mut canvas = Canvas::new((420, 420));
+
+    let paragraph = canvas.paragraph(LOREM_IPSUM, 256.0, TextAlign::Left);
+    assert_eq!(paragraph.height(), 255.);
+
+    let paragraph = canvas.paragraph(EMOJI_IPSUM, 320.0, TextAlign::Left);
+    assert_eq!(paragraph.height(), 79.);
 
     canvas.paint_paragraph(&paragraph, (16, 16));
     assert_canvas!(canvas);

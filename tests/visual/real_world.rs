@@ -90,7 +90,7 @@ mod real_world {
 
       dot.y80 at 7/12 time.n "1980" above color #E47958
       sline from y80.s 1cm down color #E47958
-      box wd 2in .14 1cm down from y80.s color #E47958 normal "ソフトウェア製品生産管理:\nソフトウェア工学における 品質管理(QC)と品質保証 (QA) 発表"
+      box wd 2.2in .8 1cm down from y80.s color #E47958 normal "ソフトウェア製品生産管理:\nソフトウェア工学における 品質管理(QC)と品質保証 (QA) 発表"
 
       dot.y81 at 8/12 time.n "1981" below color #E24B7E
       sline from y81.n .3in up color #E24B7E

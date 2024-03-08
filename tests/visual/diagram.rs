@@ -122,7 +122,7 @@ mod diagram {
     let string =
       r#"
       box.left "This goes to the left hand side" color green fill white
-      box.right "While this goes to the right hand side" color magenta fill gray text_color white .w 2cm right from left.ne
+      box.right "While this goes to the right hand side" color magenta fill gray text white .w 2cm right from left.ne
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);

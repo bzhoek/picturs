@@ -332,10 +332,10 @@ impl Conversion {
     let colon = str.find(':').unwrap();
     let hour = str[0..colon].parse::<i32>().unwrap();
     let minutes = &str[(colon + 1)..];
-    let minutes = if minutes.len() > 0 {
-      minutes.parse::<f32>().unwrap() * 30. / 60.
-    } else {
+    let minutes = if minutes.is_empty() {
       0.
+    } else {
+      minutes.parse::<f32>().unwrap() * 30. / 60.
     };
     hour * 30 + minutes as i32
   }

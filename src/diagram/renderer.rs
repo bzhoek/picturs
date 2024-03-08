@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
-use skia_safe::{Color, PaintStyle, Point, Rect};
+use skia_safe::{Color, Paint, PaintStyle, Point, Rect};
 use skia_safe::textlayout::TextAlign;
 
 use crate::diagram::parser::TEXT_PADDING;
@@ -96,8 +96,8 @@ impl Renderer {
         canvas.paint.set_color(*fill);
         canvas.rectangle(used, *radius);
 
-        Self::draw_paragraph(canvas, used, text_color, paragraph);
-        // Self::paint_paragraph(canvas, used, text_color, paragraph);
+        // Self::draw_paragraph(canvas, used, text_color, paragraph);
+        Self::paint_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::File(text_color, paragraph, _radius, _fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
@@ -306,11 +306,14 @@ impl Renderer {
   #[allow(dead_code)]
   fn paint_paragraph(canvas: &mut Canvas, used: &Rect, text_color: &Color, paragraph: &Option<Paragraph>) {
     if let Some(paragraph) = paragraph {
-      canvas.paint.set_style(PaintStyle::Fill);
       canvas.paint.set_color(*text_color);
-      let paragraph = Canvas::paragraph(&paragraph.text, used.width() - TEXT_PADDING * 4., TextAlign::Center);
+      canvas.paint.set_style(PaintStyle::Fill);
+      let paragraph = canvas.paragraph(&paragraph.text, used.width() - TEXT_PADDING * 2., TextAlign::Center);
+      let mut paint = Paint::default();
+      paint.set_color(Color::WHITE);
+
       let mut top_left = Point::from((used.left, used.top));
-      top_left.offset((TEXT_PADDING * 2., TEXT_PADDING));
+      top_left.offset((TEXT_PADDING, (used.height() - paragraph.height()) / 2.));
       let top_left = Self::align_point(&top_left, 1.);
       canvas.paint_paragraph(&paragraph, top_left);
     }
