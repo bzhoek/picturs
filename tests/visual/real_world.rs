@@ -75,19 +75,19 @@ mod real_world {
       sline.time 4in right *-> color dgrey thick
       dot.y49 at 1/12 time.n "1949" below color #645590
       sline from y49.n .5in up color #645590
-      box wd 1in "QCリサーチ\nグループ\n結成" .s .5in up from 1/12 time.s color #645590 thick
+      box wd 1in "QCリサーチ\nグループ\n結成" .190 .5in up from 1/12 time.s color #645590 thick
 
       dot.y50 at 2/12 time.n "1950年代\n後半" above color #27A8BE
       sline from y50.s 1cm down color #27A8BE
-      box wd 1in "新製品開発\nの品質管理\nを始める" .n 1cm down from 2/12 time.s color #27A8BE normal
+      box wd 1in "新製品開発\nの品質管理\nを始める" .20 1cm down from 2/12 time.s color #27A8BE normal
 
-      dot.y72 at 4/12 time.n "1972" below color #D6A02A
+      dot.y72 at 5/12 time.n "1972" below color #D6A02A
       sline from y72.n .5in up color #D6A02A
-      box wd 1in "ソフトウェアの 検査の考え方 発表" .s .5in up from 4/12 time.s color #D6A02A normal
+      box wd 1in "ソフトウェアの 検査の考え方 発表" .167 .5in up from 5/12 time.s color #D6A02A normal
 
       dot.y80 at 7/12 time.n "1980" above color #E47958
       sline from y80.s 1cm down color #E47958
-      box wd 2in ht .7in "ソフトウェア製品生産管理:\nソフトウェア工学における 品質管理(QC)と品質保証 (QA) 発表" .n 1cm down from 7/12 time.s color #E47958 normal
+      box wd 2in ht .7in "ソフトウェア製品生産管理:\nソフトウェア工学における 品質管理(QC)と品質保証 (QA) 発表" .14 1cm down from 7/12 time.s color #E47958 normal
 
       dot.y81 at 8/12 time.n "1981" below color #E24B7E
       sline from y81.n .3in up color #E24B7E

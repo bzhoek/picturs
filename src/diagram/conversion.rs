@@ -238,39 +238,11 @@ impl Conversion {
 
   fn object_edge_from_degrees(pair: Pair<Rule>) -> ObjectEdge {
     let mut inner = pair.into_inner();
+
     let id = Self::next_to_string(&mut inner).unwrap();
+    let edge = inner.next().map(Self::edge_from).unwrap_or(Edge::center());
 
-    let edge = inner.next();
-    if edge.is_none() {
-      return ObjectEdge::new(id, Edge::center());
-    }
-
-    let mut inner = edge.unwrap().into_inner();
-    let next = inner.next().unwrap();
-    let str = next.as_str();
-
-    let degrees = match next.as_rule() {
-      Rule::compass => {
-        match str {
-          "n" => 360,
-          "ne" => 45,
-          "e" => 90,
-          "se" => 135,
-          "s" => 180,
-          "sw" => 225,
-          "w" => 270,
-          "nw" => 315,
-          _ => panic!("unexpected compass direction")
-        }
-      }
-      Rule::degrees => str.parse().unwrap(),
-      Rule::hours => {
-        let hour = str[0..str.len() - 1].parse::<i32>().unwrap();
-        hour * 30
-      }
-      _ => panic!("unexpected rule")
-    };
-    ObjectEdge::new(id, Edge::from(degrees as f32))
+    ObjectEdge::new(id, edge)
   }
 
   pub(crate) fn flow_in(pair: &Pair<Rule>) -> Option<Flow> {
@@ -331,6 +303,34 @@ impl Conversion {
       })
   }
 
+  pub(crate) fn edge_from(pair: Pair<Rule>) -> Edge {
+    let next = pair.into_inner().next().unwrap();
+    let str = next.as_str();
+
+    let degrees = match next.as_rule() {
+      Rule::compass => {
+        match str {
+          "n" => 360,
+          "ne" => 45,
+          "e" => 90,
+          "se" => 135,
+          "s" => 180,
+          "sw" => 225,
+          "w" => 270,
+          "nw" => 315,
+          _ => panic!("unexpected compass direction")
+        }
+      }
+      Rule::degrees => str.parse().unwrap(),
+      Rule::hours => {
+        let hour = str[0..str.len() - 1].parse::<i32>().unwrap();
+        hour * 30
+      }
+      _ => panic!("unexpected rule")
+    };
+    Edge::from(degrees as f32)
+  }
+
   pub(crate) fn location_for(pair: &Pair<Rule>, _end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
     Rules::find_rule(pair, Rule::location)
       .map(|p| {
@@ -340,7 +340,7 @@ impl Conversion {
 
         for pair in p.into_inner() {
           match pair.as_rule() {
-            Rule::edge => { edge = Some(Edge::from(pair.as_str())); }
+            Rule::edge => { edge = Some(Self::edge_from(pair)); }
             Rule::rel_movement => {
               let movement = Self::displacement_from(pair, unit);
               directions.push(movement);
