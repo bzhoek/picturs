@@ -2,6 +2,28 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Rule;
 use crate::diagram::types::{Edge, ObjectEdge};
 
+mod hours {
+  use crate::diagram::conversion::Conversion;
+  use crate::diagram::parser::Rule;
+
+  #[test]
+  fn hours() {
+    let degrees = subject("5:");
+    assert_eq!(degrees, 150);
+  }
+
+  #[test]
+  fn minutes() {
+    let degrees = subject("5:30");
+    assert_eq!(degrees, 165);
+  }
+
+  fn subject(string: &str) -> i32 {
+    let pair = Conversion::pair_for(Rule::hours, string);
+    Conversion::hours(pair.as_str())
+  }
+}
+
 mod string {
   use super::*;
 

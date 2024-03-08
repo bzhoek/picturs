@@ -322,13 +322,22 @@ impl Conversion {
         }
       }
       Rule::degrees => str.parse().unwrap(),
-      Rule::hours => {
-        let hour = str[0..str.len() - 1].parse::<i32>().unwrap();
-        hour * 30
-      }
+      Rule::hours => Self::hours(str),
       _ => panic!("unexpected rule")
     };
     Edge::from(degrees as f32)
+  }
+
+  pub(crate) fn hours(str: &str) -> i32 {
+    let colon = str.find(':').unwrap();
+    let hour = str[0..colon].parse::<i32>().unwrap();
+    let minutes = &str[(colon + 1)..];
+    let minutes = if minutes.len() > 0 {
+      minutes.parse::<f32>().unwrap() * 30. / 60.
+    } else {
+      0.
+    };
+    hour * 30 + minutes as i32
   }
 
   pub(crate) fn location_for(pair: &Pair<Rule>, _end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
