@@ -5,7 +5,7 @@ mod tests {
   use std::fs;
 
   use skia_safe::{FontMgr, Paint, Point};
-  use skia_safe::textlayout::{FontCollection, Paragraph, ParagraphBuilder, ParagraphStyle, TextStyle, TypefaceFontProvider};
+  use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextStyle, TypefaceFontProvider};
 
   use picturs::assert_canvas;
   use picturs::skia::Canvas;

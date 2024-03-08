@@ -49,20 +49,20 @@ pub enum Shape<'a> {
   Dot(Point, Radius, Option<Caption<'a>>),
   Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption<'a>>),
   Line(Point, Option<Displacement>, Point, Option<Caption<'a>>, Endings),
-  Box(Color, Option<Paragraph<'a>>, Radius, Color, Option<EdgeMovement>),
-  Circle(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
-  Ellipse(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
-  Cylinder(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
-  Oval(Color, Option<Paragraph<'a>>, Color, Option<EdgeMovement>),
-  Text(Paragraph<'a>, Option<EdgeMovement>),
-  File(Color, Option<Paragraph<'a>>, Radius, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
+  Box(Color, Option<Paragraph>, Radius, Color, Option<EdgeMovement>),
+  Circle(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
+  Ellipse(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
+  Cylinder(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
+  Oval(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
+  Text(Paragraph, Option<EdgeMovement>),
+  File(Color, Option<Paragraph>, Radius, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
   Path(Point, Vec<Point>, Option<Caption<'a>>),
   Sline(Vec<Point>, Option<Caption<'a>>, Endings),
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Paragraph<'a> {
-  pub text: &'a str,
+pub struct Paragraph {
+  pub text: String,
   pub widths: Vec<f32>,
   pub height: f32,
   pub size: Size,

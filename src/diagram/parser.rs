@@ -314,7 +314,7 @@ impl<'i> Diagram<'i> {
       location,
       stroke,
       fill,
-      text,
+      text: text_color,
       thickness,
       ..
     } = &attrs {
@@ -333,7 +333,7 @@ impl<'i> Diagram<'i> {
       let common = CommonAttributes::new(*id, used, *stroke, *thickness);
       let rectangle = Primitive(
         common,
-        Shape::Box(*text, paragraph, *radius, *fill, location.clone()));
+        Shape::Box(*text_color, paragraph, *radius, *fill, location.clone()));
 
       let mut rect = used;
       if config.flow.end.x <= 0. {
@@ -567,13 +567,13 @@ impl<'i> Diagram<'i> {
     let paragraph = match fit {
       Some(_) => {
         let size = config.measure_string(title);
-        Paragraph { text: title, widths: vec![size.width], height: size.height, size }
+        Paragraph { text: title.into(), widths: vec![size.width], height: size.height, size }
       }
       None => {
         let width = Conversion::width_into(&attributes, &config.unit).unwrap_or(config.text.width);
         let (widths, height) = config.measure_strings(title, width - 2. * TEXT_PADDING);
         let size = Size::new(width, height);
-        Paragraph { text: title, widths, height, size }
+        Paragraph { text: title.into(), widths, height, size }
       }
     };
 
@@ -707,14 +707,14 @@ impl<'i> Diagram<'i> {
     (rect, used)
   }
 
-  fn paragraph_sized<'a>(title: Option<&'a str>, width: &Option<f32>, height: &Option<f32>, config: &Config, shape: &ShapeConfig) -> (Option<Paragraph<'a>>, Size) {
+  fn paragraph_sized(title: Option<&str>, width: &Option<f32>, height: &Option<f32>, config: &Config, shape: &ShapeConfig) -> (Option<Paragraph>, Size) {
     let width = width.unwrap_or(shape.width);
     let height = height.unwrap_or(shape.height);
 
     let paragraph = title.map(|title| {
       let (widths, height) = config.measure_strings(title, width - 2. * TEXT_PADDING);
       let size = Size::new(width, height);
-      Paragraph { text: title, widths, height, size }
+      Paragraph { text: title.into(), widths, height, size }
     });
 
     let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);

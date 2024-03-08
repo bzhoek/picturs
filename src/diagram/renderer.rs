@@ -157,7 +157,7 @@ impl Renderer {
         if paragraph.widths.len() > 1 {
           Self::render_paragraph(canvas, used, &paragraph.text);
         } else {
-          canvas.text(paragraph.text, (used.left, used.top + canvas.font.metrics().0));
+          canvas.text(&paragraph.text, (used.left, used.top + canvas.font.metrics().0));
         }
       }
     }
@@ -302,12 +302,13 @@ impl Renderer {
     (topleft, rect)
   }
 
+  #[allow(dead_code)]
   fn paint_paragraph(canvas: &mut Canvas, used: &Rect, text_color: &Color, paragraph: &Option<Paragraph>) {
     if let Some(paragraph) = paragraph {
       canvas.paint.set_style(PaintStyle::Fill);
       canvas.paint.set_color(*text_color);
       let paragraph = Canvas::paragraph(&paragraph.text, used.width());
-      let rect = Self::align_rect(&used, 1.);
+      let rect = Self::align_rect(used, 1.);
       canvas.paint_paragraph(&paragraph, (rect.left, rect.top));
     }
   }
@@ -324,7 +325,7 @@ impl Renderer {
         rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
       }
       let rect = Self::align_rect(&rect, 1.);
-      canvas.draw_paragraph(paragraph.text, (rect.left, rect.top), rect.width());
+      canvas.draw_paragraph(&paragraph.text, (rect.left, rect.top), rect.width());
     }
   }
 
@@ -342,7 +343,7 @@ impl Renderer {
     canvas.fill();
   }
 
-  fn render_paragraph(canvas: &mut Canvas, rect: &Rect, title: &&str) {
+  fn render_paragraph(canvas: &mut Canvas, rect: &Rect, title: &str) {
     let origin = (rect.left, rect.top);
     canvas.draw_paragraph(title, origin, rect.width());
   }

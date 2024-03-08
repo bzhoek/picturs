@@ -134,7 +134,7 @@ fn box_with_wrapping_title() {
   let size = Size::new(88., 85.);
   let tqbf = Shape::Box(
     Color::BLACK,
-    Some(Paragraph { text: TQBF, widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
+    Some(Paragraph { text: TQBF.into(), widths: vec!(72., 78., 50., 66., 68.), height: 85., size }),
     Radius::default(), Color::TRANSPARENT, None);
 
   assert_eq!(
@@ -194,7 +194,7 @@ fn offset_from_rect() {
 fn rectangle(title: Option<(&str, f32)>) -> Shape {
   let paragraph = title.map(|(title, width)| {
     let size = Size::new(88., 17.);
-    Paragraph { text: title, widths: vec!(width), height: size.height, size }
+    Paragraph { text: title.into(), widths: vec!(width), height: size.height, size }
   });
   Shape::Box(Color::BLACK, paragraph, Radius::default(), Color::TRANSPARENT, None)
 }

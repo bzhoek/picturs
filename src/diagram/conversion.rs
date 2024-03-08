@@ -109,7 +109,7 @@ impl Conversion {
   pub(crate) fn string_from(pair: &Pair<Rule>) -> String {
     let str = pair.clone().into_inner()
       .next().unwrap().as_str();
-    str.replace("\\n", "\n").into()
+    str.replace("\\n", "\n")
   }
 
   pub(crate) fn identified_in<'a>(pair: &Pair<'a, Rule>) -> Option<&'a str> {
