@@ -70,33 +70,36 @@ mod real_world {
 
   #[test]
   fn timeline() {
+    // TODO: edge.190 en edge.n is duidelijker dan .190 en .n
     let string = r#"
       set box rd 8pt ht .6in
+
       sline.time 4in right *-> color dgrey thick
+
       dot.y49 at 1/12 time.n "1949" below color #645590
       sline from y49.n .5in up color #645590
-      box wd 1in "QCリサーチ\nグループ\n結成" .190 .5in up from 1/12 time.s color #645590 thick
+      box wd 1in .190 .5in up from y49.n color #645590 thick "QCリサーチ\nグループ\n結成"
 
       dot.y50 at 2/12 time.n "1950年代\n後半" above color #27A8BE
       sline from y50.s 1cm down color #27A8BE
-      box wd 1in "新製品開発\nの品質管理\nを始める" .20 1cm down from 2/12 time.s color #27A8BE normal
+      box wd 1in .20 1cm down from y50.s color #27A8BE normal "新製品開発\nの品質管理\nを始める"
 
       dot.y72 at 5/12 time.n "1972" below color #D6A02A
       sline from y72.n .5in up color #D6A02A
-      box wd 1in "ソフトウェアの 検査の考え方 発表" .167 .5in up from 5/12 time.s color #D6A02A normal
+      box wd 1in .167 .5in up from y72.n color #D6A02A normal "ソフトウェアの 検査の考え方 発表"
 
       dot.y80 at 7/12 time.n "1980" above color #E47958
       sline from y80.s 1cm down color #E47958
-      box wd 2in ht .7in "ソフトウェア製品生産管理:\nソフトウェア工学における 品質管理(QC)と品質保証 (QA) 発表" .14 1cm down from 7/12 time.s color #E47958 normal
+      box wd 2in .14 1cm down from y80.s color #E47958 normal "ソフトウェア製品生産管理:\nソフトウェア工学における 品質管理(QC)と品質保証 (QA) 発表"
 
       dot.y81 at 8/12 time.n "1981" below color #E24B7E
       sline from y81.n .3in up color #E24B7E
-      box wd 1in "ソフトウェアの 品質管理推進 について 発表" .s .3in up from 8/12 time.s color #E24B7E normal
-      box wd 1in ht .2in "日本的品質管理刊行" .s 1in up from 8/12 time.s color #E24B7E normal
+      box wd 1.4in         .6:25 .3in up from y81.n color #E24B7E normal "ソフトウェアの 品質管理推進 について 発表"
+      box wd 1.4in ht .2in .6:25 1in up from y81.n color #E24B7E normal "日本的品質管理刊行"
 
       dot.y98 at 11/12 time.n "1998" above color #214F79
       sline from y98.s 1cm down color #214F79 invisible
-      box "ISTQBの 前身が 発足" .n 1cm down from 11/12 time.s color #214F79 normal
+      box .n 1cm down from y98.s color #214F79 normal "ISTQBの 前身が 発足"
       "#;
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
