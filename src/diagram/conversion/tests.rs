@@ -14,7 +14,7 @@ mod string {
 
   fn subject(string: &str) -> String {
     let pair = Conversion::pair_for(Rule::string, string);
-    Conversion::string_from(&pair)
+    Conversion::string_from(pair)
   }
 }
 

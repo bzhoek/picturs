@@ -116,7 +116,7 @@ fn nested_box_with_title() {
   assert_eq!(
     diagram.nodes,
     vec![Container(
-      None, 0., Some("parent"),
+      None, 0., Some("parent".into()),
       Rect::from_xywh(0.5, 0.5, 104., 104.),
       vec![Primitive(
         common(None, Rect::from_xywh(8.5, 8.5, 88., 67.).into()),

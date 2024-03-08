@@ -148,7 +148,7 @@ impl<'i> Diagram<'i> {
 
       used = inner.with_outset((*padding, *padding));
 
-      if let Some(title) = *title {
+      if let Some(title) = title {
         let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
         let (_widths, down) = config.measure_strings(title, text_inset.width());
         used.bottom = inner.bottom + down + TEXT_PADDING;
@@ -158,7 +158,7 @@ impl<'i> Diagram<'i> {
 
       let mut rect = used;
       rect.bottom += padding;
-      return Some((rect, Container(*id, *radius, *title, used, nodes)));
+      return Some((rect, Container(*id, *radius, title.clone(), used, nodes)));
     }
     None
   }
@@ -174,7 +174,7 @@ impl<'i> Diagram<'i> {
       stroke, fill, text,
       ..
     } = &attrs {
-      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.circle);
+      let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.circle);
       let mut used = Rect::from_xywh(cursor.x, cursor.y, size.height, size.height);
 
       Self::adjust_topleft(&config.flow, &mut used);
@@ -201,7 +201,7 @@ impl<'i> Diagram<'i> {
       stroke, fill, text,
       ..
     } = &attrs {
-      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.cylinder);
+      let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.cylinder);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
       Self::adjust_topleft(&config.flow, &mut used);
@@ -229,7 +229,7 @@ impl<'i> Diagram<'i> {
       stroke, fill, text,
       ..
     } = &attrs {
-      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.ellipse);
+      let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.ellipse);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
       Self::adjust_topleft(&config.flow, &mut used);
@@ -257,7 +257,7 @@ impl<'i> Diagram<'i> {
       stroke, fill, text,
       ..
     } = &attrs {
-      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.file);
+      let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.file);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
       Self::adjust_topleft(&config.flow, &mut used);
@@ -284,7 +284,7 @@ impl<'i> Diagram<'i> {
       stroke, fill, text,
       ..
     } = &attrs {
-      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.oval);
+      let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.oval);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
       Self::position_rect_on_edge(&config.flow.start, location, &mut used);
@@ -318,7 +318,7 @@ impl<'i> Diagram<'i> {
       thickness,
       ..
     } = &attrs {
-      let (paragraph, size) = Self::paragraph_sized(*title, width, height, config, &config.rectangle);
+      let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.rectangle);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
       // TODO: pad in flow direction

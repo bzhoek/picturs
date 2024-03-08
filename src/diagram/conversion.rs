@@ -96,17 +96,22 @@ impl Conversion {
     })
   }
 
+  pub(crate) fn str_for<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
+    Rules::find_rule(pair, rule)
+      .map(|p| p.as_str())
+  }
+
   pub(crate) fn string_in<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
     Rules::dig_rule(pair, rule)
       .map(|p| p.as_str())
   }
 
-  pub(crate) fn string_for<'a>(pair: &Pair<'a, Rule>, rule: Rule) -> Option<&'a str> {
+  pub(crate) fn string_for(pair: &Pair<Rule>, rule: Rule) -> Option<String> {
     Rules::find_rule(pair, rule)
-      .map(|p| p.as_str())
+      .map(Self::string_from)
   }
 
-  pub(crate) fn string_from(pair: &Pair<Rule>) -> String {
+  pub(crate) fn string_from(pair: Pair<Rule>) -> String {
     let str = pair.clone().into_inner()
       .next().unwrap().as_str();
     str.replace("\\n", "\n")
@@ -313,7 +318,7 @@ impl Conversion {
   pub(crate) fn displacement_from(pair: Pair<Rule>, unit: &Unit) -> Displacement {
     let length = Rules::find_rule(&pair, Rule::offset)
       .map(|pair| Self::length_from(pair, unit)).unwrap();
-    let direction = Self::string_for(&pair, Rule::direction).unwrap();
+    let direction = Self::str_for(&pair, Rule::direction).unwrap();
     Displacement { length, edge: direction.into() }
   }
 

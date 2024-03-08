@@ -35,7 +35,7 @@ impl<'a> CommonAttributes<'a> {
 
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
-  Container(Option<&'a str>, Radius, Option<&'a str>, Used, Vec<Node<'a>>),
+  Container(Option<&'a str>, Radius, Option<String>, Used, Vec<Node<'a>>),
   Primitive(CommonAttributes<'a>, Shape<'a>),
   Font(Font),
   Move(Rect),
