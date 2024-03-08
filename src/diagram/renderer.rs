@@ -24,7 +24,7 @@ impl Renderer {
             canvas.paint.set_color(Color::BLACK);
             let inset = used.with_inset((TEXT_PADDING, TEXT_PADDING));
             let origin = (inset.left, inset.bottom - 16.);
-            canvas.paragraph(title, origin, inset.width());
+            canvas.draw_paragraph(title, origin, inset.width());
           }
 
           canvas.paint.set_style(PaintStyle::Stroke);
@@ -96,6 +96,7 @@ impl Renderer {
         canvas.rectangle(used, *radius);
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
+        // Self::paint_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::File(text_color, paragraph, _radius, _fill, _) => {
         canvas.paint.set_style(PaintStyle::Stroke);
@@ -301,6 +302,16 @@ impl Renderer {
     (topleft, rect)
   }
 
+  fn paint_paragraph(canvas: &mut Canvas, used: &Rect, text_color: &Color, paragraph: &Option<Paragraph>) {
+    if let Some(paragraph) = paragraph {
+      canvas.paint.set_style(PaintStyle::Fill);
+      canvas.paint.set_color(*text_color);
+      let paragraph = Canvas::paragraph(&paragraph.text, used.width());
+      let rect = Self::align_rect(&used, 1.);
+      canvas.paint_paragraph(&paragraph, (rect.left, rect.top));
+    }
+  }
+
   fn draw_paragraph(canvas: &mut Canvas, used: &Rect, text_color: &Color, paragraph: &Option<Paragraph>) {
     if let Some(paragraph) = paragraph {
       canvas.paint.set_style(PaintStyle::Fill);
@@ -313,7 +324,7 @@ impl Renderer {
         rect = rect.with_inset((TEXT_PADDING, TEXT_PADDING));
       }
       let rect = Self::align_rect(&rect, 1.);
-      canvas.paragraph(paragraph.text, (rect.left, rect.top), rect.width());
+      canvas.draw_paragraph(paragraph.text, (rect.left, rect.top), rect.width());
     }
   }
 
@@ -333,7 +344,7 @@ impl Renderer {
 
   fn render_paragraph(canvas: &mut Canvas, rect: &Rect, title: &&str) {
     let origin = (rect.left, rect.top);
-    canvas.paragraph(title, origin, rect.width());
+    canvas.draw_paragraph(title, origin, rect.width());
   }
 
   #[allow(dead_code)]
