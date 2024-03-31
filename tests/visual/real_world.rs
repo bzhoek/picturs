@@ -104,4 +104,79 @@ mod real_world {
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
   }
+
+  // Image from https://youtu.be/lWTzqPfy1gE
+  #[test]
+  fn keyboard() {
+    let string = r#"
+      set box rd 8pt ht .5in wd .5in
+      box { // 13 x 1u, 1 x ?u
+        right
+        box "`"
+        box "1"
+        box "2"
+        box "3"
+        box "4"
+        box "5"
+        box "6"
+        box "7"
+        box "8"
+        box "9"
+        box "0"
+        box "-"
+        box "="
+        box "delete" wd 0.75in
+      }
+      box { // 13 x 1u, 1 x ?u
+        right
+        box "tab" wd 0.75in
+        box "Q"
+        box "W"
+        box "E"
+        box "R"
+        box "T"
+        box "Y"
+        box "U"
+        box "I"
+        box "O"
+        box "P"
+        box "["
+        box "]"
+        box "\\"
+      }
+      box { // 11 x 1u, 2 x ?u
+        right
+        box "caps" wd .9in
+        box "A"
+        box "S"
+        box "D"
+        box "F"
+        box "G"
+        box "H"
+        box "J"
+        box "K"
+        box "L"
+        box ";"
+        box "'"
+        box "enter" wd .9in
+      }
+      box { // 10 x 1u, 2 x ?u
+        right
+        box "shift" wd 1.25in
+        box "Z"
+        box "X"
+        box "C"
+        box "V"
+        box "B"
+        box "N"
+        box "M"
+        box ","
+        box "."
+        box "/"
+        box "shift" wd 1.25in
+      }
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram!(diagram);
+  }
 }
