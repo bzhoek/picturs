@@ -111,7 +111,7 @@ mod real_world {
     let string = r#"
       set box rd 8pt ht .5in wd .5in
       box { // 13 x 1u, 1 x ?u
-        right
+        continue right-top
         box "`"
         box "1"
         box "2"
@@ -128,7 +128,7 @@ mod real_world {
         box "delete" wd 0.75in
       }
       box { // 13 x 1u, 1 x ?u
-        right
+        continue from right-top
         box "tab" wd 0.75in
         box "Q"
         box "W"
@@ -145,7 +145,7 @@ mod real_world {
         box "\\"
       }
       box { // 11 x 1u, 2 x ?u
-        right
+        right-top
         box "caps" wd .9in
         box "A"
         box "S"
@@ -161,7 +161,7 @@ mod real_world {
         box "enter" wd .9in
       }
       box { // 10 x 1u, 2 x ?u
-        right
+        right-top
         box "shift" wd 1.25in
         box "Z"
         box "X"
@@ -173,6 +173,31 @@ mod real_world {
         box ","
         box "."
         box "/"
+        box "shift" wd 1.25in
+      }
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram!(diagram);
+  }
+
+  #[test]
+  fn keyboard_small() {
+    let string = r#"
+      set box rd 8pt ht .5in wd .5in
+      box { // 13 x 1u, 1 x ?u
+        top
+        box "`"
+      }
+      box { // 13 x 1u, 1 x ?u
+        top
+        box "tab" wd 0.75in
+      }
+      box { // 11 x 1u, 2 x ?u
+        right
+        box "caps" wd .9in
+      }
+      box { // 10 x 1u, 2 x ?u
+        right
         box "shift" wd 1.25in
       }
       "#;

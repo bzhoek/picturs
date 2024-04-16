@@ -1,10 +1,14 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 // WHITESPACE = { ( " "* ~ "\\" ~ NEWLINE ~ " "* ) }
 picture = _{ SOI ~ statements* ~ EOI }
-statements = _{ comment | container | shape | font_config | unit_config | box_config | circle_config | line_config | flow | flow_to | move_to }
+statements = _{ comment | container | shape | font_config | unit_config | box_config | circle_config | line_config | continue_from | flow | flow_to | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ dot | arrow | line | sline | rectangle | file | circle | ellipse | cylinder | oval | text | path }
 flow = { "down" | "right" | "top" | "left" }
+
+continue_from = { continue_prefix? ~ continue_direction  }
+continue_prefix = _{ "continue" ~ "from"? }
+continue_direction = { "right-top" }
 
 // config
 unit_config = { "set unit" ~ unit }

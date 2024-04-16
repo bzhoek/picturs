@@ -117,6 +117,11 @@ impl<'i> Diagram<'i> {
         config.flow = Flow::new(pair.as_str());
         None
       }
+      Rule::continue_from => {
+        let direction = Conversion::str_for(&pair, Rule::continue_direction).unwrap();
+        config.flow = direction.into();
+        None
+      }
       _ => None
     };
     result

@@ -14,6 +14,16 @@ The `flow` statement determines where the cursor ends for the next statement:
 | `bottom`  | center bottom |
 | `left`    | left bottom   |
 
+A better way is to think about where the cursor *continues*, defined as a point on the edge of the *last* object. The `continue` keyword reflects this better.
+
+```
+continue from right-top
+continue right-top
+right-top
+```
+
+The first part determines the direction, `right-top` flows horizontally, `top-right` flows vertically.
+
 ## Relative placement
 
 ```pic

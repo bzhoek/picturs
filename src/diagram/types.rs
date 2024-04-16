@@ -251,6 +251,13 @@ impl Flow {
   }
 }
 
+impl From<&str> for Flow {
+  fn from(item: &str) -> Self {
+    let end: Edge = item.into();
+    Self { start: end.flip(), end }
+  }
+}
+
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum EdgeDirection {
   #[default]
@@ -273,7 +280,7 @@ impl From<&str> for Edge {
     match dot_removed.to_lowercase().as_str() {
       "n" | "up" | "above" => Self::above(),
       "ne" => Self { direction: Vertical, x: 0.5, y: -0.5 },
-      "en" => Self { direction: Horizontal, x: 0.5, y: -0.5 },
+      "en" | "right-top" => Self { direction: Horizontal, x: 0.5, y: -0.5 },
       "e" | "right" => Self::right(),
       "se" => Self { direction: Vertical, x: 0.5, y: 0.5 },
       "s" | "down" | "below" => Self::below(),
