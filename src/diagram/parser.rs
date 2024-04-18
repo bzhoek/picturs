@@ -10,7 +10,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, CommonAttributes};
+use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, CommonAttributes, EdgeDirection};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -164,7 +164,6 @@ impl<'i> Diagram<'i> {
 
       let mut rect = used;
       rect.bottom += padding;
-      // return Some((rect, Container(*id, *radius, title.clone(), used, nodes)));
       return Some((rect, Container(attrs, used, nodes)));
     }
     None
@@ -318,6 +317,7 @@ impl<'i> Diagram<'i> {
       height,
       padding,
       radius,
+      space,
       location,
       stroke,
       fill,
@@ -336,7 +336,6 @@ impl<'i> Diagram<'i> {
       index.insert(ShapeName::Box, *id, used);
       index.add_open(ShapeName::Box, attrs.clone());
 
-
       let common = CommonAttributes::new(*id, used, *stroke, *thickness);
       let rectangle = Primitive(
         common,
@@ -345,6 +344,11 @@ impl<'i> Diagram<'i> {
       let mut rect = used;
       if config.flow.end.x <= 0. {
         rect.bottom += padding;
+      }
+
+      match config.flow.end.direction {
+        EdgeDirection::Horizontal => rect.right += space,
+        EdgeDirection::Vertical => rect.bottom += space
       }
 
       return Some((rect, rectangle));
@@ -676,6 +680,10 @@ impl<'i> Diagram<'i> {
         Rule::radius => {
           let length = Conversion::length_from(pair, unit);
           config.radius = length.pixels();
+        }
+        Rule::space => {
+          let length = Conversion::length_from(pair, unit);
+          config.space = length.pixels();
         }
         _ => {
           warn!("Ignored {:?}", pair);

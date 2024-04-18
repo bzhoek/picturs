@@ -141,11 +141,12 @@ pub struct ShapeConfig { // all in pixels
   pub(crate) width: f32,
   pub(crate) height: f32,
   pub(crate) radius: f32,
+  pub(crate) space: f32,
 }
 
 impl Default for ShapeConfig {
   fn default() -> Self {
-    Self { padding: BLOCK_PADDING, width: WIDTH.trunc(), height: HEIGHT.trunc(), radius: 0. }
+    Self { padding: BLOCK_PADDING, width: WIDTH.trunc(), height: HEIGHT.trunc(), radius: 0., space: 0. }
   }
 }
 
@@ -175,6 +176,7 @@ impl Config {
         width: HEIGHT.trunc(),
         height: WIDTH.trunc(),
         radius: 8.0,
+        space: 0.0,
       },
       font,
     }

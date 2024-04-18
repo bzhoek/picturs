@@ -13,7 +13,7 @@ continue_direction = { "right-top" }
 // config
 unit_config = { "set unit" ~ unit }
 font_config = { "set font" ~ string }
-box_config = { "set box" ~ (padding | width| height | radius )* }
+box_config = { "set box" ~ (padding | width| height | radius | space )* }
 circle_config = { "set circle" ~ (height) }
 line_config = { "set line" ~ length }
 
@@ -27,13 +27,14 @@ cylinder = { "cylinder" ~ identified? ~ attributes }
 oval = { "oval" ~ identified? ~ attributes }
 
 attributes = { attribute* }
-attribute = _{ string | stroke | fill | width | height | padding | radius | location | text_color | flow | same | thickness }
+attribute = _{ string | stroke | fill | width | height | padding | radius | space | location | text_color | flow | same | thickness }
 stroke = { "color" ~ color }
 fill = { "fill" ~ id }
 width = { ("wd" | "wid" | "width") ~ size }
 height = { ("ht" | "height") ~ size }
 padding = { ("pd" | "padding") ~ size }
 radius = { ("rd" | "rad" | "radius") ~ size }
+space = { ("sp" | "space" ) ~ size }
 text_color = { "text" ~ id }
 
 color = _{ ( id | rgb) }

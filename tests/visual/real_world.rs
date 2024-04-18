@@ -105,12 +105,12 @@ mod real_world {
     assert_diagram!(diagram);
   }
 
-  // Image from https://youtu.be/lWTzqPfy1gE
+  // Image from https://youtu.be/nBjEzQlJLHE?t=8
   // Sizes from https://intercom.help/omnitype/en/articles/5121683-keycap-sizes
   #[test]
   fn keyboard() {
     let string = r#"
-      set box rd 8pt ht .4in wd .4in
+      set box rd 8pt ht .4in wd .4in sp 4
       box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
         continue right-top
         box "`"

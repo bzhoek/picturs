@@ -203,6 +203,11 @@ impl Conversion {
       .map(|length| length.pixels())
   }
 
+  pub(crate) fn space_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
+    Conversion::length_in(attributes, Rule::space, unit)
+      .map(|length| length.pixels())
+  }
+
   pub(crate) fn width_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_in(attributes, Rule::width, unit)
       .map(|length| length.pixels())
