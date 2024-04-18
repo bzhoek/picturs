@@ -1,8 +1,10 @@
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
+use log::warn;
 
 use skia_safe::{Color, PaintStyle, Point, Rect, Size};
 use skia_safe::textlayout::TextAlign;
+use crate::diagram::attributes::Attributes;
 
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
@@ -17,7 +19,7 @@ impl Renderer {
       canvas.paint.set_stroke_width(1.0);
 
       match node {
-        Container(_id, radius, title, used, nodes) => {
+        Container(Attributes::Closed { radius, title, thickness, .. }, used, nodes) => {
           Self::render_to_canvas(canvas, nodes);
 
           if let Some(title) = title {
@@ -28,9 +30,12 @@ impl Renderer {
             canvas.draw_paragraph(title, origin, inset.width());
           }
 
-          canvas.paint.set_style(PaintStyle::Stroke);
-          canvas.paint.set_color(Color::RED);
-          canvas.rectangle(used, *radius);
+          if thickness > &0. {
+            canvas.paint.set_style(PaintStyle::Stroke);
+            canvas.set_line_width(*thickness);
+            canvas.paint.set_color(Color::RED);
+            canvas.rectangle(used, *radius);
+          }
         }
         Primitive(common, shape) => {
           let used = Self::align_rect(&common.used, common.thickness);
@@ -38,6 +43,7 @@ impl Renderer {
         }
         Node::Font(font) => canvas.font = font.clone(),
         Node::Move(_used) => {}
+        _ => warn!("Cannot render: {:?}", node),
       }
     }
   }
@@ -367,7 +373,7 @@ impl Renderer {
   fn final_placement(nodes: &mut [Node]) {
     for node in nodes.iter_mut() {
       match node {
-        Container(_id, _, _, used, nodes) => {
+        Container(_attrs, used, nodes) => {
           used.top += 16.;
           Self::final_placement(nodes);
         }

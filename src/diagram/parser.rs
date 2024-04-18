@@ -132,8 +132,9 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Container);
 
     if let Attributes::Closed {
-      id, title,
-      padding, radius,
+      id,
+      title,
+      padding,
       location,
       ..
     } = &attrs {
@@ -163,7 +164,8 @@ impl<'i> Diagram<'i> {
 
       let mut rect = used;
       rect.bottom += padding;
-      return Some((rect, Container(*id, *radius, title.clone(), used, nodes)));
+      // return Some((rect, Container(*id, *radius, title.clone(), used, nodes)));
+      return Some((rect, Container(attrs, used, nodes)));
     }
     None
   }
@@ -771,7 +773,7 @@ impl<'i> Diagram<'i> {
         Primitive(common, ..) => {
           common.id == Some(node_id)
         }
-        Container(id, _, _, _, nodes) => {
+        Container(Attributes::Closed {id, ..}, _, nodes) => {
           if let Some(id) = id {
             if id == &node_id {
               return true;
@@ -800,7 +802,7 @@ impl<'i> Diagram<'i> {
             return Some(node);
           }
         }
-        Container(_, _, _, _, nodes) => {
+        Container(_, _, nodes) => {
           if let Some(node) = Self::find_nodes_mut(nodes, node_id) {
             return Some(node);
           }

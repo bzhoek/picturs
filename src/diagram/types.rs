@@ -4,6 +4,7 @@ mod tests;
 use std::ops::{Add, Mul};
 
 use skia_safe::{Color, Font, FontMgr, FontStyle, Point, Rect, scalar, Size, Vector};
+use crate::diagram::attributes::Attributes;
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
@@ -35,7 +36,7 @@ impl<'a> CommonAttributes<'a> {
 
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
-  Container(Option<&'a str>, Radius, Option<String>, Used, Vec<Node<'a>>),
+  Container(Attributes<'a>, Used, Vec<Node<'a>>),
   Primitive(CommonAttributes<'a>, Shape),
   Font(Font),
   Move(Rect),

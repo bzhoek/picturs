@@ -110,7 +110,7 @@ mod real_world {
   fn keyboard() {
     let string = r#"
       set box rd 8pt ht .5in wd .5in
-      box { // 13 x 1u, 1 x ?u
+      box nostroke { // 13 x 1u, 1 x ?u
         continue right-top
         box "`"
         box "1"
@@ -127,7 +127,7 @@ mod real_world {
         box "="
         box "delete" wd 0.75in
       }
-      box { // 13 x 1u, 1 x ?u
+      box invisible { // 13 x 1u, 1 x ?u
         continue from right-top
         box "tab" wd 0.75in
         box "Q"
@@ -144,7 +144,7 @@ mod real_world {
         box "]"
         box "\\"
       }
-      box { // 11 x 1u, 2 x ?u
+      box invis { // 11 x 1u, 2 x ?u
         right-top
         box "caps" wd .9in
         box "A"
@@ -160,7 +160,7 @@ mod real_world {
         box "'"
         box "enter" wd .9in
       }
-      box { // 10 x 1u, 2 x ?u
+      box invis { // 10 x 1u, 2 x ?u
         right-top
         box "shift" wd 1.25in
         box "Z"

@@ -397,7 +397,7 @@ impl Conversion {
   }
   pub(crate) fn thickness_from(pair: Pair<Rule>) -> f32 {
     match pair.as_str() {
-      "invisible" => 0.0,
+      "invisible" | "invis" | "nostroke" => 0.0,
       "thin" => 1.0,
       "normal" => 2.0,
       "thick" => 3.0,

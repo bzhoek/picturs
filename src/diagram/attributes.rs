@@ -5,8 +5,8 @@ use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::{Caption, Config, Displacement, Edge, Endings, ObjectEdge, Radius, ShapeConfig};
 
-#[derive(Clone, Debug)]
-pub(crate) enum Attributes<'a> {
+#[derive(Clone, Debug, PartialEq)]
+pub enum Attributes<'a> {
   Open {
     id: Option<&'a str>,
     same: bool,
