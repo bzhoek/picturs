@@ -61,7 +61,7 @@ impl<'i> Attributes<'i> {
     (Attributes::Closed {
       id: Conversion::identified_in(pair),
       same: Rules::find_rule(&attributes, Rule::same).is_some(),
-      width: Conversion::width_into(&attributes, &config.unit),
+      width: Conversion::width_into_(&attributes, &config.unit, shape.width),
       height: Conversion::height_into(&attributes, &config.unit),
       padding: Conversion::padding_into(&attributes, &config.unit).unwrap_or(shape.padding),
       radius: Conversion::radius_into(&attributes, &config.unit).unwrap_or(shape.radius),

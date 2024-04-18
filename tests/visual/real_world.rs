@@ -106,11 +106,12 @@ mod real_world {
   }
 
   // Image from https://youtu.be/lWTzqPfy1gE
+  // Sizes from https://intercom.help/omnitype/en/articles/5121683-keycap-sizes
   #[test]
   fn keyboard() {
     let string = r#"
-      set box rd 8pt ht .5in wd .5in
-      box nostroke { // 13 x 1u, 1 x ?u
+      set box rd 8pt ht .4in wd .4in
+      box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
         continue right-top
         box "`"
         box "1"
@@ -125,11 +126,11 @@ mod real_world {
         box "0"
         box "-"
         box "="
-        box "delete" wd 0.75in
+        box "delete" wd 1.5u
       }
-      box invisible { // 13 x 1u, 1 x ?u
+      box invisible pd 4 { // 13 x 1u, 1 x 1.5u
         continue from right-top
-        box "tab" wd 0.75in
+        box "tab" wd 1.5u
         box "Q"
         box "W"
         box "E"
@@ -144,9 +145,9 @@ mod real_world {
         box "]"
         box "\\"
       }
-      box invis { // 11 x 1u, 2 x ?u
+      box invis pd 4 { // 11 x 1u, 2 x 1.75u
         right-top
-        box "caps" wd .9in
+        box "caps" wd 1.75u
         box "A"
         box "S"
         box "D"
@@ -158,11 +159,11 @@ mod real_world {
         box "L"
         box ";"
         box "'"
-        box "enter" wd .9in
+        box "enter" wd 1.75u
       }
-      box invis { // 10 x 1u, 2 x ?u
+      box invis pd 4 { // 10 x 1u, 2 x 2.25u
         right-top
-        box "shift" wd 1.25in
+        box "shift" wd 2.25u
         box "Z"
         box "X"
         box "C"
@@ -173,7 +174,7 @@ mod real_world {
         box ","
         box "."
         box "/"
-        box "shift" wd 1.25in
+        box "shift" wd 2.25u
       }
       "#;
     let diagram = create_diagram(string);

@@ -208,6 +208,30 @@ impl Conversion {
       .map(|length| length.pixels())
   }
 
+  pub(crate) fn width_into_(attributes: &Pair<Rule>, unit: &Unit, size: f32) -> Option<f32> {
+    Conversion::length_in_(attributes, Rule::width, unit, size)
+      .map(|length| length.pixels())
+  }
+
+  pub(crate) fn length_in_(pair: &Pair<Rule>, rule: Rule, unit: &Unit, size: f32) -> Option<Length> {
+    Rules::dig_rule(pair, rule)
+      .map(|pair| Self::length_from_(pair, unit, size))
+  }
+
+  pub(crate) fn length_from_(pair: Pair<Rule>, unit: &Unit, size: f32) -> Length {
+    let mut pairs = pair.into_inner();
+    let factor = Self::next_to_f32(&mut pairs).unwrap();
+    match Self::next_to_string(&mut pairs).map(|str| str.into()) {
+      Some (Unit::Unit) => {
+        Length::new(factor * size, Unit::Px)
+      },
+      Some(unit) => {
+        Length::new(factor, unit)
+      }
+      None => Length::new(factor, *unit)
+    }
+  }
+
   pub(crate) fn height_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_in(attributes, Rule::height, unit)
       .map(|length| length.pixels())
