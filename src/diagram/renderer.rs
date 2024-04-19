@@ -2,9 +2,9 @@ use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 use log::warn;
 
-use skia_safe::{Color, PaintStyle, Point, Rect, Size};
+use skia_safe::{Color, PaintStyle, PathEffect, Point, Rect, Size};
 use skia_safe::textlayout::TextAlign;
-use crate::diagram::attributes::Attributes;
+use crate::diagram::attributes::{Attributes, Effect};
 
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
@@ -19,8 +19,9 @@ impl Renderer {
       canvas.paint.set_stroke_width(1.0);
 
       match node {
-        Container(Attributes::Closed { radius, title, thickness, .. }, used, nodes) => {
+        Container(Attributes::Closed { radius, title, thickness, effect, .. }, used, nodes) => {
           Self::render_to_canvas(canvas, nodes);
+          // canvas.paint.reset();
 
           if let Some(title) = title {
             canvas.paint.set_style(PaintStyle::Fill);
@@ -29,6 +30,14 @@ impl Renderer {
             let origin = (inset.left, inset.bottom - 16.);
             canvas.draw_paragraph(title, origin, inset.width());
           }
+
+          let effect = match effect {
+            Effect::Dashed => PathEffect::dash(&[10., 10.], 0.),
+            Effect::Dotted => PathEffect::dash(&[2., 4.], 0.),
+            Effect::Solid => None
+          };
+
+          canvas.paint.set_path_effect(effect);
 
           if thickness > &0. {
             canvas.paint.set_style(PaintStyle::Stroke);

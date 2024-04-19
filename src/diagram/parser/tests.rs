@@ -2,6 +2,7 @@ use std::ops::Mul;
 
 use skia_safe::{Color, Point, Rect, Size, Vector};
 use crate::diagram::attributes::Attributes;
+use crate::diagram::attributes::Effect::Solid;
 
 use crate::diagram::conversion::Conversion;
 use crate::diagram::create_diagram;
@@ -111,7 +112,7 @@ fn nested_box_id() {
   let string = "box.parent { box }";
   let diagram = create_diagram(string);
 
-  let attrs = Attributes::Closed { id: Some("parent"), same: false, width: None, height: None, padding: 8.0, radius: 0.0, space: 0.0, title: None, location: None, stroke: 4278190335.into(), fill: 0.into(), text: 4278190080.into(), thickness: 1.0 };
+  let attrs = Attributes::Closed { id: Some("parent"), same: false, width: None, height: None, padding: 8.0, radius: 0.0, space: 0.0, title: None, location: None, stroke: 4278190335.into(), fill: 0.into(), text: 4278190080.into(), thickness: 1.0, effect: Solid };
 
   assert_eq!(
     diagram.nodes,
@@ -130,7 +131,7 @@ fn nested_box_with_title() {
   let string = r#"box "parent" { box "child" }"#;
   let diagram = create_diagram(string);
 
-  let attrs = Attributes::Closed { id: None, same: false, width: None, height: None, padding: 8.0, radius: 0.0, space: 0.0, title: Some("parent".into()), location: None, stroke: 4278190335.into(), fill: 0.into(), text: 4278190080.into(), thickness: 1.0 };
+  let attrs = Attributes::Closed { id: None, same: false, width: None, height: None, padding: 8.0, radius: 0.0, space: 0.0, title: Some("parent".into()), location: None, stroke: 4278190335.into(), fill: 0.into(), text: 4278190080.into(), thickness: 1.0, effect: Solid };
 
 
   assert_eq!(

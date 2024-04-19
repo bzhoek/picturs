@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 
-use log::warn;
+use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use skia_safe::{Color, Font, FontMgr, FontStyle};
+use crate::diagram::attributes::Effect;
 
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
@@ -98,7 +99,7 @@ impl Conversion {
           let b = hex as u8;
           Color::from_argb(0xFF, r, g, b)
         }
-        _ => panic!("unexpected rule {:?}", pair.as_rule())
+        _ => panic!("Unexpected rule for color {:?}", pair.as_rule())
       }.into()
     })
   }
@@ -126,7 +127,7 @@ impl Conversion {
       Rule::string => {
         strings.push(Self::string_from(pair));
       }
-      _ => warn!("unexpected rule {:?}", pair.as_rule())
+      _ => debug!("Ignore rule {:?}", pair.as_rule())
     });
 
     if strings.is_empty() {
@@ -166,7 +167,7 @@ impl Conversion {
         let length = Conversion::length_from(pair, unit);
         size = length.points();
       }
-      _ => warn!("unexpected rule {:?}", pair.as_rule())
+      _ => warn!("Unexpected rule for font {:?}", pair.as_rule())
     });
 
     let typeface = FontMgr::default().match_family_style(family, FontStyle::default()).unwrap();
@@ -191,7 +192,7 @@ impl Conversion {
         }.into();
       }
       Rule::opaque => { opaque = true }
-      _ => panic!("unexpected rule {:?}", pair.as_rule())
+      _ => panic!("Unexpected rule for caption {:?}", pair.as_rule())
     });
 
     let (inner, outer) = alignment.unwrap_or((Edge::center(), Edge::center()));
@@ -458,7 +459,7 @@ impl Conversion {
     pair.into_inner().for_each(|pair| match pair.as_rule() {
       Rule::left_end => start = Ending::from(pair.as_str()),
       Rule::right_end => end = Ending::from(pair.as_str()),
-      _ => panic!("unexpected rule {:?}", pair.as_rule())
+      _ => panic!(" {:?}", pair.as_rule())
     });
 
     Endings { start, end }
@@ -469,6 +470,7 @@ impl Conversion {
       .map(Self::thickness_from)
       .unwrap_or(1.0)
   }
+
   pub(crate) fn thickness_from(pair: Pair<Rule>) -> f32 {
     match pair.as_str() {
       "invisible" | "invis" | "nostroke" => 0.0,
@@ -478,6 +480,20 @@ impl Conversion {
       "thicker" => 4.0,
       "thickest" => 6.0,
       _ => panic!("unknown thickness {:?}", pair.as_str()),
+    }
+  }
+
+  pub(crate) fn effect_for(pair: &Pair<Rule>) -> Effect {
+    Rules::find_rule(pair, Rule::effect)
+      .map(Self::effect_from)
+      .unwrap_or(Effect::Solid)
+  }
+
+  pub(crate) fn effect_from(pair: Pair<Rule>) -> Effect {
+    match pair.as_str() {
+      "dashed" => Effect::Dashed,
+      "dotted" => Effect::Dotted,
+      _ => panic!("Unknown effect {:?}", pair.as_str()),
     }
   }
 }

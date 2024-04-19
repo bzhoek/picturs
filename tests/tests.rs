@@ -14,6 +14,7 @@ mod visual {
 mod doc {
   mod align;
   mod edges;
+  mod spacing;
 }
 
 mod shapes;

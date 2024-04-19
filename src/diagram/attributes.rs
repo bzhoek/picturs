@@ -5,6 +5,14 @@ use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::{Caption, Config, Displacement, Edge, Endings, ObjectEdge, Radius, ShapeConfig};
 
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum Effect {
+  Dashed,
+  Dotted,
+  #[default]
+  Solid,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Attributes<'a> {
   Open {
@@ -33,6 +41,7 @@ pub enum Attributes<'a> {
     fill: Color,
     text: Color,
     thickness: f32,
+    effect: Effect
   },
 }
 
@@ -73,6 +82,7 @@ impl<'i> Attributes<'i> {
       fill,
       text,
       thickness: Conversion::thickness_for(&attributes),
+      effect: Conversion::effect_for(&attributes),
     }, attributes)
   }
 }
