@@ -106,6 +106,33 @@ mod real_world {
     assert_diagram!(diagram);
   }
 
+  #[test]
+  fn risotto_timeline() {
+    let string = r#"
+      set box rd 8pt ht .6in
+
+      continue right-top
+      sline.time 6in right *-> color dgrey thick
+      dot.water at 0/12 time.n
+      box.bln 1cm up from water.n "1,2L water" "16g eekhoorntjes" "brood" color brown
+      box "Pijnboom" "pitjes" "roosteren" color grey
+      box "Fruiten" color yellow
+      box "Rijst bakken" color black
+      box wd 2in "Bouillon toevoegen" color brown
+      box "Parmezaan" color yellow
+      box "Bakken" color orange
+      dot.pbp at 1/12 time.n
+      box 1cm down from pbp.s "Parmezaan" "Knoflook" "Ui" color yellow
+      box "Zeven" color brown
+      box "Fijnhakken" color brown
+      dot.vis at 9/12 time.n
+      box 1cm down from vis.s "Olie" color orange
+      box "Paneren" color orange
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram!(diagram);
+  }
+
   // Image from https://youtu.be/nBjEzQlJLHE?t=8
   // Sizes from https://intercom.help/omnitype/en/articles/5121683-keycap-sizes
   #[test]

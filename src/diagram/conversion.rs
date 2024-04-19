@@ -61,6 +61,8 @@ impl Conversion {
     Rules::dig_rule(pair, Rule::text_color).and_then(Self::color_from)
   }
 
+  // https://www.rapidtables.com/web/color/RGB_Color.html
+  // https://www.colordic.org/w (Japanese)
   fn color_from(pair: Pair<Rule>) -> Option<Color> {
     let mut pairs = pair.into_inner();
     pairs.find_map(|pair| {
@@ -68,17 +70,21 @@ impl Conversion {
         Rule::id => {
           let str = pair.as_str();
           match str {
-            "white" => Color::WHITE,
-            "lgray" => Color::LIGHT_GRAY,
-            "dgray" | "dgrey" => Color::DARK_GRAY,
             "black" => Color::BLACK,
-            "yellow" => Color::YELLOW,
+            "white" => Color::WHITE,
             "red" => Color::RED,
             "green" => Color::GREEN,
+            "yellow" => Color::YELLOW,
             "blue" => Color::BLUE,
-            "gray" | "grey" => Color::GRAY,
             "cyan" => Color::CYAN,
             "magenta" => Color::MAGENTA,
+            "brown" => Color::new(0xFFA52A2A),
+            "orange" => Color::new(0xFFFFA500),
+            "pink" => Color::new(0xFFFFC0CB),
+            "purple" => Color::new(0xFF800080),
+            "gray" | "grey" => Color::GRAY,
+            "dgray" | "dgrey" => Color::DARK_GRAY,
+            "lgray" => Color::LIGHT_GRAY,
             _ => panic!("unknown color {:?}", pair)
           }
         }
