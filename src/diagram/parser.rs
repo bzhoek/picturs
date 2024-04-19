@@ -175,7 +175,6 @@ impl<'i> Diagram<'i> {
       id, title,
       width, height,
       location,
-      stroke, fill, text,
       ..
     } = &attrs {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.circle);
@@ -185,10 +184,7 @@ impl<'i> Diagram<'i> {
       index.position_rect(location, &mut used);
       index.insert(ShapeName::Circle, *id, used);
 
-      let common = CommonAttributes::new(*id, used, *stroke, 1.);
-      let circle = Primitive(
-        common,
-        Shape::Circle(*text, paragraph, *fill, location.clone()));
+      let circle = Closed(attrs, used, paragraph, Shape::Circle);
       return Some((used, circle));
     }
     None
@@ -339,7 +335,7 @@ impl<'i> Diagram<'i> {
       index.add_open(ShapeName::Box, attrs.clone());
 
       let bounds = Self::adjust_rect(&outer, config.flow.end.direction, *padding);
-      let rectangle = Closed(attrs, inner, Shape::Rectangle(paragraph));
+      let rectangle = Closed(attrs, inner, paragraph, Shape::Rectangle);
       return Some((bounds, rectangle));
     }
     None

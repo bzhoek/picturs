@@ -6,8 +6,26 @@ use crate::diagram::rules::Rules;
 use crate::diagram::types::{Caption, Config, Displacement, Edge, Endings, ObjectEdge, Radius, ShapeConfig};
 use crate::skia::Effect;
 
+pub(crate) type EdgeMovement = (Edge, Vec<Displacement>, ObjectEdge);
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Attributes<'a> {
+  Closed {
+    id: Option<&'a str>,
+    same: bool,
+    width: Option<f32>,
+    height: Option<f32>,
+    padding: f32,
+    radius: Radius,
+    space: f32,
+    title: Option<String>,
+    location: Option<EdgeMovement>,
+    stroke: Color,
+    fill: Color,
+    text: Color,
+    thickness: f32,
+    effect: Effect
+  },
   Open {
     id: Option<&'a str>,
     same: bool,
@@ -19,22 +37,6 @@ pub enum Attributes<'a> {
     movement: Option<Displacement>,
     stroke: Color,
     thickness: f32,
-  },
-  Closed {
-    id: Option<&'a str>,
-    same: bool,
-    width: Option<f32>,
-    height: Option<f32>,
-    padding: f32,
-    radius: Radius,
-    space: f32,
-    title: Option<String>,
-    location: Option<(Edge, Vec<Displacement>, ObjectEdge)>,
-    stroke: Color,
-    fill: Color,
-    text: Color,
-    thickness: f32,
-    effect: Effect
   },
 }
 

@@ -39,21 +39,24 @@ impl Renderer {
           let used = Self::align_rect(&common.used, common.thickness);
           Self::render_shape(canvas, &used, &common.stroke, shape, &common.thickness);
         }
-        Closed(Attributes::Closed { radius, thickness, effect, stroke, fill, text, .. }, used, shape) => {
+        Closed(Attributes::Closed { radius, thickness, effect, stroke, fill, text, .. }, used, paragraph, shape) => {
           let used = Self::align_rect(used, *thickness);
 
           canvas.stroke_with(*thickness, *stroke, effect);
-          canvas.rectangle(&used, *radius);
-
-          canvas.fill_with(*fill);
-          canvas.rectangle(&used, *radius);
-
           match shape {
-            Shape::Rectangle(paragraph) => {
-              Self::paint_paragraph(canvas, &used, text, paragraph);
-            }
+            Shape::Rectangle => canvas.rectangle(&used, *radius),
+            Shape::Circle => canvas.circle(&used.center(), used.width() / 2.),
             _ => {}
           }
+
+          canvas.fill_with(*fill);
+          match shape {
+            Shape::Rectangle => canvas.rectangle(&used, *radius),
+            Shape::Circle => canvas.circle(&used.center(), used.width() / 2.),
+            _ => {}
+          }
+
+          Self::paint_paragraph(canvas, &used, text, paragraph);
         }
         Node::Font(font) => canvas.font = font.clone(),
         Node::Move(_used) => {}
@@ -117,15 +120,6 @@ impl Renderer {
         canvas.move_to(used.left, used.top);
         canvas.line_to(used.right - fold, used.top);
         canvas.stroke();
-
-        Self::draw_paragraph(canvas, used, text_color, paragraph);
-      }
-      Shape::Circle(text_color, paragraph, fill, _) => {
-        canvas.stroke_with(1., *color, &Solid);
-        canvas.circle(&used.center(), used.width() / 2.);
-
-        canvas.fill_with(*fill);
-        canvas.circle(&used.center(), used.width() / 2.);
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }

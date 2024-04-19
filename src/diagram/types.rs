@@ -4,7 +4,7 @@ mod tests;
 use std::ops::{Add, Mul};
 
 use skia_safe::{Color, Font, FontMgr, FontStyle, Point, Rect, scalar, Size, Vector};
-use crate::diagram::attributes::Attributes;
+use crate::diagram::attributes::{Attributes, EdgeMovement};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
@@ -38,22 +38,21 @@ impl<'a> CommonAttributes<'a> {
 pub enum Node<'a> {
   Container(Attributes<'a>, Used, Vec<Node<'a>>),
   Primitive(CommonAttributes<'a>, Shape),
-  Closed(Attributes<'a>, Used, Shape),
+  Closed(Attributes<'a>, Used, Option<Paragraph>, Shape),
   Font(Font),
   Move(Rect),
 }
 
-type EdgeMovement = (Edge, Vec<Displacement>, ObjectEdge);
 pub type Radius = f32;
 
 #[derive(Debug, PartialEq)]
 pub enum Shape {
-  Circle(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
+  Circle,
+  Rectangle,
   Cylinder(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
   Ellipse(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
   File(Color, Option<Paragraph>, Radius, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
   Oval(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
-  Rectangle(Option<Paragraph>),
   Text(Paragraph, Option<EdgeMovement>),
 
   Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption>),

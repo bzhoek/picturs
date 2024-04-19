@@ -3,6 +3,26 @@
 * https://pikchr.org/home/doc/trunk/homepage.md
 * https://pikchr.org/home/doc/trunk/doc/grammar.md
 
+## Shapes
+
+Fundamentally there are two shape types: open and closed. Closed shapes claim an area with width and height and can be filled, for example a `circle` or a `box`. Captions are rendered inside the area of the closed shape.
+
+Open shapes form connections between closed shapes. They can snake around and bend like an `arc` and have different endpoints like arrows.
+
+Open and closed shaped share many attributes, but some only apply to one type:
+
+| Closed    | Open      |
+|-----------|-----------| 
+| id        | id        |
+| stroke    | stroke    |
+| thickness | thickness |
+| effect    | effect    |
+| title     | caption   |
+| location  | movement  |
+| width     | source    |
+| height    | target    |
+| padding   | arrows    |
+
 ## Flow
 
 The `flow` statement determines where the cursor ends for the next statement:

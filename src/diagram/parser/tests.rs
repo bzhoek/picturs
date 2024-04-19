@@ -8,7 +8,7 @@ use crate::diagram::index::Index;
 use crate::diagram::parser::{Diagram, Rule};
 use crate::diagram::types::{Config, Displacement, Edge, Node, Unit};
 
-static TQBF: &str = "the quick brown fox jumps over the lazy dog";
+// static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
 #[test]
 fn should_copy_same_attributes_from_line() {
