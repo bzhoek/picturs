@@ -67,7 +67,7 @@ impl<'i> Attributes<'i> {
       padding: Conversion::padding_into(&attributes, &config.unit).unwrap_or(shape.padding),
       radius: Conversion::radius_into(&attributes, &config.unit).unwrap_or(shape.radius),
       space: Conversion::space_into(&attributes, &config.unit).unwrap_or(shape.space),
-      title: Conversion::string_for(&attributes, Rule::string),
+      title: Conversion::strings_for(&attributes),
       location: Conversion::location_for(&attributes, &Edge::default(), &config.unit),
       stroke,
       fill,

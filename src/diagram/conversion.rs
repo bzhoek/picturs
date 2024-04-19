@@ -118,6 +118,24 @@ impl Conversion {
       .map(Self::string_from)
   }
 
+  pub(crate) fn strings_for(pair: &Pair<Rule>) -> Option<String> {
+    let mut strings = vec![];
+
+    let pairs = pair.clone().into_inner();
+    pairs.for_each(|pair| match pair.as_rule() {
+      Rule::string => {
+        strings.push(Self::string_from(pair));
+      }
+      _ => warn!("unexpected rule {:?}", pair.as_rule())
+    });
+
+    if strings.is_empty() {
+      None
+    } else {
+      Some(strings.join("\n"))
+    }
+  }
+
   pub(crate) fn string_from(pair: Pair<Rule>) -> String {
     let str = pair.clone().into_inner()
       .next().unwrap().as_str();

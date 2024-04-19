@@ -115,7 +115,7 @@ mod real_world {
       continue right-top
       sline.time 6in right *-> color dgrey thick
       dot.water at 0/12 time.n
-      box.bln 1cm up from water.n "1,2L water" "16g eekhoorntjes" "brood" color brown
+      box.bln 1cm up from water.n "1,2L water" "met 16g" "eekhoorntjes" "brood" color brown
       box "Pijnboom" "pitjes" "roosteren" color grey
       box "Fruiten" color yellow
       box "Rijst bakken" color black

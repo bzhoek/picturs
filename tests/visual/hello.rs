@@ -20,6 +20,15 @@ mod hello {
   }
 
   #[test]
+  fn hello_world() {
+    let string = r#"
+      box "Hello" "World"
+      "#;
+    let diagram = create_diagram(string);
+    assert_diagram!(diagram);
+  }
+
+  #[test]
   fn hello_world_right() {
     let string = r#"
       right
