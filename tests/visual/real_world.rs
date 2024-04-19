@@ -110,7 +110,7 @@ mod real_world {
   #[test]
   fn keyboard() {
     let string = r#"
-      set box rd 8pt ht .4in wd .4in sp 2
+      set box rd 8pt ht .4in wd .4in sp 4
       box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
         continue right-top
         box "`"

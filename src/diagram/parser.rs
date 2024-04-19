@@ -10,7 +10,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, CommonAttributes};
+use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, CommonAttributes, EdgeDirection};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -331,24 +331,30 @@ impl<'i> Diagram<'i> {
       thickness,
       ..
     } = &attrs {
-      let spaces = 2. * space;
       let mut size = Self::config_size(*width, *height, &config.rectangle);
-      size.width -= spaces;
-      size.height -= spaces;
+
+      match config.flow.end.direction {
+        EdgeDirection::Horizontal => size.width -= space,
+        EdgeDirection::Vertical => size.height -= space
+      }
 
       let (paragraph, size) = Self::paragraph_sized_(title.as_deref(), size, config);
       let mut inner = Rect::from_point_and_size(*cursor, size);
-      inner.offset((*space, *space));
-      let mut outer = inner.with_outset((*space, *space));
+      inner.bottom += padding;
+
+      Self::adjust_topleft(&config.flow, &mut inner);
+      index.position_rect(location, &mut inner);
+
+      let mut outer = inner;
+      match config.flow.end.direction {
+        EdgeDirection::Horizontal => outer.right += space,
+        EdgeDirection::Vertical => outer.bottom += space
+      }
 
       // TODO: pad in flow direction
-      outer.bottom += padding;
-      Self::adjust_topleft(&config.flow, &mut outer);
-      index.position_rect(location, &mut outer);
       index.insert(ShapeName::Box, *id, outer);
       index.add_open(ShapeName::Box, attrs.clone());
 
-      let inner= outer.with_inset((*space, *space));
       let common = CommonAttributes::new(*id, inner, *stroke, *thickness);
       let rectangle = Primitive(
         common,
