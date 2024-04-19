@@ -49,7 +49,7 @@ impl Renderer {
           canvas.rectangle(&used, *radius);
 
           match shape {
-            Shape::Nox(paragraph) => {
+            Shape::Rectangle(paragraph) => {
               Self::paint_paragraph(canvas, &used, text, paragraph);
             }
             _ => {}
@@ -103,17 +103,6 @@ impl Renderer {
         Self::render_arrow(canvas, used, from, movement, to, caption),
       Shape::Line(start, movement, end, caption, arrows) =>
         Self::render_line(canvas, used, start, movement, end, caption, arrows),
-      Shape::Box(text_color, paragraph, radius, fill, _) => {
-        canvas.stroke_with(*thickness, *color, &Solid);
-
-        canvas.rectangle(used, *radius);
-
-        canvas.fill_with(*fill);
-        canvas.rectangle(used, *radius);
-
-        // Self::draw_paragraph(canvas, used, text_color, paragraph);
-        Self::paint_paragraph(canvas, used, text_color, paragraph);
-      }
       Shape::File(text_color, paragraph, _radius, _fill, _) => {
         canvas.stroke_with(1., *color, &Solid);
 

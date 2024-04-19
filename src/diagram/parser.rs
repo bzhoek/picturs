@@ -339,7 +339,7 @@ impl<'i> Diagram<'i> {
       index.add_open(ShapeName::Box, attrs.clone());
 
       let bounds = Self::adjust_rect(&outer, config.flow.end.direction, *padding);
-      let rectangle = Closed(attrs, inner, Shape::Nox(paragraph));
+      let rectangle = Closed(attrs, inner, Shape::Rectangle(paragraph));
       return Some((bounds, rectangle));
     }
     None

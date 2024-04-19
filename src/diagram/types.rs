@@ -48,19 +48,20 @@ pub type Radius = f32;
 
 #[derive(Debug, PartialEq)]
 pub enum Shape {
-  Dot(Point, Radius, Option<Caption>),
+  Circle(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
+  Cylinder(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
+  Ellipse(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
+  File(Color, Option<Paragraph>, Radius, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
+  Oval(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
+  Rectangle(Option<Paragraph>),
+  Text(Paragraph, Option<EdgeMovement>),
+
   Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption>),
   Line(Point, Option<Displacement>, Point, Option<Caption>, Endings),
-  Box(Color, Option<Paragraph>, Radius, Color, Option<EdgeMovement>),
-  Nox(Option<Paragraph>),
-  Circle(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
-  Ellipse(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
-  Cylinder(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
-  Oval(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
-  Text(Paragraph, Option<EdgeMovement>),
-  File(Color, Option<Paragraph>, Radius, Color, Option<(Edge, Vec<Displacement>, ObjectEdge)>),
   Path(Point, Vec<Point>, Option<Caption>),
   Sline(Vec<Point>, Option<Caption>, Endings),
+
+  Dot(Point, Radius, Option<Caption>),
 }
 
 #[derive(Debug, PartialEq)]
