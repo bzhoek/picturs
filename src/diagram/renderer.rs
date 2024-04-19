@@ -1,15 +1,16 @@
 use std::f32::consts::PI;
 use std::ops::{Add, Sub};
+
 use log::warn;
-
-use skia_safe::{Color, PaintStyle, PathEffect, Point, Rect, Size};
+use skia_safe::{Color, PaintStyle, Point, Rect, Size};
 use skia_safe::textlayout::TextAlign;
-use crate::diagram::attributes::{Attributes, Effect};
 
+use crate::diagram::attributes::Attributes;
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
 use crate::diagram::types::Node::{Closed, Container, Primitive};
 use crate::skia::Canvas;
+use crate::skia::Effect::Solid;
 
 pub struct Renderer {}
 
@@ -21,22 +22,16 @@ impl Renderer {
       match node {
         Container(Attributes::Closed { radius, title, thickness, effect, stroke, .. }, used, nodes) => {
           Self::render_to_canvas(canvas, nodes);
-          // canvas.paint.reset();
 
           if let Some(title) = title {
-            canvas.paint.set_style(PaintStyle::Fill);
-            canvas.paint.set_color(Color::BLACK);
+            canvas.fill_with(Color::BLACK);
             let inset = used.with_inset((TEXT_PADDING, TEXT_PADDING));
             let origin = (inset.left, inset.bottom - 16.);
             canvas.draw_paragraph(title, origin, inset.width());
           }
 
-          Self::set_path_effect(effect, canvas);
-
           if thickness > &0. {
-            canvas.paint.set_style(PaintStyle::Stroke);
-            canvas.set_line_width(*thickness);
-            canvas.paint.set_color(*stroke);
+            canvas.stroke_with(*thickness, *stroke, effect);
             canvas.rectangle(used, *radius);
           }
         }
@@ -44,17 +39,13 @@ impl Renderer {
           let used = Self::align_rect(&common.used, common.thickness);
           Self::render_shape(canvas, &used, &common.stroke, shape, &common.thickness);
         }
-        Closed(Attributes::Closed { radius, thickness, effect, stroke, fill, text,  .. }, used, shape) => {
-          let used = Self::align_rect(&used, *thickness);
-          canvas.paint.set_style(PaintStyle::Stroke);
-          canvas.paint.set_color(*stroke);
-          canvas.paint.set_stroke_width(*thickness);
+        Closed(Attributes::Closed { radius, thickness, effect, stroke, fill, text, .. }, used, shape) => {
+          let used = Self::align_rect(used, *thickness);
 
-          Self::set_path_effect(effect, canvas);
+          canvas.stroke_with(*thickness, *stroke, effect);
           canvas.rectangle(&used, *radius);
 
-          canvas.paint.set_style(PaintStyle::Fill);
-          canvas.paint.set_color(*fill);
+          canvas.fill_with(*fill);
           canvas.rectangle(&used, *radius);
 
           match shape {
@@ -71,15 +62,6 @@ impl Renderer {
     }
   }
 
-  fn set_path_effect(effect: &Effect, canvas: &mut Canvas) {
-    let effect = match effect {
-      Effect::Dashed => PathEffect::dash(&[10., 10.], 0.),
-      Effect::Dotted => PathEffect::dash(&[2., 4.], 0.),
-      Effect::Solid => None
-    };
-
-    canvas.paint.set_path_effect(effect);
-  }
   fn render_shape(canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape, thickness: &f32) {
     match shape {
       Shape::Path(start, points, caption) => {
@@ -94,9 +76,7 @@ impl Renderer {
         Self::draw_caption(canvas, used, caption);
       }
       Shape::Sline(points, caption, endings) => {
-        canvas.paint.set_stroke_width(*thickness);
-        canvas.paint.set_style(PaintStyle::Stroke);
-        canvas.paint.set_color(*color);
+        canvas.stroke_with(*thickness, *color, &Solid);
         let mut points_iter = points.iter();
         let start = points_iter.next().unwrap();
         let start = Self::align_point(start, *thickness);
@@ -115,8 +95,7 @@ impl Renderer {
         Self::draw_caption(canvas, used, caption);
       }
       Shape::Dot(point, radius, caption) => {
-        canvas.paint.set_style(PaintStyle::Fill);
-        canvas.paint.set_color(*color);
+        canvas.fill_with(*color);
         canvas.circle(point, *radius);
         Self::draw_dot_caption(canvas, point, radius, caption);
       }
@@ -125,22 +104,18 @@ impl Renderer {
       Shape::Line(start, movement, end, caption, arrows) =>
         Self::render_line(canvas, used, start, movement, end, caption, arrows),
       Shape::Box(text_color, paragraph, radius, fill, _) => {
-        canvas.paint.set_style(PaintStyle::Stroke);
-        canvas.paint.set_color(*color);
-        canvas.paint.set_stroke_width(*thickness);
+        canvas.stroke_with(*thickness, *color, &Solid);
 
         canvas.rectangle(used, *radius);
 
-        canvas.paint.set_style(PaintStyle::Fill);
-        canvas.paint.set_color(*fill);
+        canvas.fill_with(*fill);
         canvas.rectangle(used, *radius);
 
         // Self::draw_paragraph(canvas, used, text_color, paragraph);
         Self::paint_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::File(text_color, paragraph, _radius, _fill, _) => {
-        canvas.paint.set_style(PaintStyle::Stroke);
-        canvas.paint.set_color(*color);
+        canvas.stroke_with(1., *color, &Solid);
 
         let fold = 16.;
         canvas.move_to(used.left, used.top);
@@ -157,38 +132,32 @@ impl Renderer {
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::Circle(text_color, paragraph, fill, _) => {
-        canvas.paint.set_style(PaintStyle::Stroke);
-        canvas.paint.set_color(*color);
+        canvas.stroke_with(1., *color, &Solid);
         canvas.circle(&used.center(), used.width() / 2.);
 
-        canvas.paint.set_style(PaintStyle::Fill);
-        canvas.paint.set_color(*fill);
+        canvas.fill_with(*fill);
         canvas.circle(&used.center(), used.width() / 2.);
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::Ellipse(text_color, paragraph, fill, _) => {
-        canvas.paint.set_style(PaintStyle::Stroke);
-        canvas.paint.set_color(*color);
+        canvas.stroke_with(1., *color, &Solid);
         canvas.ellipse(used);
 
-        canvas.paint.set_style(PaintStyle::Fill);
-        canvas.paint.set_color(*fill);
+        canvas.fill_with(*fill);
         canvas.ellipse(used);
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);
       }
       Shape::Cylinder(text_color, paragraph, _fill, _) => {
-        canvas.paint.set_style(PaintStyle::Stroke);
-        canvas.paint.set_color(*color);
+        canvas.stroke_with(1., *color, &Solid);
         canvas.cylinder(used);
 
         let rect = Rect::from_xywh(used.left, used.top + used.height() / 3., used.width(), used.height() * 0.666);
         Self::draw_paragraph(canvas, &rect, text_color, paragraph);
       }
       Shape::Oval(text_color, paragraph, _fill, _) => {
-        canvas.paint.set_style(PaintStyle::Stroke);
-        canvas.paint.set_color(*color);
+        canvas.stroke_with(1., *color, &Solid);
         canvas.oval(used);
 
         Self::draw_paragraph(canvas, used, text_color, paragraph);

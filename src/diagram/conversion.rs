@@ -4,12 +4,12 @@ use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use skia_safe::{Color, Font, FontMgr, FontStyle};
-use crate::diagram::attributes::Effect;
 
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
 use crate::diagram::types::{Caption, Config, Displacement, Edge, EdgeDirection, Ending, Endings, Flow, Length, Movement, ObjectEdge, Unit};
+use crate::skia::Effect;
 
 #[cfg(test)]
 mod tests;

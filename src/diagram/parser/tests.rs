@@ -2,7 +2,6 @@ use std::ops::Mul;
 
 use skia_safe::{Color, Point, Rect, Size, Vector};
 use crate::diagram::attributes::Attributes;
-use crate::diagram::attributes::Effect::Solid;
 
 use crate::diagram::conversion::Conversion;
 use crate::diagram::create_diagram;
@@ -10,6 +9,7 @@ use crate::diagram::index::Index;
 use crate::diagram::parser::{Diagram, Rule};
 use crate::diagram::types::{CommonAttributes, Config, Displacement, Edge, Node, Paragraph, Radius, Shape, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
+use crate::skia::Effect::Solid;
 
 static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 

@@ -1,10 +1,11 @@
 #[cfg(test)]
 mod tests {
-  use skia_safe::{Font, FontMgr, FontStyle, PaintStyle, Point, Rect, Size};
+  use skia_safe::{Color, Font, FontMgr, FontStyle, PaintStyle, Point, Rect, Size};
 
   use picturs::assert_canvas;
   use picturs::diagram::types::{Config, Edge};
   use picturs::skia::Canvas;
+  use picturs::skia::Effect::Solid;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
@@ -65,7 +66,7 @@ mod tests {
   fn draw_demo() {
     let mut canvas = Canvas::new((1024, 1024));
 
-    canvas.set_line_width(2.0);
+    canvas.stroke_with(2.0, Color::BLACK, &Solid);
     let rect = Rect::from_xywh(8.0, 8.0, 1008.0, 1008.0);
     canvas.paint.set_style(PaintStyle::Stroke);
     canvas.surface.canvas().draw_rect(rect, &canvas.paint);
@@ -74,7 +75,7 @@ mod tests {
     canvas.move_to(36.0, 48.0);
     canvas.quad_to(660.0, 880.0, 1200.0, 360.0);
     canvas.translate(10.0, 10.0);
-    canvas.set_line_width(4.0);
+    canvas.stroke_with(4.0, Color::BLACK, &Solid);
     canvas.text("Hello, world", (32., 320.));
     canvas.stroke();
     canvas.save();

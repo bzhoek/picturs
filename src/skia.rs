@@ -7,6 +7,14 @@ use skia_safe::textlayout::{FontCollection, Paragraph, ParagraphBuilder, Paragra
 
 pub static A5: (i32, i32) = (798, 562);
 
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum Effect {
+  Dashed,
+  Dotted,
+  #[default]
+  Solid,
+}
+
 pub struct Canvas {
   pub surface: Surface,
   path: Path,
@@ -96,8 +104,21 @@ impl Canvas {
     self.surface.canvas().draw_path(&self.path, &self.paint);
   }
 
-  pub fn set_line_width(&mut self, width: f32) {
+  pub fn stroke_with(&mut self, width: f32, color: Color, effect: &Effect) {
+    self.paint.set_style(PaintStyle::Stroke);
     self.paint.set_stroke_width(width);
+    self.paint.set_color(color);
+    let effect = match effect {
+      Effect::Dashed => PathEffect::dash(&[10., 10.], 0.),
+      Effect::Dotted => PathEffect::dash(&[2., 4.], 0.),
+      Effect::Solid => None
+    };
+    self.paint.set_path_effect(effect);
+  }
+
+  pub fn fill_with(&mut self, color: Color) {
+    self.paint.set_style(PaintStyle::Fill);
+    self.paint.set_color(color);
   }
 
   pub fn text(&mut self, text: &str, origin: impl Into<Point>) {

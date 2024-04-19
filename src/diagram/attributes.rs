@@ -4,14 +4,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::parser::Rule;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::{Caption, Config, Displacement, Edge, Endings, ObjectEdge, Radius, ShapeConfig};
-
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub enum Effect {
-  Dashed,
-  Dotted,
-  #[default]
-  Solid,
-}
+use crate::skia::Effect;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Attributes<'a> {
