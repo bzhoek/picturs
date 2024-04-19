@@ -44,8 +44,8 @@ impl Conversion {
     pairs.next().map(|p| p.as_str())
   }
 
-  pub(crate) fn colors_from(pair: &Pair<Rule>) -> (Color, Color, Color) {
-    let stroke = Conversion::stroke_color_in(pair).unwrap_or(Color::BLUE);
+  pub(crate) fn colors_from(pair: &Pair<Rule>, stroke: &Color) -> (Color, Color, Color) {
+    let stroke = Conversion::stroke_color_in(pair).unwrap_or(*stroke);
     let fill = Conversion::fill_color_in(pair).unwrap_or(Color::TRANSPARENT);
     let text_color = Conversion::text_color_in(pair).unwrap_or(Color::BLACK);
     (stroke, fill, text_color)

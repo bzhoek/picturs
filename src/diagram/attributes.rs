@@ -48,7 +48,7 @@ pub enum Attributes<'a> {
 impl<'i> Attributes<'i> {
   pub(crate) fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, rule: Rule) -> (Attributes<'a>, Pair<'a, Rule>) {
     let attributes = Rules::get_rule(pair, rule);
-    let (stroke, _fill, _text) = Conversion::colors_from(&attributes);
+    let (stroke, _fill, _text) = Conversion::colors_from(&attributes, &Color::BLUE);
 
     (Attributes::Open {
       id: Conversion::identified_in(pair),
@@ -66,7 +66,7 @@ impl<'i> Attributes<'i> {
 
   pub(crate) fn closed_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> (Attributes<'a>, Pair<'a, Rule>) {
     let attributes = Rules::get_rule(pair, Rule::attributes);
-    let (stroke, fill, text) = Conversion::colors_from(&attributes);
+    let (stroke, fill, text) = Conversion::colors_from(&attributes, &shape.stroke);
 
     (Attributes::Closed {
       id: Conversion::identified_in(pair),

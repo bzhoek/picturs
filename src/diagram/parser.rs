@@ -11,7 +11,7 @@ use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Flow, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
-use crate::diagram::types::Node::{Container, Primitive};
+use crate::diagram::types::Node::{Closed, Container, Primitive};
 use crate::skia::Canvas;
 
 #[cfg(test)]
@@ -126,7 +126,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, attributes) = Attributes::closed_attributes(pair, config, &config.rectangle);
+    let (mut attrs, attributes) = Attributes::closed_attributes(pair, config, &config.container);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Container);
 
     if let Attributes::Closed {
@@ -320,13 +320,8 @@ impl<'i> Diagram<'i> {
       width,
       height,
       padding,
-      radius,
       space,
       location,
-      stroke,
-      fill,
-      text: text_color,
-      thickness,
       ..
     } = &attrs {
       let rect = Self::create_rect(*width, *height, &config.rectangle);
@@ -343,12 +338,8 @@ impl<'i> Diagram<'i> {
       index.insert(ShapeName::Box, *id, outer);
       index.add_open(ShapeName::Box, attrs.clone());
 
-      let common = CommonAttributes::new(*id, inner, *stroke, *thickness);
-      let rectangle = Primitive(
-        common,
-        Shape::Box(*text_color, paragraph, *radius, *fill, location.clone()));
-
       let bounds = Self::adjust_rect(&outer, config.flow.end.direction, *padding);
+      let rectangle = Closed(attrs, inner, Shape::Nox(paragraph));
       return Some((bounds, rectangle));
     }
     None
@@ -802,7 +793,7 @@ impl<'i> Diagram<'i> {
         Primitive(common, ..) => {
           common.id == Some(node_id)
         }
-        Container(Attributes::Closed {id, ..}, _, nodes) => {
+        Container(Attributes::Closed { id, .. }, _, nodes) => {
           if let Some(id) = id {
             if id == &node_id {
               return true;

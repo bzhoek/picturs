@@ -38,6 +38,7 @@ impl<'a> CommonAttributes<'a> {
 pub enum Node<'a> {
   Container(Attributes<'a>, Used, Vec<Node<'a>>),
   Primitive(CommonAttributes<'a>, Shape),
+  Closed(Attributes<'a>, Used, Shape),
   Font(Font),
   Move(Rect),
 }
@@ -51,6 +52,7 @@ pub enum Shape {
   Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption>),
   Line(Point, Option<Displacement>, Point, Option<Caption>, Endings),
   Box(Color, Option<Paragraph>, Radius, Color, Option<EdgeMovement>),
+  Nox(Option<Paragraph>),
   Circle(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
   Ellipse(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
   Cylinder(Color, Option<Paragraph>, Color, Option<EdgeMovement>),
@@ -121,6 +123,7 @@ impl From<&str> for Endings {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Config {
+  pub(crate) container: ShapeConfig,
   pub(crate) flow: Flow,
   pub(crate) unit: Unit,
   pub(crate) line: Length,
@@ -142,11 +145,32 @@ pub struct ShapeConfig { // all in pixels
   pub(crate) height: f32,
   pub(crate) radius: f32,
   pub(crate) space: f32,
+  pub(crate) stroke: Color,
 }
 
 impl Default for ShapeConfig {
   fn default() -> Self {
-    Self { padding: BLOCK_PADDING, width: WIDTH.trunc(), height: HEIGHT.trunc(), radius: 0., space: 0. }
+    Self {
+      padding: BLOCK_PADDING,
+      width: WIDTH.trunc(),
+      height: HEIGHT.trunc(),
+      radius: 0.,
+      space: 0.,
+      stroke: Color::BLUE,
+    }
+  }
+}
+
+impl ShapeConfig {
+  pub fn stroke(color: Color) -> Self {
+    Self {
+      padding: BLOCK_PADDING,
+      width: WIDTH.trunc(),
+      height: HEIGHT.trunc(),
+      radius: 0.,
+      space: 0.,
+      stroke: color,
+    }
   }
 }
 
@@ -161,6 +185,7 @@ impl Config {
     let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
     let font = Font::from_typeface(typeface, 17.0);
     Self {
+      container: ShapeConfig::stroke(Color::RED),
       flow,
       dot: Length::new(4., Unit::Px),
       circle: ShapeConfig::default(),
@@ -177,6 +202,7 @@ impl Config {
         height: WIDTH.trunc(),
         radius: 8.0,
         space: 0.0,
+        stroke: Color::BLUE,
       },
       font,
     }

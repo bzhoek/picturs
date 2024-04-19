@@ -8,7 +8,7 @@ use crate::diagram::attributes::{Attributes, Effect};
 
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
-use crate::diagram::types::Node::{Container, Primitive};
+use crate::diagram::types::Node::{Closed, Container, Primitive};
 use crate::skia::Canvas;
 
 pub struct Renderer {}
@@ -19,7 +19,7 @@ impl Renderer {
       canvas.paint.set_stroke_width(1.0);
 
       match node {
-        Container(Attributes::Closed { radius, title, thickness, effect, .. }, used, nodes) => {
+        Container(Attributes::Closed { radius, title, thickness, effect, stroke, .. }, used, nodes) => {
           Self::render_to_canvas(canvas, nodes);
           // canvas.paint.reset();
 
@@ -31,18 +31,12 @@ impl Renderer {
             canvas.draw_paragraph(title, origin, inset.width());
           }
 
-          let effect = match effect {
-            Effect::Dashed => PathEffect::dash(&[10., 10.], 0.),
-            Effect::Dotted => PathEffect::dash(&[2., 4.], 0.),
-            Effect::Solid => None
-          };
-
-          canvas.paint.set_path_effect(effect);
+          Self::set_path_effect(effect, canvas);
 
           if thickness > &0. {
             canvas.paint.set_style(PaintStyle::Stroke);
             canvas.set_line_width(*thickness);
-            canvas.paint.set_color(Color::RED);
+            canvas.paint.set_color(*stroke);
             canvas.rectangle(used, *radius);
           }
         }
@@ -50,11 +44,41 @@ impl Renderer {
           let used = Self::align_rect(&common.used, common.thickness);
           Self::render_shape(canvas, &used, &common.stroke, shape, &common.thickness);
         }
+        Closed(Attributes::Closed { radius, thickness, effect, stroke, fill, text,  .. }, used, shape) => {
+          let used = Self::align_rect(&used, *thickness);
+          canvas.paint.set_style(PaintStyle::Stroke);
+          canvas.paint.set_color(*stroke);
+          canvas.paint.set_stroke_width(*thickness);
+
+          Self::set_path_effect(effect, canvas);
+          canvas.rectangle(&used, *radius);
+
+          canvas.paint.set_style(PaintStyle::Fill);
+          canvas.paint.set_color(*fill);
+          canvas.rectangle(&used, *radius);
+
+          match shape {
+            Shape::Nox(paragraph) => {
+              Self::paint_paragraph(canvas, &used, text, paragraph);
+            }
+            _ => {}
+          }
+        }
         Node::Font(font) => canvas.font = font.clone(),
         Node::Move(_used) => {}
         _ => warn!("Cannot render: {:?}", node),
       }
     }
+  }
+
+  fn set_path_effect(effect: &Effect, canvas: &mut Canvas) {
+    let effect = match effect {
+      Effect::Dashed => PathEffect::dash(&[10., 10.], 0.),
+      Effect::Dotted => PathEffect::dash(&[2., 4.], 0.),
+      Effect::Solid => None
+    };
+
+    canvas.paint.set_path_effect(effect);
   }
   fn render_shape(canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape, thickness: &f32) {
     match shape {
@@ -176,6 +200,7 @@ impl Renderer {
           canvas.text(&paragraph.text, (used.left, used.top + canvas.font.metrics().0));
         }
       }
+      _ => warn!("Cannot render: {:?}", shape),
     }
   }
 

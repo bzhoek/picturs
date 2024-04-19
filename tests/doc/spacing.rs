@@ -4,10 +4,10 @@ mod spacing {
   use picturs::diagram::create_diagram;
 
   #[test]
-  fn spacing_expand() {
+  fn expand() {
     let string = r#"
-      box dotted {
-        box "bounds"
+      box dotted color red {
+        box "expand"
       }
       "#;
     let diagram = create_diagram(string);
@@ -15,10 +15,10 @@ mod spacing {
   }
 
   #[test]
-  fn spacing_shrink() {
+  fn shrink() {
     let string = r#"
-      box {
-        box "bounds" dotted
+      box color blue {
+        box "shrink" dotted color red
       }
       "#;
     let diagram = create_diagram(string);

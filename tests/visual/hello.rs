@@ -79,7 +79,7 @@ mod hello {
   #[test]
   fn box_box_box() {
     let string = r#"
-      box pd 0 top color green{
+      box pd 0 top color green {
         box pd 0
         box pd 0
         box pd 0
