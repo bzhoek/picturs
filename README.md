@@ -24,6 +24,15 @@ right-top
 
 The first part determines the direction, `right-top` flows horizontally, `top-right` flows vertically.
 
+## Spacing
+
+There are a few ways to create space between shapes: shrinking from the bounding box, expanding the bounding box and 
+moving the bounding box.
+
+Shrinking leaves the dimensions of the bounding box intact, so they are known and can be used for math relative to the box size. For example, you want to render a keyboard where the special keys are a ratio of the normal keys. When space between the keys comes from shrinking the boxes, it is easy to make the right and left edges of the rows aligned.
+
+Expanding the bounding box gives it more space in its container, and leaves space between itself and the next shape.
+
 ## Relative placement
 
 ```pic

@@ -306,10 +306,10 @@ impl<'i> Diagram<'i> {
     None
   }
 
-  fn config_size(width: Option<f32>, height: Option<f32>, config: &ShapeConfig) -> Size {
+  fn create_rect(width: Option<f32>, height: Option<f32>, config: &ShapeConfig) -> Rect {
     let width = width.unwrap_or(config.width);
     let height = height.unwrap_or(config.height);
-    Size::new(width, height)
+    Rect::from_xywh(0., 0., width, height)
   }
 
   fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
@@ -331,27 +331,17 @@ impl<'i> Diagram<'i> {
       thickness,
       ..
     } = &attrs {
-      let mut size = Self::config_size(*width, *height, &config.rectangle);
+      let rect = Self::create_rect(*width, *height, &config.rectangle);
+      let rect = Self::adjust_rect(&rect, config.flow.end.direction, -*space);
 
-      match config.flow.end.direction {
-        EdgeDirection::Horizontal => size.width -= space,
-        EdgeDirection::Vertical => size.height -= space
-      }
-
-      let (paragraph, size) = Self::paragraph_sized_(title.as_deref(), size, config);
+      let (paragraph, size) = Self::paragraph_sized_(title.as_deref(), rect.size(), config);
       let mut inner = Rect::from_point_and_size(*cursor, size);
-      inner.bottom += padding;
+      inner.bottom += padding; // for text
 
       Self::adjust_topleft(&config.flow, &mut inner);
       index.position_rect(location, &mut inner);
 
-      let mut outer = inner;
-      match config.flow.end.direction {
-        EdgeDirection::Horizontal => outer.right += space,
-        EdgeDirection::Vertical => outer.bottom += space
-      }
-
-      // TODO: pad in flow direction
+      let outer = Self::adjust_rect(&inner, config.flow.end.direction, *space);
       index.insert(ShapeName::Box, *id, outer);
       index.add_open(ShapeName::Box, attrs.clone());
 
@@ -360,14 +350,19 @@ impl<'i> Diagram<'i> {
         common,
         Shape::Box(*text_color, paragraph, *radius, *fill, location.clone()));
 
-      let mut rect = outer;
-      if config.flow.end.x <= 0. {
-        rect.bottom += padding;
-      }
-
-      return Some((rect, rectangle));
+      let bounds = Self::adjust_rect(&outer, config.flow.end.direction, *padding);
+      return Some((bounds, rectangle));
     }
     None
+  }
+
+  fn adjust_rect(rect: &Rect, direction: EdgeDirection, change: f32) -> Rect {
+    let mut rect = *rect;
+    match direction {
+      EdgeDirection::Horizontal => rect.right += change,
+      EdgeDirection::Vertical => rect.bottom += change
+    }
+    rect
   }
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {

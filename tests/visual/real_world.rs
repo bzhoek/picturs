@@ -43,6 +43,7 @@ mod real_world {
   #[test]
   fn dependencies_serial() {
     let string = r#"
+      set box pd 0
       right
       box.ui13 ht 1in wd 2in "jQuery"
       box.ui20 same wd 4in "Vue"
@@ -110,7 +111,7 @@ mod real_world {
   #[test]
   fn keyboard() {
     let string = r#"
-      set box rd 8pt ht .4in wd .4in sp 4
+      set box rd 8pt ht .4in wd .4in sp 4 pd 0
       box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
         continue right-top
         box "`"
@@ -184,7 +185,7 @@ mod real_world {
   #[test]
   fn keyboard_small() {
     let string = r#"
-      set box rd 8pt ht .4in wd .4in sp 4
+      set box rd 8pt ht .4in wd .4in sp 4 pd 0
       box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
         continue right-top
         box "1"

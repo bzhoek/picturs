@@ -24,7 +24,7 @@ mod hello {
     let string = r#"
       right
       line
-      box "Hello"
+      box "Hello" pd 0
       arrow
       "#;
     let diagram = create_diagram(string);
