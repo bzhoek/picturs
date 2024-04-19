@@ -425,6 +425,16 @@ impl Length {
       _ => self.length * 1.,
     }
   }
+
+  pub fn points(&self) -> f32 {
+    match self.unit {
+      Unit::Cm => self.length / 28.3465,
+      Unit::In => self.length / 72.,
+      Unit::Pc => self.length / 12.,
+      Unit::Px => self.length / 1.3333,
+      _ => self.length * 1.,
+    }
+  }
 }
 
 #[derive(Clone, Debug, PartialEq)]

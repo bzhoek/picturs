@@ -110,6 +110,7 @@ mod real_world {
   fn risotto_timeline() {
     let string = r#"
       set box rd 8pt ht .6in
+      set font 12pt
 
       continue right-top
       sline.time 6in right *-> color dgrey thick

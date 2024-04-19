@@ -7,7 +7,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::create_diagram;
 use crate::diagram::index::Index;
 use crate::diagram::parser::{Diagram, Rule};
-use crate::diagram::types::{CommonAttributes, Config, Displacement, Edge, Paragraph, Radius, Shape, Unit};
+use crate::diagram::types::{CommonAttributes, Config, Displacement, Edge, Node, Paragraph, Radius, Shape, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 
 static TQBF: &str = "the quick brown fox jumps over the lazy dog";
@@ -73,6 +73,20 @@ fn should_parse_box_id() {
       common(Some("first"), None),
       rectangle(Some(("title", 31.)))),
     ]);
+}
+
+#[test]
+fn should_parse_font() {
+  let string = r#"set font "Menlo" 15pt"#;
+  let diagram = create_diagram(string);
+  let node = diagram.nodes.first().unwrap();
+  match node {
+    Node::Font(font) => {
+      assert_eq!("Menlo", font.typeface().unwrap().family_name());
+      assert_eq!(15., font.size());
+    }
+    _ => panic!("Expected Font")
+  }
 }
 
 #[test]

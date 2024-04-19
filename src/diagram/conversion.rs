@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 
+use log::warn;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
-use skia_safe::Color;
+use skia_safe::{Color, Font, FontMgr, FontStyle};
 
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
@@ -132,6 +133,26 @@ impl Conversion {
   pub(crate) fn caption(pair: &Pair<Rule>, config: &Config) -> Option<Caption> {
     Rules::find_rule(pair, Rule::caption)
       .map(|caption| { Self::caption_from(caption, config) })
+  }
+
+  pub(crate) fn font_from(pair: Pair<Rule>, unit: &Unit) -> Font {
+    let mut family = "Helvetica".to_owned();
+    let mut size = 17.;
+
+    let pairs = pair.into_inner();
+    pairs.for_each(|pair| match pair.as_rule() {
+      Rule::string => {
+        family = Self::string_from(pair);
+      }
+      Rule::size => {
+        let length = Conversion::length_from(pair, unit);
+        size = length.points();
+      }
+      _ => warn!("unexpected rule {:?}", pair.as_rule())
+    });
+
+    let typeface = FontMgr::default().match_family_style(family, FontStyle::default()).unwrap();
+    Font::from_typeface(typeface, size)
   }
 
   pub(crate) fn caption_from(pair: Pair<Rule>, config: &Config) -> Caption {

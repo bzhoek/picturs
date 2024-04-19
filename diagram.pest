@@ -12,7 +12,7 @@ continue_direction = { "right-top" }
 
 // config
 unit_config = { "set unit" ~ unit }
-font_config = { "set font" ~ string }
+font_config = { "set font" ~ string? ~ size? }
 box_config = { "set box" ~ (padding | width| height | radius | space )* }
 circle_config = { "set circle" ~ (height) }
 line_config = { "set line" ~ length }
@@ -30,11 +30,11 @@ attributes = { attribute* }
 attribute = _{ string | stroke | fill | width | height | padding | radius | space | location | text_color | flow | same | thickness }
 stroke = { "color" ~ color }
 fill = { "fill" ~ id }
-width = { ("wd" | "wid" | "width") ~ size }
-height = { ("ht" | "height") ~ size }
-padding = { ("pd" | "padding") ~ size }
-radius = { ("rd" | "rad" | "radius") ~ size }
-space = { ("sp" | "space" ) ~ size }
+width = { ("wd" | "wid" | "width") ~ size_ }
+height = { ("ht" | "height") ~ size_ }
+padding = { ("pd" | "padding") ~ size_ }
+radius = { ("rd" | "rad" | "radius") ~ size_ }
+space = { ("sp" | "space" ) ~ size_ }
 text_color = { "text" ~ id }
 
 color = _{ ( id | rgb) }
@@ -49,7 +49,7 @@ path = { "path" ~ identified? ~ movements ~ caption? }
 line_attributes = { line_attribute* }
 line_attribute = _{ stroke | length | source | rel_movement | target | caption | endings | same | thickness }
 
-length = { ("ln" | "length") ~ size }
+length = { ("ln" | "length") ~ size_ }
 source = { ("from" | "at") ~ object_fraction }
 target = { "to" ~ object_fraction }
 
@@ -74,13 +74,15 @@ fit = { "fit" }
 identified = ${ "." ~ id }
 id = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
 
-size = _{ number ~ unit? }
-number = @{ ASCII_DIGIT* ~ ("." ~ ASCII_DIGIT+)? }
+size = { size_ }
+size_ = _{ number ~ unit? }
+number = @{ (ASCII_DIGIT+ ~ decimals?) | decimals }
+decimals = _{ "." ~ ASCII_DIGIT+ }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" | "u" }
 
 location = { edge? ~ rel_movement+ ~ (last_object | from_object)? }
 rel_movement = { offset ~ direction }
-offset = { size }
+offset = { size_ }
 direction = { "up" | "down" | "left" | "right" }
 last_object = { "last" ~ object_fraction }
 from_object = { "from" ~ object_fraction }
@@ -88,7 +90,7 @@ from_object = { "from" ~ object_fraction }
 same = { "same" }
 thickness = { "invisible" | "invis" | "nostroke" | "thin" | "normal" | "thicker" | "thickest" | "thick" }
 
-flow_to = { "flow" ~ size }
+flow_to = { "flow" ~ size_ }
 move_to = { "move" ~ movements }
 movements = { movement* }
 movement = _{ rel_movement | abs_movement }

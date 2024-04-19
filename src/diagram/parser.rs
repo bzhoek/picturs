@@ -3,14 +3,14 @@ use std::ops::Add;
 use log::{debug, info, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
-use skia_safe::{Color, Font, FontMgr, FontStyle, ISize, Point, Rect, Size};
-use crate::diagram::attributes::Attributes;
+use skia_safe::{Color, ISize, Point, Rect, Size};
 
+use crate::diagram::attributes::Attributes;
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, CommonAttributes, EdgeDirection};
+use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Flow, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -89,9 +89,7 @@ impl<'i> Diagram<'i> {
       Rule::flow_to => Self::flow_from(pair, cursor, config),
       Rule::move_to => Self::move_from(&pair, cursor, &config.unit),
       Rule::font_config => {
-        let name = Conversion::string_in(&pair, Rule::inner).unwrap();
-        let typeface = FontMgr::default().match_family_style(name, FontStyle::default()).unwrap();
-        config.font = Font::from_typeface(typeface, 17.0);
+        config.font = Conversion::font_from(pair, &config.unit);
         let rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
         let node = Node::Font(config.font.clone());
         Some((rect, node))
