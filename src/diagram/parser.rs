@@ -10,7 +10,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, CommonAttributes, EdgeDirection};
+use crate::diagram::types::{BLOCK_PADDING, Config, Edge, Flow, Displacement, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, CommonAttributes};
 use crate::diagram::types::Node::{Container, Primitive};
 use crate::skia::Canvas;
 
@@ -306,6 +306,12 @@ impl<'i> Diagram<'i> {
     None
   }
 
+  fn config_size(width: Option<f32>, height: Option<f32>, config: &ShapeConfig) -> Size {
+    let width = width.unwrap_or(config.width);
+    let height = height.unwrap_or(config.height);
+    Size::new(width, height)
+  }
+
   fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.rectangle);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Box);
@@ -325,30 +331,32 @@ impl<'i> Diagram<'i> {
       thickness,
       ..
     } = &attrs {
-      let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.rectangle);
-      let mut used = Rect::from_point_and_size(*cursor, size);
+      let spaces = 2. * space;
+      let mut size = Self::config_size(*width, *height, &config.rectangle);
+      size.width -= spaces;
+      size.height -= spaces;
+
+      let (paragraph, size) = Self::paragraph_sized_(title.as_deref(), size, config);
+      let mut inner = Rect::from_point_and_size(*cursor, size);
+      inner.offset((*space, *space));
+      let mut outer = inner.with_outset((*space, *space));
 
       // TODO: pad in flow direction
-      used.bottom += padding;
-      Self::adjust_topleft(&config.flow, &mut used);
-      index.position_rect(location, &mut used);
-
-      index.insert(ShapeName::Box, *id, used);
+      outer.bottom += padding;
+      Self::adjust_topleft(&config.flow, &mut outer);
+      index.position_rect(location, &mut outer);
+      index.insert(ShapeName::Box, *id, outer);
       index.add_open(ShapeName::Box, attrs.clone());
 
-      let common = CommonAttributes::new(*id, used, *stroke, *thickness);
+      let inner= outer.with_inset((*space, *space));
+      let common = CommonAttributes::new(*id, inner, *stroke, *thickness);
       let rectangle = Primitive(
         common,
         Shape::Box(*text_color, paragraph, *radius, *fill, location.clone()));
 
-      let mut rect = used;
+      let mut rect = outer;
       if config.flow.end.x <= 0. {
         rect.bottom += padding;
-      }
-
-      match config.flow.end.direction {
-        EdgeDirection::Horizontal => rect.right += space,
-        EdgeDirection::Vertical => rect.bottom += space
       }
 
       return Some((rect, rectangle));
@@ -725,6 +733,20 @@ impl<'i> Diagram<'i> {
   fn paragraph_sized(title: Option<&str>, width: &Option<f32>, height: &Option<f32>, config: &Config, shape: &ShapeConfig) -> (Option<Paragraph>, Size) {
     let width = width.unwrap_or(shape.width);
     let height = height.unwrap_or(shape.height);
+
+    let paragraph = title.map(|title| {
+      let (widths, height) = config.measure_strings(title, width - 2. * TEXT_PADDING);
+      let size = Size::new(width, height);
+      Paragraph { text: title.into(), widths, height, size }
+    });
+
+    let height = paragraph.as_ref().map(|paragraph| height.max(paragraph.height)).unwrap_or(height);
+    (paragraph, Size::new(width, height))
+  }
+
+  fn paragraph_sized_(title: Option<&str>, size: Size, config: &Config) -> (Option<Paragraph>, Size) {
+    let width = size.width;
+    let height = size.height;
 
     let paragraph = title.map(|title| {
       let (widths, height) = config.measure_strings(title, width - 2. * TEXT_PADDING);

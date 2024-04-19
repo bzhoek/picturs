@@ -110,7 +110,7 @@ mod real_world {
   #[test]
   fn keyboard() {
     let string = r#"
-      set box rd 8pt ht .4in wd .4in sp 4
+      set box rd 8pt ht .4in wd .4in sp 2
       box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
         continue right-top
         box "`"
@@ -184,22 +184,12 @@ mod real_world {
   #[test]
   fn keyboard_small() {
     let string = r#"
-      set box rd 8pt ht .5in wd .5in
-      box { // 13 x 1u, 1 x ?u
-        top
-        box "`"
-      }
-      box { // 13 x 1u, 1 x ?u
-        top
-        box "tab" wd 0.75in
-      }
-      box { // 11 x 1u, 2 x ?u
-        right
-        box "caps" wd .9in
-      }
-      box { // 10 x 1u, 2 x ?u
-        right
-        box "shift" wd 1.25in
+      set box rd 8pt ht .4in wd .4in sp 4
+      box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
+        continue right-top
+        box "1"
+        box "2"
+        box "3"
       }
       "#;
     let diagram = create_diagram(string);
