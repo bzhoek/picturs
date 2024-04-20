@@ -129,8 +129,8 @@ impl Renderer {
       }
       Shape::Arrow(from, movement, to, caption) =>
         Self::render_arrow(canvas, used, from, movement, to, caption),
-      Shape::Line(start, movement, end, caption, arrows) =>
-        Self::render_line(canvas, used, start, movement, end, caption, arrows),
+      Shape::Line(start, movement, end, caption, endings) =>
+        Self::render_line(canvas, used, start, movement, end, caption, endings),
       Shape::Text(paragraph, _) => {
         if paragraph.widths.len() > 1 {
           Self::render_paragraph(canvas, used, &paragraph.text);

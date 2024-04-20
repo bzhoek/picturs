@@ -372,7 +372,7 @@ impl<'i> Diagram<'i> {
         movement,
         caption,
         length,
-        ref arrows,
+        ref endings,
         ..
       } => {
         let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
@@ -393,7 +393,7 @@ impl<'i> Diagram<'i> {
         let common = CommonAttributes::new(*id, rect, Color::BLACK, 1.);
         let node = Primitive(
           common,
-          Shape::Line(start, movement.clone(), end, caption.clone(), arrows.clone()));
+          Shape::Line(start, movement.clone(), end, caption.clone(), endings.clone()));
         Some((used, node))
       }
     }
@@ -412,7 +412,7 @@ impl<'i> Diagram<'i> {
         movement,
         caption,
         length,
-        ref arrows,
+        ref endings,
         stroke,
         thickness,
         ..
@@ -431,7 +431,7 @@ impl<'i> Diagram<'i> {
         let common = CommonAttributes::new(*id, rect, *stroke, *thickness);
         let node = Primitive(
           common,
-          Shape::Sline(vec!(start, end), caption.clone(), arrows.clone()));
+          Shape::Sline(vec!(start, end), caption.clone(), endings.clone()));
         Some((rect, node))
       }
     }
@@ -516,7 +516,7 @@ impl<'i> Diagram<'i> {
       }
       Attributes::Open {
         same,
-        arrows,
+        endings,
         movement,
         caption,
         ..
@@ -525,12 +525,12 @@ impl<'i> Diagram<'i> {
           return;
         }
         if let Some((_shape, Attributes::Open {
-          arrows: last_arrows,
+          endings: last_endings,
           movement: last_movement,
           caption: last_caption,
           ..
         })) = index.last_open(shape) {
-          *arrows = last_arrows.clone();
+          *endings = last_endings.clone();
           if movement.is_none() {
             *movement = last_movement.clone();
           }
