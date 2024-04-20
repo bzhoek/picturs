@@ -46,6 +46,10 @@ impl Renderer {
           match shape {
             Shape::Rectangle => canvas.rectangle(&used, *radius),
             Shape::Circle => canvas.circle(&used.center(), used.width() / 2.),
+            Shape::Ellipse => canvas.ellipse(&used),
+            Shape::File => canvas.file(&used),
+            Shape::Oval => canvas.oval(&used),
+            Shape::Cylinder => canvas.cylinder(&used),
             _ => {}
           }
 
@@ -53,10 +57,20 @@ impl Renderer {
           match shape {
             Shape::Rectangle => canvas.rectangle(&used, *radius),
             Shape::Circle => canvas.circle(&used.center(), used.width() / 2.),
+            Shape::Ellipse => canvas.ellipse(&used),
+            Shape::File => canvas.file(&used),
+            Shape::Oval => canvas.oval(&used),
+            Shape::Cylinder => canvas.cylinder(&used),
             _ => {}
           }
 
-          Self::paint_paragraph(canvas, &used, text, paragraph);
+          match shape {
+            Shape::Cylinder => {
+              let rect = Rect::from_xywh(used.left, used.top + used.height() / 3., used.width(), used.height() * 0.666);
+              Self::paint_paragraph(canvas, &rect, text, paragraph);
+            }
+            _ => Self::paint_paragraph(canvas, &used, text, paragraph)
+          }
         }
         Node::Font(font) => canvas.font = font.clone(),
         Node::Move(_used) => {}
@@ -106,45 +120,6 @@ impl Renderer {
         Self::render_arrow(canvas, used, from, movement, to, caption),
       Shape::Line(start, movement, end, caption, arrows) =>
         Self::render_line(canvas, used, start, movement, end, caption, arrows),
-      Shape::File(text_color, paragraph, _radius, _fill, _) => {
-        canvas.stroke_with(1., *color, &Solid);
-
-        let fold = 16.;
-        canvas.move_to(used.left, used.top);
-        canvas.line_to(used.left, used.bottom);
-        canvas.line_to(used.right, used.bottom);
-        canvas.line_to(used.right, used.top + fold);
-        canvas.line_to(used.right - fold, used.top + fold);
-        canvas.line_to(used.right - fold, used.top);
-        canvas.line_to(used.right, used.top + fold);
-        canvas.move_to(used.left, used.top);
-        canvas.line_to(used.right - fold, used.top);
-        canvas.stroke();
-
-        Self::draw_paragraph(canvas, used, text_color, paragraph);
-      }
-      Shape::Ellipse(text_color, paragraph, fill, _) => {
-        canvas.stroke_with(1., *color, &Solid);
-        canvas.ellipse(used);
-
-        canvas.fill_with(*fill);
-        canvas.ellipse(used);
-
-        Self::draw_paragraph(canvas, used, text_color, paragraph);
-      }
-      Shape::Cylinder(text_color, paragraph, _fill, _) => {
-        canvas.stroke_with(1., *color, &Solid);
-        canvas.cylinder(used);
-
-        let rect = Rect::from_xywh(used.left, used.top + used.height() / 3., used.width(), used.height() * 0.666);
-        Self::draw_paragraph(canvas, &rect, text_color, paragraph);
-      }
-      Shape::Oval(text_color, paragraph, _fill, _) => {
-        canvas.stroke_with(1., *color, &Solid);
-        canvas.oval(used);
-
-        Self::draw_paragraph(canvas, used, text_color, paragraph);
-      }
       Shape::Text(paragraph, _) => {
         if paragraph.widths.len() > 1 {
           Self::render_paragraph(canvas, used, &paragraph.text);

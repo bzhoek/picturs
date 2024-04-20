@@ -186,6 +186,20 @@ impl Canvas {
     self.surface.canvas().draw_oval(rect, &self.paint);
   }
 
+  pub fn file(&mut self, rect: &Rect) {
+    let fold = 16.;
+    self.move_to(rect.left, rect.top);
+    self.line_to(rect.left, rect.bottom);
+    self.line_to(rect.right, rect.bottom);
+    self.line_to(rect.right, rect.top + fold);
+    self.line_to(rect.right - fold, rect.top + fold);
+    self.line_to(rect.right - fold, rect.top);
+    self.line_to(rect.right, rect.top + fold);
+    self.move_to(rect.left, rect.top);
+    self.line_to(rect.right - fold, rect.top);
+    self.stroke();
+  }
+
   pub fn cylinder(&mut self, rect: &Rect) {
     let top = Rect::from_xywh(rect.left, rect.top, rect.width(), rect.height() / 3.);
     let bottom = Rect::from_xywh(rect.left, rect.bottom - top.height(), rect.width(), top.height());

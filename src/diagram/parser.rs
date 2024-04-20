@@ -198,7 +198,6 @@ impl<'i> Diagram<'i> {
       id, title,
       width, height,
       location,
-      stroke, fill, text,
       ..
     } = &attrs {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.cylinder);
@@ -209,10 +208,7 @@ impl<'i> Diagram<'i> {
 
       index.insert(ShapeName::Cylinder, *id, used);
 
-      let common = CommonAttributes::new(*id, used, *stroke, 1.);
-      let cylinder = Primitive(
-        common,
-        Shape::Cylinder(*text, paragraph, *fill, location.clone()));
+      let cylinder = Closed(attrs, used, paragraph, Shape::Cylinder);
       return Some((used, cylinder));
     }
     None
@@ -226,7 +222,6 @@ impl<'i> Diagram<'i> {
       id, title,
       width, height,
       location,
-      stroke, fill, text,
       ..
     } = &attrs {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.ellipse);
@@ -234,13 +229,9 @@ impl<'i> Diagram<'i> {
 
       Self::adjust_topleft(&config.flow, &mut used);
       index.position_rect(location, &mut used);
-
       index.insert(ShapeName::Ellipse, *id, used);
 
-      let common = CommonAttributes::new(*id, used, *stroke, 1.);
-      let ellipse = Primitive(
-        common,
-        Shape::Ellipse(*text, paragraph, *fill, location.clone()));
+      let ellipse = Closed(attrs, used, paragraph, Shape::Ellipse);
       return Some((used, ellipse));
     }
     None
@@ -252,9 +243,8 @@ impl<'i> Diagram<'i> {
 
     if let Attributes::Closed {
       id, title,
-      width, height, radius,
+      width, height,
       location,
-      stroke, fill, text,
       ..
     } = &attrs {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.file);
@@ -265,10 +255,7 @@ impl<'i> Diagram<'i> {
 
       index.insert(ShapeName::File, *id, used);
 
-      let common = CommonAttributes::new(*id, used, *stroke, 1.);
-      let file = Primitive(
-        common,
-        Shape::File(*text, paragraph, *radius, *fill, location.clone()));
+      let file = Closed(attrs, used, paragraph, Shape::File);
       return Some((used, file));
     }
     None
@@ -277,11 +264,11 @@ impl<'i> Diagram<'i> {
   fn oval_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.oval);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Oval);
+
     if let Attributes::Closed {
       id, title,
       width, height,
       location,
-      stroke, fill, text,
       ..
     } = &attrs {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.oval);
@@ -291,11 +278,8 @@ impl<'i> Diagram<'i> {
       index.position_rect(location, &mut used);
       index.insert(ShapeName::Oval, *id, used);
 
-      let common = CommonAttributes::new(*id, used, *stroke, 1.);
-      let node = Primitive(
-        common,
-        Shape::Oval(*text, paragraph, *fill, location.clone()));
-      return Some((used, node));
+      let oval = Closed(attrs, used, paragraph, Shape::Oval);
+      return Some((used, oval));
     }
     None
   }
