@@ -115,17 +115,24 @@ mod real_world {
       continue right-top
       sline.time 6in right *-> color dgrey thick
       dot.water at 0/12 time.n
-      box.bln 1cm up from water.n "1,2L water" "met 16g" "eekhoorntjes" "brood" color brown
+      dot.pbp at 1/16 time.n
+      box .5: 1cm up from water.n -> "1,2L water" "met 16g" "eekhoorntjes" "brood" color brown
       box "Pijnboom" "pitjes" "roosteren" color grey
-      box "Fruiten" color yellow
+      dot.bln at 4/16 time.n
+      box 4cm up from bln.n "Zeven" color brown
+      box "Fijnhakken" color brown
+      dot.ui at 5/16 time.n
+      box 1cm up from ui.n "Fruiten" color yellow
       box "Rijst bakken" color black
       box wd 2in "Bouillon toevoegen" color brown
       box "Parmezaan" color yellow
       box "Bakken" color orange
-      dot.pbp at 1/12 time.n
-      box 1cm down from pbp.s "Parmezaan" "Knoflook" "Ui" color yellow
-      box "Zeven" color brown
-      box "Fijnhakken" color brown
+
+      box 1cm down from pbp.s dotted {
+        down
+        box "Parmezaan" "schafen" color yellow
+        box "Ui snipperen" "Knoflook hakken" color yellow
+      }
       dot.vis at 9/12 time.n
       box 1cm down from vis.s "Olie" color orange
       box "Paneren" color orange

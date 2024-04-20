@@ -39,7 +39,7 @@ impl Renderer {
           let used = Self::align_rect(&common.used, common.thickness);
           Self::render_shape(canvas, &used, &common.stroke, shape, &common.thickness);
         }
-        Closed(Attributes::Closed { radius, thickness, effect, stroke, fill, text, .. }, used, paragraph, shape) => {
+        Closed(Attributes::Closed { radius, thickness, effect, stroke, fill, text, location, endings, .. }, used, paragraph, shape) => {
           let used = Self::align_rect(used, *thickness);
 
           canvas.stroke_with(*thickness, *stroke, effect);
@@ -53,6 +53,16 @@ impl Renderer {
             _ => {}
           }
 
+          if let (Some(_endings), Some((my, displacements, _))) = (endings, location) {
+            let point = my.edge_point(&used);
+            canvas.move_to(point.x, point.y);
+            for movement in displacements.iter() {
+              let point = point.sub(movement.offset());
+              canvas.line_to(point.x, point.y);
+            }
+            canvas.stroke();
+          }
+
           canvas.fill_with(*fill);
           match shape {
             Shape::Rectangle => canvas.rectangle(&used, *radius),
@@ -63,6 +73,7 @@ impl Renderer {
             Shape::Cylinder => canvas.cylinder(&used),
             _ => {}
           }
+
 
           match shape {
             Shape::Cylinder => {
@@ -295,6 +306,7 @@ impl Renderer {
     }
   }
 
+  #[allow(dead_code)]
   fn draw_paragraph(canvas: &mut Canvas, used: &Rect, text_color: &Color, paragraph: &Option<Paragraph>) {
     if let Some(paragraph) = paragraph {
       canvas.paint.set_style(PaintStyle::Fill);

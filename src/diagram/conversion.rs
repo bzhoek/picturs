@@ -201,10 +201,9 @@ impl Conversion {
     Caption { text, inner: inner.mirror(), outer, size, opaque }
   }
 
-  pub(crate) fn endings(pair: &Pair<Rule>) -> Endings {
+  pub(crate) fn endings(pair: &Pair<Rule>) -> Option<Endings> {
     Rules::find_rule(pair, Rule::endings)
       .map(Self::endings_from)
-      .unwrap_or_default()
   }
 
   pub(crate) fn movement_from(pair: Pair<Rule>, unit: &Unit) -> Movement {

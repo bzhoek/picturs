@@ -64,7 +64,7 @@ oval "oval" 1 below first box
 
 The relative `1 right` is shorthand for `.w 1cm right of last.e`. Since the direction is `right`, the polar opposite `west` is used. For `oval` the polar opposite `north` is assumed, because the placement is `below`.
 
-![Relative placement](tests/visual/hello-direction_start_end.png)
+![Relative placement](tests/snapshots/hello-direction_start_end.png)
 
 The first relative component determines direction, `circle 1 right 1 down` will be horizontal, and `oval 1 down` will be vertical.
 
@@ -102,11 +102,11 @@ The defaults sizes are the same as GNU PIC:
 
 The position of captions on lines and arrows is determined by the alignment suffix, like `above` and `below` for horizontal lines.
 
-![Above and below](tests/doc/align-above_below.png)
+![Above and below](tests/snapshots/align-above_below.png)
 
 For vertical lines the alignment is `left` and `right`. The default is `center`.
 
-![Left and right](tests/doc/align-left_right.png)
+![Left and right](tests/snapshots/align-left_right.png)
 
 ### Edges
 
@@ -120,7 +120,7 @@ In combination with the block `id`, they indicate exact positions on the block's
 
 The four directions indicate the midpoints on a block object, named `up`, `down`, `left`, and `right`. Compass points also add positions for the corners `nw`, `n`, `ne`, `e`, `se`, `s`, `sw`, and `w`.
 
-![Degree angles](tests/doc/edges-all_edges.png)
+![Degree angles](tests/snapshots/edges-all_edges.png)
 
 Clock hours give you 12 positions on the edge of a block, and might be more natural. The `:` suffix is used to distinguish them from degree angles. Degree angles divide the edge in 360 parts, with 0 pointing up.
 
