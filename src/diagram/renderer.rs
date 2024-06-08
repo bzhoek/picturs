@@ -54,12 +54,22 @@ impl Renderer {
           }
 
           if let (Some(_endings), Some((my, displacements, _))) = (endings, location) {
-            let point = my.edge_point(&used);
+            let mut points: Vec<Point> = vec![];
+            let mut point = my.edge_point(&used);
             canvas.move_to(point.x, point.y);
+            points.push(point);
             for movement in displacements.iter() {
-              let point = point.sub(movement.offset());
+              point = point.sub(movement.offset());
+              points.push(point);
               canvas.line_to(point.x, point.y);
             }
+
+            let start = points.first().unwrap();
+            let end = points.get(1).unwrap();
+            Self::draw_ending(&_endings.start, start, end, canvas);
+            let start = points.get(points.len() - 2).unwrap();
+            let end = points.last().unwrap();
+            Self::draw_ending(&_endings.end, end, start, canvas);
             canvas.stroke();
           }
 
