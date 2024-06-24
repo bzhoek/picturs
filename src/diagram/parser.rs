@@ -533,7 +533,7 @@ impl<'i> Diagram<'i> {
         })) = index.last_open(shape) {
           *endings = last_endings.clone();
           if movement.is_none() {
-            *movement = last_movement.clone();
+            movement.clone_from(last_movement);
           }
           if let Some(caption) = &mut *caption {
             if let Some(last) = last_caption.as_ref() {
