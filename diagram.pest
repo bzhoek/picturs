@@ -1,9 +1,11 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 // WHITESPACE = { ( " "* ~ "\\" ~ NEWLINE ~ " "* ) }
 picture = _{ SOI ~ statements* ~ EOI }
-statements = _{ comment | container | shape | font_config | unit_config | box_config | circle_config | line_config | continue_from | flow | flow_to | move_to }
+statements = _{ comment | group | container | shape | font_config | unit_config | box_config | circle_config | line_config | continue_from | flow | flow_to | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ dot | arrow | line | sline | rectangle | file | circle | ellipse | cylinder | oval | text | path }
+
+flow_cmd = _{ "flow"? ~ flow }
 flow = { "down" | "right" | "top" | "left" }
 
 continue_from = { continue_prefix? ~ continue_direction  }
@@ -18,6 +20,7 @@ circle_config = { "set circle" ~ (height) }
 line_config = { "set line" ~ length }
 
 // closed shapes
+group = { "group" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
 container = { "box" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
 rectangle = { "box" ~ identified? ~ attributes }
 file = { "file" ~ identified? ~ attributes }
@@ -27,8 +30,8 @@ cylinder = { "cylinder" ~ identified? ~ attributes }
 oval = { "oval" ~ identified? ~ attributes }
 
 attributes = { attribute* }
-attribute = _{ string | stroke | fill | width | height | padding | radius | space | location | endings | text_color | flow | same | thickness | effect }
-stroke = { "color" ~ color }
+attribute = _{ string | stroke | fill | width | height | padding | radius | space | location | endings | text_color | flow_cmd | same | thickness | effect }
+stroke = { ("stroke" | "color") ~ color }
 fill = { "fill" ~ id }
 width = { ("wd" | "wid" | "width") ~ size_ }
 height = { ("ht" | "height") ~ size_ }

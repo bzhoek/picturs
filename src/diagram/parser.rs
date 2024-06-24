@@ -73,7 +73,8 @@ impl<'i> Diagram<'i> {
 
   fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index<'a>, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
     let result = match pair.as_rule() {
-      Rule::container => Self::container_from(&pair, config, index, cursor),
+      Rule::container => Self::container_from(&pair, config, index, cursor, &config.container),
+      Rule::group => Self::container_from(&pair, config, index, cursor, &config.group),
       Rule::circle => Self::circle_from(&pair, config, index, cursor),
       Rule::cylinder => Self::cylinder_from(&pair, config, index, cursor),
       Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor),
@@ -125,8 +126,8 @@ impl<'i> Diagram<'i> {
     result
   }
 
-  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, attributes) = Attributes::closed_attributes(pair, config, &config.container);
+  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point, shape: &ShapeConfig) -> Option<(Rect, Node<'a>)> {
+    let (mut attrs, attributes) = Attributes::closed_attributes(pair, config, shape);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Container);
 
     if let Attributes::Closed {

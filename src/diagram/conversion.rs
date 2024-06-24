@@ -272,9 +272,9 @@ impl Conversion {
     let mut pairs = pair.into_inner();
     let factor = Self::next_to_f32(&mut pairs).unwrap();
     match Self::next_to_string(&mut pairs).map(|str| str.into()) {
-      Some (Unit::Unit) => {
+      Some(Unit::Unit) => {
         Length::new(factor * size, Unit::Px)
-      },
+      }
       Some(unit) => {
         Length::new(factor, unit)
       }

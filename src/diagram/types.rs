@@ -124,6 +124,7 @@ impl From<&str> for Endings {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Config {
   pub(crate) container: ShapeConfig,
+  pub(crate) group: ShapeConfig,
   pub(crate) flow: Flow,
   pub(crate) unit: Unit,
   pub(crate) line: Length,
@@ -186,6 +187,7 @@ impl Config {
     let font = Font::from_typeface(typeface, 17.0);
     Self {
       container: ShapeConfig::stroke(Color::RED),
+      group: ShapeConfig::stroke(Color::TRANSPARENT),
       flow,
       dot: Length::new(4., Unit::Px),
       circle: ShapeConfig::default(),
