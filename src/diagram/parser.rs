@@ -1,5 +1,5 @@
 use std::ops::Add;
-
+use std::path::Path;
 use log::{debug, info, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
@@ -764,7 +764,7 @@ impl<'i> Diagram<'i> {
     })
   }
 
-  fn find_node<'a>(&'a self, id: &str) -> Option<&Node<'a>> {
+  fn find_node(&self, id: &str) -> Option<&Node> {
     Self::find_nodes(&self.nodes, id)
   }
 
@@ -819,14 +819,14 @@ impl<'i> Diagram<'i> {
     self.write_to_file(filepath, &mut canvas);
   }
 
-  pub fn shrink_to_file(&mut self, filepath: &str) {
+  pub fn shrink_to_file<P: AsRef<Path>>(&mut self, path: P) {
     let size = self.bounds.with_outset(self.inset);
     let size = ISize::new(size.width() as i32, size.height() as i32);
     let mut canvas = Canvas::new(size);
-    self.write_to_file(filepath, &mut canvas);
+    self.write_to_file(path, &mut canvas);
   }
 
-  fn write_to_file(&mut self, filepath: &str, canvas: &mut Canvas) {
+  fn write_to_file<P: AsRef<Path>>(&mut self, filepath: P, canvas: &mut Canvas) {
     canvas.translate(-self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
     Renderer::render_to_canvas(canvas, &self.nodes);
     canvas.write_png(filepath);

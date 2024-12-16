@@ -231,7 +231,7 @@ impl Canvas {
       .unwrap()
   }
 
-  pub fn write_png(&mut self, path: &str) {
+  pub fn write_png<P: AsRef<std::path::Path>>(&mut self, path: P) {
     let mut file = File::create(path).unwrap();
     let data = self.data();
     let bytes = data.as_bytes();
