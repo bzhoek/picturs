@@ -6,6 +6,7 @@ mod pic {
 mod visual {
   mod diagram;
   mod edges;
+  mod flow;
   mod hello;
   mod real_world;
   mod units;

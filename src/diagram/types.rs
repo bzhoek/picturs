@@ -3,8 +3,8 @@ mod tests;
 
 use std::ops::{Add, Mul};
 
-use skia_safe::{Color, Font, FontMgr, FontStyle, Point, Rect, scalar, Size, Vector};
 use crate::diagram::attributes::{Attributes, EdgeMovement};
+use skia_safe::{scalar, Color, Font, FontMgr, FontStyle, Point, Rect, Size, Vector};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
@@ -93,7 +93,7 @@ impl From<&str> for Ending {
     match item {
       "<" | ">" => Ending::Arrow,
       "*" => Ending::Dot,
-      _ => Ending::None
+      _ => Ending::None,
     }
   }
 }
@@ -110,14 +110,17 @@ impl From<&str> for Endings {
     let start = match chars.next().unwrap() {
       '<' => Ending::Arrow,
       '*' => Ending::Dot,
-      _ => Ending::None
+      _ => Ending::None,
     };
     let end = match chars.last().unwrap() {
       '>' => Ending::Arrow,
       '*' => Ending::Dot,
-      _ => Ending::None
+      _ => Ending::None,
     };
-    Self { start, end }
+    Self {
+      start,
+      end,
+    }
   }
 }
 
@@ -125,7 +128,7 @@ impl From<&str> for Endings {
 pub struct Config {
   pub(crate) container: ShapeConfig,
   pub(crate) group: ShapeConfig,
-  pub(crate) flow: Flow,
+  pub(crate) continuation: Continuation,
   pub(crate) unit: Unit,
   pub(crate) line: Length,
   pub(crate) circle: ShapeConfig,
@@ -140,7 +143,8 @@ pub struct Config {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct ShapeConfig { // all in pixels
+pub struct ShapeConfig {
+  // all in pixels
   pub(crate) padding: f32,
   pub(crate) width: f32,
   pub(crate) height: f32,
@@ -177,18 +181,18 @@ impl ShapeConfig {
 
 impl Default for Config {
   fn default() -> Self {
-    Self::new(Flow::new("left"))
+    Self::new(Continuation::new("left"))
   }
 }
 
 impl Config {
-  pub fn new(flow: Flow) -> Self {
+  pub fn new(flow: Continuation) -> Self {
     let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
     let font = Font::from_typeface(typeface, 17.0);
     Self {
       container: ShapeConfig::stroke(Color::RED),
       group: ShapeConfig::stroke(Color::TRANSPARENT),
-      flow,
+      continuation: flow,
       dot: Length::new(4., Unit::Px),
       circle: ShapeConfig::default(),
       cylinder: ShapeConfig::default(),
@@ -222,7 +226,7 @@ impl Config {
     let advance = font_height / 4.;
 
     let (mut x, mut y) = (0.0, font_height);
-    let mut widths: Vec<scalar> = vec!();
+    let mut widths: Vec<scalar> = vec![];
 
     for word in text.split_whitespace() {
       let (word_width, _word_rect) = self.font.measure_str(word, None);
@@ -255,37 +259,44 @@ impl From<&str> for Direction {
       "right" => Direction::E,
       "down" => Direction::S,
       "left" => Direction::SW,
-      _ => panic!("Unknown direction {}", item)
+      _ => panic!("Unknown direction {}", item),
     }
   }
 }
 
+/// A continuation is a pair of edges that are connected
 #[derive(Clone, Debug, PartialEq)]
-pub struct Flow {
+pub struct Continuation {
   pub(crate) start: Edge,
   pub(crate) end: Edge,
 }
 
-impl Flow {
+impl Continuation {
   pub fn new(dir: impl Into<Direction>) -> Self {
     match dir.into() {
-      Direction::EN => Flow::start("en"),
-      Direction::E => Flow::start("e"),
-      Direction::S => Flow::start("s"),
-      _ => Flow::start("sw"),
+      Direction::EN => Continuation::start("en"),
+      Direction::E => Continuation::start("e"),
+      Direction::S => Continuation::start("s"),
+      _ => Continuation::start("sw"),
     }
   }
 
   pub fn start(start: impl Into<Edge>) -> Self {
     let end = start.into();
-    Self { start: end.flip(), end }
+    Self {
+      start: end.flip(),
+      end,
+    }
   }
 }
 
-impl From<&str> for Flow {
+impl From<&str> for Continuation {
   fn from(item: &str) -> Self {
     let end: Edge = item.into();
-    Self { start: end.flip(), end }
+    Self {
+      start: end.flip(),
+      end,
+    }
   }
 }
 
@@ -310,16 +321,40 @@ impl From<&str> for Edge {
     let dot_removed = item.trim_start_matches('.');
     match dot_removed.to_lowercase().as_str() {
       "n" | "up" | "above" => Self::above(),
-      "ne" => Self { direction: Vertical, x: 0.5, y: -0.5 },
-      "en" | "right-top" => Self { direction: Horizontal, x: 0.5, y: -0.5 },
+      "ne" => Self {
+        direction: Vertical,
+        x: 0.5,
+        y: -0.5,
+      },
+      "en" | "right-top" => Self {
+        direction: Horizontal,
+        x: 0.5,
+        y: -0.5,
+      },
       "e" | "right" => Self::right(),
-      "se" => Self { direction: Vertical, x: 0.5, y: 0.5 },
+      "se" => Self {
+        direction: Vertical,
+        x: 0.5,
+        y: 0.5,
+      },
       "s" | "down" | "below" => Self::below(),
-      "sw" => Self { direction: Vertical, x: -0.5, y: 0.5 },
+      "sw" => Self {
+        direction: Vertical,
+        x: -0.5,
+        y: 0.5,
+      },
       "w" | "left" => Self::left(),
-      "nw" => Self { direction: Vertical, x: -0.5, y: -0.5 },
-      "wn" => Self { direction: Horizontal, x: -0.5, y: -0.5 },
-      _ => Self::center()
+      "nw" => Self {
+        direction: Vertical,
+        x: -0.5,
+        y: -0.5,
+      },
+      "wn" => Self {
+        direction: Horizontal,
+        x: -0.5,
+        y: -0.5,
+      },
+      _ => Self::center(),
     }
   }
 }
@@ -333,43 +368,82 @@ impl From<f32> for Edge {
     } else {
       Vertical
     };
-    Self { direction, x, y }
+    Self {
+      direction,
+      x,
+      y,
+    }
   }
 }
 
-
 impl Edge {
   pub fn above() -> Self {
-    Self { direction: Vertical, x: 0., y: -0.5 }
+    Self {
+      direction: Vertical,
+      x: 0.,
+      y: -0.5,
+    }
   }
 
   pub fn below() -> Self {
-    Self { direction: Vertical, x: 0., y: 0.5 }
+    Self {
+      direction: Vertical,
+      x: 0.,
+      y: 0.5,
+    }
   }
 
   pub fn left() -> Self {
-    Self { direction: Horizontal, x: -0.5, y: 0. }
+    Self {
+      direction: Horizontal,
+      x: -0.5,
+      y: 0.,
+    }
   }
 
   pub fn right() -> Self {
-    Self { direction: Horizontal, x: 0.5, y: 0. }
+    Self {
+      direction: Horizontal,
+      x: 0.5,
+      y: 0.,
+    }
   }
 
   pub fn center() -> Self {
-    Self { direction: Horizontal, x: 0., y: 0. }
+    Self {
+      direction: Horizontal,
+      x: 0.,
+      y: 0.,
+    }
   }
 
   pub fn flip(&self) -> Self {
     match self.direction {
-      Horizontal => Self { direction: Horizontal, x: self.x * -1., y: self.y },
-      Vertical => Self { direction: Vertical, x: self.x, y: self.y * -1. }
+      Horizontal => Self {
+        direction: Horizontal,
+        x: self.x * -1.,
+        y: self.y,
+      },
+      Vertical => Self {
+        direction: Vertical,
+        x: self.x,
+        y: self.y * -1.,
+      },
     }
   }
 
   pub fn mirror(&self) -> Self {
     match self.direction {
-      Horizontal => Self { direction: Horizontal, x: self.x * -1., y: self.y * -1. },
-      Vertical => Self { direction: Vertical, x: self.x * -1., y: self.y * -1. },
+      Horizontal => Self {
+        direction: Horizontal,
+        x: self.x * -1.,
+        y: self.y * -1.,
+      },
+      Vertical => Self {
+        direction: Vertical,
+        x: self.x * -1.,
+        y: self.y * -1.,
+      },
     }
   }
   pub fn tuple(&self) -> (f32, f32) {
@@ -428,7 +502,7 @@ impl From<&str> for Unit {
       "pt" => Unit::Pt,
       "px" => Unit::Px,
       "u" => Unit::Unit,
-      _ => panic!("unknown unit {}", item)
+      _ => panic!("unknown unit {}", item),
     }
   }
 }
@@ -441,7 +515,10 @@ pub struct Length {
 
 impl Length {
   pub fn new(length: f32, unit: Unit) -> Self {
-    Self { length, unit }
+    Self {
+      length,
+      unit,
+    }
   }
 
   pub fn pixels(&self) -> f32 {
@@ -467,8 +544,12 @@ impl Length {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Movement {
-  Relative { displacement: Displacement },
-  Absolute { object: ObjectEdge },
+  Relative {
+    displacement: Displacement,
+  },
+  Absolute {
+    object: ObjectEdge,
+  },
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -480,7 +561,10 @@ pub struct Displacement {
 impl Displacement {
   pub fn new(length: f32, unit: Unit, edge: Edge) -> Self {
     let length = Length::new(length, unit);
-    Self { length, edge }
+    Self {
+      length,
+      edge,
+    }
   }
 
   pub fn offset(&self) -> Point {
@@ -504,6 +588,9 @@ pub struct ObjectEdge {
 
 impl ObjectEdge {
   pub fn new(id: &str, edge: impl Into<Edge>) -> Self {
-    Self { id: id.into(), edge: edge.into() }
+    Self {
+      id: id.into(),
+      edge: edge.into(),
+    }
   }
 }

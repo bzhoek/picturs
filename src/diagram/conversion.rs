@@ -8,7 +8,7 @@ use skia_safe::{Color, Font, FontMgr, FontStyle};
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{Caption, Config, Displacement, Edge, EdgeDirection, Ending, Endings, Flow, Length, Movement, ObjectEdge, Unit};
+use crate::diagram::types::{Caption, Config, Displacement, Edge, EdgeDirection, Ending, Endings, Continuation, Length, Movement, ObjectEdge, Unit};
 use crate::skia::Effect;
 
 #[cfg(test)]
@@ -318,9 +318,9 @@ impl Conversion {
     ObjectEdge::new(id, edge)
   }
 
-  pub(crate) fn flow_in(pair: &Pair<Rule>) -> Option<Flow> {
-    Rules::dig_rule(pair, Rule::flow)
-      .map(|pair| Flow::new(pair.as_str()))
+  pub(crate) fn continuation_in(pair: &Pair<Rule>) -> Option<Continuation> {
+    Rules::dig_rule(pair, Rule::continuation)
+      .map(|pair| Continuation::new(pair.as_str()))
   }
 
   pub(crate) fn fraction_edge_for(pair: &Pair<Rule>, rule: Rule) -> Option<ObjectEdge> {

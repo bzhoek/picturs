@@ -27,12 +27,12 @@ Open and closed shaped share many attributes, but some only apply to one type:
 
 The `flow` statement determines where the cursor ends for the next statement:
 
-| Statement | Flow          |
-|-----------|---------------|
-| `top`     | top right     |
-| `right`   | middle right  |
-| `bottom`  | center bottom |
-| `left`    | left bottom   |
+| Statement | Flow                   |
+|-----------|------------------------|
+| `right`   | middle right (default) |
+| `top`     | top right              |
+| `bottom`  | center bottom          |
+| `left`    | left bottom            |
 
 A better way is to think about where the cursor *continues*, defined as a point on the edge of the *last* object. The `continue` keyword reflects this better.
 

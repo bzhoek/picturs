@@ -10,7 +10,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Flow, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Continuation, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
 use crate::diagram::types::Node::{Closed, Container, Primitive};
 use crate::skia::Canvas;
 
@@ -64,7 +64,7 @@ impl<'i> Diagram<'i> {
       if let Some((rect, node)) = result {
         ast.push(node);
         Self::bounds_from_rect(&mut bounds, rect);
-        let point = config.flow.end.edge_point(&rect);
+        let point = config.continuation.end.edge_point(&rect);
         cursor = point
       }
     }
@@ -112,13 +112,13 @@ impl<'i> Diagram<'i> {
         config.line = length;
         None
       }
-      Rule::flow => {
-        config.flow = Flow::new(pair.as_str());
+      Rule::continuation => {
+        config.continuation = Continuation::new(pair.as_str());
         None
       }
       Rule::continue_from => {
         let direction = Conversion::str_for(&pair, Rule::continue_direction).unwrap();
-        config.flow = direction.into();
+        config.continuation = direction.into();
         None
       }
       _ => None
@@ -145,8 +145,8 @@ impl<'i> Diagram<'i> {
 
       let (nodes, inner) = {
         let mut config = config.clone();
-        Conversion::flow_in(&attributes).into_iter().for_each(|flow| {
-          config.flow = flow;
+        Conversion::continuation_in(&attributes).into_iter().for_each(|continuation| {
+          config.continuation = continuation;
         });
         Self::nodes_from(pair.clone().into_inner(), vec![], &inset, config, index)
       };
@@ -181,7 +181,7 @@ impl<'i> Diagram<'i> {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.circle);
       let mut used = Rect::from_xywh(cursor.x, cursor.y, size.height, size.height);
 
-      Self::adjust_topleft(&config.flow, &mut used);
+      Self::adjust_topleft(&config.continuation, &mut used);
       index.position_rect(location, &mut used);
       index.insert(ShapeName::Circle, *id, used);
 
@@ -204,7 +204,7 @@ impl<'i> Diagram<'i> {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.cylinder);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
-      Self::adjust_topleft(&config.flow, &mut used);
+      Self::adjust_topleft(&config.continuation, &mut used);
       index.position_rect(location, &mut used);
 
       index.insert(ShapeName::Cylinder, *id, used);
@@ -228,7 +228,7 @@ impl<'i> Diagram<'i> {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.ellipse);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
-      Self::adjust_topleft(&config.flow, &mut used);
+      Self::adjust_topleft(&config.continuation, &mut used);
       index.position_rect(location, &mut used);
       index.insert(ShapeName::Ellipse, *id, used);
 
@@ -251,7 +251,7 @@ impl<'i> Diagram<'i> {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.file);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
-      Self::adjust_topleft(&config.flow, &mut used);
+      Self::adjust_topleft(&config.continuation, &mut used);
       index.position_rect(location, &mut used);
 
       index.insert(ShapeName::File, *id, used);
@@ -275,7 +275,7 @@ impl<'i> Diagram<'i> {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.oval);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
-      Self::position_rect_on_edge(&config.flow.start, location, &mut used);
+      Self::position_rect_on_edge(&config.continuation.start, location, &mut used);
       index.position_rect(location, &mut used);
       index.insert(ShapeName::Oval, *id, used);
 
@@ -306,20 +306,20 @@ impl<'i> Diagram<'i> {
       ..
     } = &attrs {
       let rect = Self::create_rect(*width, *height, &config.rectangle);
-      let rect = Self::adjust_rect(&rect, config.flow.end.direction, -*space);
+      let rect = Self::adjust_rect(&rect, config.continuation.end.direction, -*space);
 
       let (paragraph, size) = Self::paragraph_sized_(title.as_deref(), rect.size(), config);
       let mut inner = Rect::from_point_and_size(*cursor, size);
       inner.bottom += padding; // for text
 
-      Self::adjust_topleft(&config.flow, &mut inner);
+      Self::adjust_topleft(&config.continuation, &mut inner);
       index.position_rect(location, &mut inner);
 
-      let outer = Self::adjust_rect(&inner, config.flow.end.direction, *space);
+      let outer = Self::adjust_rect(&inner, config.continuation.end.direction, *space);
       index.insert(ShapeName::Box, *id, outer);
       index.add_open(ShapeName::Box, attrs.clone());
 
-      let bounds = Self::adjust_rect(&outer, config.flow.end.direction, *padding);
+      let bounds = Self::adjust_rect(&outer, config.continuation.end.direction, *padding);
       let rectangle = Closed(attrs, inner, paragraph, Shape::Rectangle);
       return Some((bounds, rectangle));
     }
@@ -345,7 +345,7 @@ impl<'i> Diagram<'i> {
       let (source_edge, movement, target_edge) = Self::source_movement_target_from_pair(&attributes, &config.unit);
       let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
       let end = index.point_index(target.as_ref(), &[])
-        .unwrap_or(Self::displace_from_start(start, &movement, &config.flow, *length));
+        .unwrap_or(Self::displace_from_start(start, &movement, &config.continuation, *length));
       let (rect, used) = Self::rect_from_points(start, &movement, end);
 
       index.insert(ShapeName::Arrow, *id, used);
@@ -378,7 +378,7 @@ impl<'i> Diagram<'i> {
       } => {
         let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
         let end = index.point_index(target.as_ref(), &[])
-          .unwrap_or(Self::displace_from_start(start, movement, &config.flow, *length));
+          .unwrap_or(Self::displace_from_start(start, movement, &config.continuation, *length));
 
         let (rect, used) = Self::rect_from_points(start, movement, end);
 
@@ -420,7 +420,7 @@ impl<'i> Diagram<'i> {
       } => {
         let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
         let end = index.point_index(target.as_ref(), &[])
-          .unwrap_or(Self::displace_from_start(start, movement, &config.flow, *length));
+          .unwrap_or(Self::displace_from_start(start, movement, &config.continuation, *length));
 
         let mut rect = Rect::from_point_and_size(start, (0, 0));
         Self::bounds_from_point(&mut rect, &end);
@@ -551,7 +551,7 @@ impl<'i> Diagram<'i> {
     let id = Conversion::identified_in(pair);
     let title = Conversion::string_in(pair, Rule::inner).unwrap();
     let attributes = Rules::find_rule(pair, Rule::text_attributes).unwrap();
-    let location = Conversion::location_for(pair, &config.flow.end, &config.unit);
+    let location = Conversion::location_for(pair, &config.continuation.end, &config.unit);
 
     let fit = Rules::dig_rule(&attributes, Rule::fit);
     let paragraph = match fit {
@@ -570,7 +570,7 @@ impl<'i> Diagram<'i> {
     let mut used = Rect::from_xywh(cursor.x, cursor.y, paragraph.size.width, paragraph.size.height);
     used.bottom += BLOCK_PADDING;
 
-    Self::adjust_topleft(&config.flow, &mut used);
+    Self::adjust_topleft(&config.continuation, &mut used);
     index.position_rect(&location, &mut used);
 
     index.insert(ShapeName::Text, id, used);
@@ -624,7 +624,7 @@ impl<'i> Diagram<'i> {
   fn flow_from<'a>(pair: Pair<'a, Rule>, cursor: &Point, config: &mut Config) -> Option<(Rect, Node<'a>)> {
     let length = Conversion::length_from(pair, &config.unit);
     let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-    if config.flow.end.horizontal() {
+    if config.continuation.end.horizontal() {
       used.right += length.pixels();
     } else {
       used.bottom += length.pixels();
@@ -683,7 +683,7 @@ impl<'i> Diagram<'i> {
     (source, movement, target)
   }
 
-  fn displace_from_start(start: Point, movement: &Option<Displacement>, flow: &Flow, default: f32) -> Point {
+  fn displace_from_start(start: Point, movement: &Option<Displacement>, flow: &Continuation, default: f32) -> Point {
     movement.as_ref()
       .map(|movement| start.add(movement.offset()))
       .unwrap_or_else(|| {
@@ -737,8 +737,8 @@ impl<'i> Diagram<'i> {
     start.offset(used);
   }
 
-  fn adjust_topleft(flow: &Flow, used: &mut Rect) {
-    flow.start.offset(used);
+  fn adjust_topleft(continuation: &Continuation, used: &mut Rect) {
+    continuation.start.offset(used);
   }
 
   fn bounds_from_rect(bounds: &mut Rect, rect: Rect) {
