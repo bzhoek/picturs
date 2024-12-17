@@ -18,7 +18,7 @@ use crate::skia::Canvas;
 mod tests;
 
 #[derive(Parser)]
-#[grammar = "diagram.pest"]
+#[grammar = "picturs.pest"]
 pub struct DiagramParser;
 
 #[derive(Debug)]
