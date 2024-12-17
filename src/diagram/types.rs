@@ -243,57 +243,29 @@ impl Config {
   }
 }
 
-#[derive(Debug, Default, PartialEq)]
-pub enum Direction {
-  #[default]
-  S,
-  EN,
-  E,
-  SW,
-}
-
-impl From<&str> for Direction {
-  fn from(item: &str) -> Self {
-    match item {
-      "top" => Direction::EN,
-      "right" => Direction::E,
-      "down" => Direction::S,
-      "left" => Direction::SW,
-      _ => panic!("Unknown direction {}", item),
-    }
-  }
-}
-
 /// A continuation is a pair of edges that are connected
 #[derive(Clone, Debug, PartialEq)]
 pub struct Continuation {
+  pub(crate) direction: EdgeDirection,
   pub(crate) start: Edge,
   pub(crate) end: Edge,
 }
 
 impl Continuation {
-  pub fn new(dir: impl Into<Direction>) -> Self {
-    match dir.into() {
-      Direction::EN => Continuation::start("en"),
-      Direction::E => Continuation::start("e"),
-      Direction::S => Continuation::start("s"),
-      _ => Continuation::start("sw"),
+  pub fn new(name: &str) -> Self {
+    match name {
+      "right-top" | "top" => Continuation::start("en", Horizontal),
+      "right" => Continuation::start("e", Horizontal),
+      "down" => Continuation::start("s", Vertical),
+      "left" => Continuation::start("sw", Vertical),
+      _ => panic!("Unknown direction {}", name),
     }
   }
 
-  pub fn start(start: impl Into<Edge>) -> Self {
+  pub fn start(start: impl Into<Edge>, direction: EdgeDirection) -> Self {
     let end = start.into();
     Self {
-      start: end.flip(),
-      end,
-    }
-  }
-}
-
-impl From<&str> for Continuation {
-  fn from(item: &str) -> Self {
-    let end: Edge = item.into();
-    Self {
+      direction,
       start: end.flip(),
       end,
     }

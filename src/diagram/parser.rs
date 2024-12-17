@@ -118,7 +118,7 @@ impl<'i> Diagram<'i> {
       }
       Rule::continue_from => {
         let direction = Conversion::str_for(&pair, Rule::continue_direction).unwrap();
-        config.continuation = direction.into();
+        config.continuation = Continuation::new(direction);
         None
       }
       _ => None
