@@ -69,6 +69,7 @@ mod hello {
   #[test]
   fn box_box() {
     let string = r#"
+      continue down-left
       box { box "A" }
       box { box "B" }
       "#;
@@ -79,6 +80,7 @@ mod hello {
   #[test]
   fn box_box_box() {
     let string = r#"
+      continue down-left
       box pd 0 top color green {
         box pd 0
         box pd 0
@@ -97,6 +99,7 @@ mod hello {
   #[test]
   fn direction_start_end() {
     let string = r#"
+      continue down-left
       set box pd 0 ht 32 wd 64
       box top color green {
         box "Layout Direction" wd 160

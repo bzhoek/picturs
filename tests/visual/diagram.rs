@@ -5,8 +5,9 @@ mod diagram {
 
   #[test]
   fn double_containers() {
-    let string =
-      r#"box.now "Now" {
+    let string = r#"
+      continue down-left
+      box.now "Now" {
         box.step3 rad 4pt "What do we need to start doing now"
       }
       box.future rd 4pt "March" {
@@ -22,8 +23,8 @@ mod diagram {
 
   #[test]
   fn effort_to_impact() {
-    let string =
-      r#"
+    let string = r#"
+      continue down-left
       box.step1 "Effort"
       box.step2 "Output"  .w 2cm right 1cm up from step1.n
       box.step3 "Outcome" .n 2cm right 1cm down from step2.e
@@ -38,8 +39,8 @@ mod diagram {
 
   #[test]
   fn move_flow() {
-    let string =
-      r#"
+    let string = r#"
+      continue down-left
       box "Top"
       move 1cm right 1cm down
       box "Middle"
@@ -52,8 +53,9 @@ mod diagram {
 
   #[test]
   fn text_shape() {
-    let string =
-      r#"box {
+    let string = r#"
+      continue down-left
+      box {
         text "Now"
         box rad 4pt "What do we need to start doing now"
       }
@@ -64,8 +66,9 @@ mod diagram {
 
   #[test]
   fn remember_the_future() {
-    let string =
-      r#"box.now "Now" {
+    let string = r#"
+      continue down-left
+      box.now "Now" {
         box.step3 "What do we need to start doing now"
       }
       box.future "March" .nw 8cm right from now.ne {
@@ -82,8 +85,9 @@ mod diagram {
 
   #[test]
   fn whole_ast() {
-    let string =
-      r#"box.now "Now" {
+    let string = r#"
+      continue down-left
+      box.now "Now" {
         box.step3 "What do we need to start doing now"
       }
       box.future "March" .nw 1cm right from now.ne {
@@ -98,8 +102,8 @@ mod diagram {
 
   #[test]
   fn side_by_side() {
-    let string =
-      r#"
+    let string = r#"
+      continue down-left
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .nw 2cm right 1cm down from left.ne
       "#;
@@ -109,8 +113,8 @@ mod diagram {
 
   #[test]
   fn width_and_height() {
-    let string =
-      r#"
+    let string = r#"
+      continue down-left
       box wd 4cm ht 4cm "This goes to the left hand side"
       "#;
     let diagram = create_diagram(string);
@@ -119,8 +123,8 @@ mod diagram {
 
   #[test]
   fn right_center_left() {
-    let string =
-      r#"
+    let string = r#"
+      continue down-left
       box.left "This goes to the left hand side" color green fill white
       box.right "While this goes to the right hand side" color magenta fill gray text white .w 2cm right from left.ne
       "#;
@@ -130,8 +134,8 @@ mod diagram {
 
   #[test]
   fn top_down_line() {
-    let string =
-      r#"
+    let string = r#"
+      continue down-left
       box.top    "Top"
       box.bottom "Bottom" .n 2cm down from top.s
       arrow from top.s to bottom.n
@@ -141,5 +145,4 @@ mod diagram {
     let diagram = create_diagram(string);
     assert_diagram!(diagram);
   }
-
 }

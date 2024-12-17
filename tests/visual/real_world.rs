@@ -6,6 +6,7 @@ mod real_world {
   #[test]
   fn pic8259_test() {
     let string = r#"
+      continue down-left
       box.pic1 ht 2in wd 1in "Primary Interrupt Controller"
       line from 1/9 pic1.w 1.5in left "Timer" ljust opaque ->
       box.pic2 same "Secondary Interrupt Controller" 2.5in left from pic1
@@ -17,6 +18,7 @@ mod real_world {
   #[test]
   fn pic8259_diagram() {
     let string = r#"
+      continue down-left
       box.pic1 ht 2in wd 1in "Primary Interrupt Controller"
       line from 3/9 pic1.w 2in left <->
       line from 1/9 pic1.w 1.5in left "Timer" ljust opaque ->
@@ -146,6 +148,7 @@ mod real_world {
   #[test]
   fn keyboard() {
     let string = r#"
+      continue down-left
       set box rd 8pt ht .4in wd .4in sp 4 pd 0
       box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
         continue right-top

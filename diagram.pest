@@ -10,7 +10,7 @@ continuation = { "down" | "right" | "top" | "left" }
 
 continue_from = { continue_prefix? ~ continue_direction  }
 continue_prefix = _{ "continue" ~ "from"? }
-continue_direction = { "right-top" }
+continue_direction = { "right-top" | "down-left" }
 
 // config
 unit_config = { "set unit" ~ unit }

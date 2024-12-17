@@ -59,6 +59,7 @@ mod edges {
   #[test]
   fn direction_edges() {
     let string = r#"
+      continue down-left
       box.a wd 1in ht 1in
       dot at a.n color red rad 4pt ".up" above
       dot at a.s same ".down" below

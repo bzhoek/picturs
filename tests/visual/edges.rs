@@ -22,6 +22,7 @@ mod edges {
   #[test]
   fn edge_bottom_left() {
     let string = r#"
+      continue down-left
       box.a "A" wd 1in
       text "Default align left"
       box.b "B" wd 2in

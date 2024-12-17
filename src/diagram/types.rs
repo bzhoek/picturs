@@ -181,7 +181,7 @@ impl ShapeConfig {
 
 impl Default for Config {
   fn default() -> Self {
-    Self::new(Continuation::new("left"))
+    Self::new(Continuation::new("right"))
   }
 }
 
@@ -257,7 +257,7 @@ impl Continuation {
       "right-top" | "top" => Continuation::start("en", Horizontal),
       "right" => Continuation::start("e", Horizontal),
       "down" => Continuation::start("s", Vertical),
-      "left" => Continuation::start("sw", Vertical),
+      "down-left" | "left" => Continuation::start("sw", Vertical),
       _ => panic!("Unknown direction {}", name),
     }
   }

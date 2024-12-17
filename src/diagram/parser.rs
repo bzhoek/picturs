@@ -306,7 +306,7 @@ impl<'i> Diagram<'i> {
       ..
     } = &attrs {
       let rect = Self::create_rect(*width, *height, &config.rectangle);
-      let rect = Self::adjust_rect(&rect, config.continuation.end.direction, -*space);
+      let rect = Self::adjust_rect(&rect, config.continuation.direction, -*space);
 
       let (paragraph, size) = Self::paragraph_sized_(title.as_deref(), rect.size(), config);
       let mut inner = Rect::from_point_and_size(*cursor, size);
@@ -315,11 +315,11 @@ impl<'i> Diagram<'i> {
       Self::adjust_topleft(&config.continuation, &mut inner);
       index.position_rect(location, &mut inner);
 
-      let outer = Self::adjust_rect(&inner, config.continuation.end.direction, *space);
+      let outer = Self::adjust_rect(&inner, config.continuation.direction, *space);
       index.insert(ShapeName::Box, *id, outer);
       index.add_open(ShapeName::Box, attrs.clone());
 
-      let bounds = Self::adjust_rect(&outer, config.continuation.end.direction, *padding);
+      let bounds = Self::adjust_rect(&outer, config.continuation.direction, *padding);
       let rectangle = Closed(attrs, inner, paragraph, Shape::Rectangle);
       return Some((bounds, rectangle));
     }
