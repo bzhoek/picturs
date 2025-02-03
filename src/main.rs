@@ -1,5 +1,7 @@
-use std::fs;
+use std::{fs, io};
 use std::path::PathBuf;
+use std::io::{Read};
+
 use anyhow::Result;
 use clap::Parser;
 use log::info;
@@ -10,6 +12,7 @@ use picturs::skia::A5;
 #[derive(Debug, Parser)]
 #[command(author, version, about, long_about = None)]
 struct Args {
+  #[arg(short, long)]
   input: Option<PathBuf>,
   #[arg(short, long)]
   output: Option<PathBuf>,
@@ -18,14 +21,18 @@ struct Args {
 fn main() -> Result<()> {
   init_logging();
   let args = Args::parse();
-  if let Some(input) = args.input {
-    let string = fs::read_to_string(&input)?;
-    let mut diagram = Diagram::inset(A5, (32., 32.));
-    diagram.parse_string(&string);
-    let output = args.output.unwrap_or_else(|| input.with_extension("png"));
-    diagram.shrink_to_file(output.as_os_str().to_str().unwrap());
-    info!("Wrote diagram to {:?}", output);
+  let mut string = String::new();
+  if let Some(path) = args.input {
+    string = fs::read_to_string(&path)?;
+  } else {
+    io::stdin().read_to_string(&mut string)?;
   };
+  let mut diagram = Diagram::inset(A5, (32., 32.));
+  diagram.parse_string(&string);
+
+  let output = args.output.expect("Output path is required");
+  diagram.shrink_to_file(output.as_os_str().to_str().unwrap());
+  info!("Wrote diagram to {:?}", output);
   Ok(())
 }
 
