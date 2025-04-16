@@ -1,4 +1,6 @@
 use crate::diagram::parser::Diagram;
+use crate::diagram::types::Node;
+use crate::diagram::types::Node::Container;
 use crate::skia::Canvas;
 use std::fs;
 use std::path::Path;
@@ -89,7 +91,7 @@ pub fn assert_png(prefix: &str, last_file: &str, diagram: Option<&Diagram>) -> a
       .output()?;
     if !output.status.success() {
       if let Some(diagram) = diagram {
-        eprint!("{:?}", diagram);
+        dump_nested(1, &diagram.nodes);
       }
       panic!("difference {} between {} and {}", String::from_utf8(output.stderr)?, last_file, ref_file);
     }
@@ -97,4 +99,24 @@ pub fn assert_png(prefix: &str, last_file: &str, diagram: Option<&Diagram>) -> a
     fs::remove_file(diff_file)?;
   }
   Ok(())
+}
+
+pub fn dump_nested(level: usize, nodes: &[Node]) {
+  let indent = "  ".repeat(level - 1);
+  for (index, node) in nodes.iter().enumerate() {
+    match node {
+      Container(attrs, used, nodes) => {
+        println!("{} {}. Container used: {:?} attrs {:?}", indent, index, used, attrs);
+        dump_nested(level + 1, nodes);
+      }
+      Node::Closed(attrs, used, _, shape) => {
+        println!("{} {}. {:?} used {:?} attrs: {:?}", indent, index, shape, used, attrs);
+      }
+      Node::Primitive(attrs, shape) => {
+        println!("{} {}. {:?} {:?}", indent, index, shape, attrs);
+      }
+      Node::Font(_) => {}
+      Node::Move(_) => {}
+    }
+  }
 }
