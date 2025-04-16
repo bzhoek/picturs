@@ -169,7 +169,7 @@ impl Default for ShapeConfig {
 impl ShapeConfig {
   pub fn stroke(color: Color) -> Self {
     Self {
-      padding: BLOCK_PADDING,
+      padding: 0.,
       width: WIDTH.trunc(),
       height: HEIGHT.trunc(),
       radius: 0.,

@@ -42,8 +42,6 @@ mod real_world {
   #[test]
   fn dependencies_serial() {
     let string = r#"
-      set box pd 0
-      right
       box.ui13 ht 1in wd 2in "jQuery"
       box.ui20 same wd 4in "Vue"
       box.ui23 same wd 1in "Revert"
@@ -223,6 +221,33 @@ mod real_world {
         box "3"
       }
       "#;
+    assert_diagram!(string);
+  }
+
+  #[test]
+  fn thinka() {
+    let string = r#"
+      box.thinka down {
+        box.ui "UI"
+        box.functions top {
+          box "HAP"
+          box "Alexa"
+          box "Google"
+          box "IFTTT"
+          box "Olisto"
+          box "Matter"
+          box "Cloud"
+          box "History"
+        }
+        box.model "Home Model"
+        box.transport top {
+          box "thinka(-knx)"
+          box "thinka-zwave"
+          box "Cloud"
+        }
+        box.model "thinka-boot"
+      }
+    "#;
     assert_diagram!(string);
   }
 }

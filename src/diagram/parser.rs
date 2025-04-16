@@ -3,7 +3,7 @@ use std::path::Path;
 use log::{debug, info, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
-use skia_safe::{Color, ISize, Point, Rect, Size};
+use skia_safe::{scalar, Color, ISize, Point, Rect, Size};
 
 use crate::diagram::attributes::Attributes;
 use crate::diagram::conversion::Conversion;
@@ -57,18 +57,49 @@ impl<'i> Diagram<'i> {
                         -> (Vec<Node<'a>>, Rect) {
     let mut bounds = Rect::from_xywh(offset.x, offset.y, 0., 0.);
     let mut cursor = Point::new(offset.x, offset.y);
+    let mut last = Rect::from_xywh(0., 0., 0., 0.);
 
     for pair in pairs.into_iter() {
       let result = Self::node_from(pair, &mut config, index, &mut cursor);
 
-      if let Some((rect, node)) = result {
+      if let Some((rect, mut node)) = result {
+        match config.continuation.direction {
+          EdgeDirection::Horizontal => {
+            last = rect;
+          }
+          EdgeDirection::Vertical => {
+            let delta = (last.center_x() - rect.width() / 2. - rect.left, 0.);
+            Self::transform_node_rect(delta, &mut node);
+            last = rect.with_offset(delta);
+          }
+        }
         ast.push(node);
-        Self::bounds_from_rect(&mut bounds, rect);
+        Self::bounds_from_rect(&mut bounds, last);
         let point = config.continuation.end.edge_point(&rect);
         cursor = point
       }
     }
     (ast, bounds)
+  }
+
+  fn transform_node_rect(delta: (scalar, scalar), node: &mut Node) {
+    match node {
+      Container(_, ref mut used, nodes) => {
+        used.offset(delta);
+        for node in nodes.iter_mut() {
+          Self::transform_node_rect(delta, node);
+        }
+      }
+      Primitive(ref mut attrs, _) => {
+        attrs.used.offset(delta);
+        // attrs.used.top += 20.;
+      }
+      Closed(_, ref mut used, _, _) => {
+        used.offset(delta);
+      }
+      Node::Font(_) => {}
+      Node::Move(_) => {}
+    }
   }
 
   fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index<'a>, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
@@ -742,6 +773,7 @@ impl<'i> Diagram<'i> {
     continuation.start.offset(used);
   }
 
+  /// Adjust bounds so that rect fits in it
   fn bounds_from_rect(bounds: &mut Rect, rect: Rect) {
     bounds.top = bounds.top.min(rect.top);
     bounds.left = bounds.left.min(rect.left);

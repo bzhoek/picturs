@@ -23,7 +23,7 @@ mod flow {
   }
 
   #[test]
-  fn flow_down() {
+  fn flow_down_from_center() {
     let string = r#"
       down
       line

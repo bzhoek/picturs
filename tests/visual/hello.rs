@@ -5,7 +5,6 @@ mod hello {
   #[test]
   fn hello_statements() {
     let string = r#"
-      set box pd 0
       right
       box "box"
       circle "circle" 2cm right
@@ -30,7 +29,7 @@ mod hello {
     let string = r#"
       right
       line
-      box "Hello" pd 0
+      box "Hello"
       arrow
       "#;
     assert_diagram!(string);
@@ -50,7 +49,7 @@ mod hello {
   #[test]
   fn box_circle_cylinder() {
     let string = r#"
-      set box pd 0 ht 64 wd 120
+      set box ht 64 wd 120
       set circle ht 64
       right
       box
@@ -74,15 +73,15 @@ mod hello {
   fn box_box_box() {
     let string = r#"
       continue down-left
-      box pd 0 top color green {
-        box pd 0
-        box pd 0
-        box pd 0
+      box top color green {
+        box
+        box
+        box
       }
-      box pd 0 top color blue {
-        box pd 0
-        box pd 0
-        box pd 0
+      box top color blue {
+        box
+        box
+        box
       }
       "#;
     assert_diagram!(string);
@@ -92,7 +91,7 @@ mod hello {
   fn direction_start_end() {
     let string = r#"
       continue down-left
-      set box pd 0 ht 32 wd 64
+      set box ht 32 wd 64
       box top color green {
         box "Layout Direction" wd 160
         box ".start"
