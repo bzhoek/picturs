@@ -24,7 +24,7 @@ pub struct Canvas {
 }
 
 impl Canvas {
-  pub fn new(size: impl Into<ISize>) -> Canvas {
+  pub fn new(size: impl Into<ISize>, background: Option<Color>) -> Canvas {
     let mut font_collection = FontCollection::new();
     font_collection.set_default_font_manager(FontMgr::new(), None);
 
@@ -34,7 +34,9 @@ impl Canvas {
     paint.set_color(Color::BLACK);
     paint.set_anti_alias(true);
     paint.set_stroke_width(1.0);
-    surface.canvas().clear(Color::LIGHT_GRAY);
+    if let Some(color) = background {
+      surface.canvas().clear(color);
+    }
     let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
     let font = Font::from_typeface(typeface, 17.0);
 
@@ -45,6 +47,10 @@ impl Canvas {
       font,
       font_collection,
     }
+  }
+
+  pub fn clear(&mut self, color: Color) {
+    self.surface.canvas().clear(color);
   }
 
   #[inline]

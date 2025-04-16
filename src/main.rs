@@ -31,7 +31,7 @@ fn main() -> Result<()> {
   diagram.parse_string(&string);
 
   let output = args.output.expect("Output path is required");
-  diagram.shrink_to_file(output.as_os_str().to_str().unwrap());
+  diagram.shrink_to_file(output.as_os_str().to_str().unwrap(), None);
   info!("Wrote diagram to {:?}", output);
   Ok(())
 }

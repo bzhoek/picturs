@@ -4,16 +4,16 @@
 mod tests {
   use std::fs;
 
-  use skia_safe::{FontMgr, Paint, Point, Rect, Size};
-  use skia_safe::PaintStyle::Stroke;
   use skia_safe::textlayout::{FontCollection, ParagraphBuilder, ParagraphStyle, TextAlign, TextStyle, TypefaceFontProvider};
+  use skia_safe::PaintStyle::Stroke;
+  use skia_safe::{FontMgr, Paint, Point, Rect, Size};
 
   use picturs::assert_canvas;
-  use picturs::skia::Canvas;
+  use picturs::test::test_canvas;
 
   #[test]
   fn layout_lorem() {
-    let mut canvas = Canvas::new((420, 420));
+    let mut canvas = test_canvas((420, 420));
 
     let paragraph = canvas.paragraph(LOREM_IPSUM, 256.0, TextAlign::Left);
     canvas.paint_paragraph(&paragraph, (16, 16));
@@ -22,7 +22,8 @@ mod tests {
 
   #[test]
   fn size() {
-    let mut canvas = Canvas::new((120, 80));
+    let mut canvas = test_canvas((120, 80));
+
     let mut paragraph = canvas.paragraph("LOREMSES\nIPSUM", 256.0, TextAlign::Center);
     let size = Size::new(paragraph.min_intrinsic_width(), paragraph.height());
     paragraph.layout(size.width.ceil());
@@ -40,7 +41,7 @@ mod tests {
 
   #[test]
   fn layout_japanese() {
-    let mut canvas = Canvas::new((420, 420));
+    let mut canvas = test_canvas((420, 420));
 
     let paragraph = canvas.paragraph("LOREM_IPSUM", 256.0, TextAlign::Left);
     assert_eq!(paragraph.min_intrinsic_width(), 123.75);

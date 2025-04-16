@@ -4,8 +4,8 @@ mod tests {
 
   use picturs::assert_canvas;
   use picturs::diagram::types::{Config, Edge};
-  use picturs::skia::Canvas;
   use picturs::skia::Effect::Solid;
+  use picturs::test::test_canvas;
 
   static TQBF: &str = "the quick brown fox jumps over the lazy dog";
 
@@ -47,7 +47,7 @@ mod tests {
 
   #[test]
   fn draw_paragraph() {
-    let mut canvas = Canvas::new((1024, 1024));
+    let mut canvas = test_canvas((1024, 1024));
 
     assert!(canvas.paint.is_anti_alias());
     canvas.paint.set_style(PaintStyle::Stroke);
@@ -64,7 +64,7 @@ mod tests {
 
   #[test]
   fn draw_demo() {
-    let mut canvas = Canvas::new((1024, 1024));
+    let mut canvas = test_canvas((1024, 1024));
 
     canvas.stroke_with(2.0, Color::BLACK, &Solid);
     let rect = Rect::from_xywh(8.0, 8.0, 1008.0, 1008.0);
@@ -98,7 +98,7 @@ mod tests {
 
   #[test]
   fn draw_quad() {
-    let mut canvas = Canvas::new((1024, 1024));
+    let mut canvas = test_canvas((1024, 1024));
 
     canvas.move_to(40.0, 40.0);
     canvas.quad_to(440.0, 440.0, 840.0, 40.0);
@@ -110,7 +110,7 @@ mod tests {
 
   #[test]
   fn draw_cubic() {
-    let mut canvas = Canvas::new((1024, 1024));
+    let mut canvas = test_canvas((1024, 1024));
 
     canvas.move_to(36.0, 48.0);
     canvas.cubic_to(36.0, 400.0, 1000.0, 400.0, 1000.0, 48.0);

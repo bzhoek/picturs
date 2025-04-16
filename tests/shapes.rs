@@ -9,7 +9,7 @@ mod shapes {
 
   use picturs::diagram::edges::{Edge, EdgeFinder};
   use picturs::skia::Canvas;
-
+  use picturs::test::test_canvas;
   use picturs::trig::angle_at;
 
   use super::*;
@@ -138,7 +138,7 @@ mod shapes {
   }
 
   fn prepare_cylinder_canvas(rect: &Rect, top: &Vec<Rect>, line: &Edge) -> Canvas {
-    let mut canvas = Canvas::new((56, 64));
+    let mut canvas = test_canvas((56, 64));
 
     canvas.paint.set_style(PaintStyle::Stroke);
 

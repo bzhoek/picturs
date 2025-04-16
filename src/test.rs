@@ -5,6 +5,11 @@ use crate::skia::Canvas;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use skia_safe::{Color, ISize};
+
+pub fn test_canvas(size: impl Into<ISize>) -> Canvas {
+  Canvas::new(size, Some(Color::LIGHT_GRAY))
+}
 
 #[macro_export]
 macro_rules! assert_canvas {
@@ -23,15 +28,34 @@ macro_rules! assert_canvas {
 #[macro_export]
 macro_rules! assert_diagram {
   ($diagram:expr) => {
-    fn stub() {}
-    fn type_name_of<T>(_: T) -> &'static str {
-        std::any::type_name::<T>()
-    }
+    {
+      fn stub() {}
+      fn type_name_of<T>(_: T) -> &'static str {
+          std::any::type_name::<T>()
+      }
 
-    let function_name = type_name_of(stub).rsplit("::").collect::<Vec<_>>();
-    let path = std::path::Path::new(file!());
-    picturs::test::assert_diagram_from_function($diagram, path, function_name);
-  };
+      let function_name = type_name_of(stub).rsplit("::").collect::<Vec<_>>();
+      let path = std::path::Path::new(file!());
+      picturs::test::assert_diagram_from_function($diagram, path, function_name);
+    };
+  }
+}
+
+#[macro_export]
+macro_rules! assert_diagram_string {
+  ($string:expr) => {
+    {
+      fn stub() {}
+      fn type_name_of<T>(_: T) -> &'static str {
+          std::any::type_name::<T>()
+      }
+
+      let function_name = type_name_of(stub).rsplit("::").collect::<Vec<_>>();
+      let path = std::path::Path::new(file!());
+      let diagram = picturs::diagram::create_diagram($string);
+      picturs::test::assert_diagram_from_function(diagram, path, function_name);
+    };
+  }
 }
 
 pub fn assert_diagram_from_function(diagram: Diagram, path: &Path, function_name: Vec<&str>) {
@@ -64,7 +88,7 @@ fn assert_canvas(mut canvas: Canvas, prefix: &str) -> anyhow::Result<()> {
 
 fn assert_diagram(mut diagram: Diagram, prefix: &str) -> anyhow::Result<()> {
   let last_file = format!("{}-last.png", prefix);
-  diagram.shrink_to_file(&last_file);
+  diagram.shrink_to_file(&last_file, Some(Color::LIGHT_GRAY));
   assert_png(prefix, &last_file, Some(&diagram))
 }
 
