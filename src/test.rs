@@ -27,22 +27,6 @@ macro_rules! assert_canvas {
 
 #[macro_export]
 macro_rules! assert_diagram {
-  ($diagram:expr) => {
-    {
-      fn stub() {}
-      fn type_name_of<T>(_: T) -> &'static str {
-          std::any::type_name::<T>()
-      }
-
-      let function_name = type_name_of(stub).rsplit("::").collect::<Vec<_>>();
-      let path = std::path::Path::new(file!());
-      picturs::test::assert_diagram_from_function($diagram, path, function_name);
-    };
-  }
-}
-
-#[macro_export]
-macro_rules! assert_diagram_string {
   ($string:expr) => {
     {
       fn stub() {}

@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod units {
   use picturs::assert_diagram;
-  use picturs::diagram::create_diagram;
 
   #[test]
   fn units() {
@@ -11,8 +10,7 @@ mod units {
       box "A" wd 1in
       box "B" 10 right
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -31,7 +29,6 @@ mod units {
       line from remote.s 1cm down "remote port" below
       line from host.n 1cm up "on host" above
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 }

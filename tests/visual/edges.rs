@@ -2,8 +2,6 @@
 mod edges {
   use picturs::assert_diagram;
 
-  use picturs::diagram::create_diagram;
-
   #[test]
   fn edge_top_right() {
     let string = r#"
@@ -15,8 +13,7 @@ mod edges {
       dot at a.ne color red rad 4pt
       dot at b.nw color green rad 4pt
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -28,8 +25,7 @@ mod edges {
       box.b "B" wd 2in
       arrow from a.sw to b.nw
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -44,7 +40,6 @@ mod edges {
       arrow from a.s to b.n "Caption left" left
       line from b.s to c.n "Caption right" right
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 }

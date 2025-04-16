@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod align {
   use picturs::assert_diagram;
-  use picturs::diagram::create_diagram;
 
   #[test]
   fn above_below() {
@@ -16,8 +15,7 @@ mod align {
       flow 1cm
       // arrow ln 2cm "left" left
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -31,8 +29,7 @@ mod align {
       flow 1cm
       arrow "right" right
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -40,7 +37,6 @@ mod align {
     let string = r#"
       dot color red rad 4pt "N" above
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 }

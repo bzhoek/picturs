@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod spacing {
   use picturs::assert_diagram;
-  use picturs::diagram::create_diagram;
 
   #[test]
   fn expand() {
@@ -10,8 +9,7 @@ mod spacing {
         box "expand"
       }
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -21,8 +19,7 @@ mod spacing {
         box "shrink" dotted color red
       }
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
 }

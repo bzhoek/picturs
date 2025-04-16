@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 mod flow {
-  use picturs::assert_diagram_string;
+  use picturs::assert_diagram;
 
   #[test]
   fn flow_default_is_right() {
@@ -11,7 +11,7 @@ mod flow {
       box "box"
       arrow
       "#;
-    assert_diagram_string!(string);
+    assert_diagram!(string);
 
     let string = r#"
       right
@@ -19,7 +19,7 @@ mod flow {
       box "box"
       arrow
       "#;
-    assert_diagram_string!(string);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -30,6 +30,6 @@ mod flow {
       box "box"
       arrow
       "#;
-    assert_diagram_string!(string);
+    assert_diagram!(string);
   }
 }

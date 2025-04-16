@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod hello {
   use picturs::assert_diagram;
-  use picturs::diagram::create_diagram;
 
   #[test]
   fn hello_statements() {
@@ -15,8 +14,7 @@ mod hello {
       file "file" 1cm down last circle
       cylinder "cylinder" 1cm down last ellipse
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -24,8 +22,7 @@ mod hello {
     let string = r#"
       box "Hello" "World"
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -36,8 +33,7 @@ mod hello {
       box "Hello" pd 0
       arrow
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -48,8 +44,7 @@ mod hello {
       box "Hello"
       arrow
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -62,8 +57,7 @@ mod hello {
       circle
       # cylinder
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -73,8 +67,7 @@ mod hello {
       box { box "A" }
       box { box "B" }
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -92,8 +85,7 @@ mod hello {
         box pd 0
       }
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -127,7 +119,6 @@ mod hello {
         box ".n"
       }
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 }

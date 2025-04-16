@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod diagram {
   use picturs::assert_diagram;
-  use picturs::diagram::create_diagram;
 
   #[test]
   fn double_containers() {
@@ -17,8 +16,7 @@ mod diagram {
       }
       line from now.e 1cm right to future.e
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -33,8 +31,7 @@ mod diagram {
       arrow from step2.e to step3.n
       arrow from step3.s to step4.e
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -47,8 +44,7 @@ mod diagram {
       flow 1cm
       box "Bottom"
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -60,8 +56,7 @@ mod diagram {
         box rad 4pt "What do we need to start doing now"
       }
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -79,8 +74,7 @@ mod diagram {
       line from now.n 1cm up to future.n
       line from future.s 1cm down to now.s
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -96,8 +90,7 @@ mod diagram {
         box.note "IMPORTANT: write in past tense"
       }
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -107,8 +100,7 @@ mod diagram {
       box.left "This goes to the left hand side"
       box.right "While this goes to the right hand side" .nw 2cm right 1cm down from left.ne
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -117,8 +109,7 @@ mod diagram {
       continue down-left
       box wd 4cm ht 4cm "This goes to the left hand side"
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -128,8 +119,7 @@ mod diagram {
       box.left "This goes to the left hand side" color green fill white
       box.right "While this goes to the right hand side" color magenta fill gray text white .w 2cm right from left.ne
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -142,7 +132,6 @@ mod diagram {
       dot at top.s color red rad 4pt
       dot at top.n color green rad 4pt
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 }

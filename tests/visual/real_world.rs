@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod real_world {
   use picturs::assert_diagram;
-  use picturs::diagram::create_diagram;
 
   #[test]
   fn pic8259_test() {
@@ -11,8 +10,7 @@ mod real_world {
       line from 1/9 pic1.w 1.5in left "Timer" ljust opaque ->
       box.pic2 same "Secondary Interrupt Controller" 2.5in left from pic1
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -38,8 +36,7 @@ mod real_world {
       line from 7/9 pic2.w "Primary ATA" same
       line from 8/9 pic2.w "Secondary ATA" same
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -52,8 +49,7 @@ mod real_world {
       box.ui23 same wd 1in "Revert"
       box.ui24 same wd 0.5in "UX"
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -67,8 +63,7 @@ mod real_world {
       line from 1/3 ui20.e to fix.ne
       line from ui20.se to 2/3 fix.e
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -104,8 +99,7 @@ mod real_world {
       sline from y98.s 1cm down color #214F79 invisible
       box .n 1cm down from y98.s color #214F79 normal "ISTQBの 前身が 発足"
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -139,8 +133,7 @@ mod real_world {
       box 1cm down from vis.s "Olie" color orange
       box "Paneren" color orange
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   // Image from https://youtu.be/nBjEzQlJLHE?t=8
@@ -216,8 +209,7 @@ mod real_world {
         box "shift" wd 2.25u
       }
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -231,7 +223,6 @@ mod real_world {
         box "3"
       }
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 }

@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod edges {
   use picturs::assert_diagram;
-  use picturs::diagram::create_diagram;
 
   #[test]
   fn all_edges() {
@@ -52,8 +51,7 @@ mod edges {
       dot at d.270 same ".270" left
       dot at d.315 color blue rad 4pt ".315" nw
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -66,8 +64,7 @@ mod edges {
       dot at a.e same ".right" right
       dot at a.w same ".left" left
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -83,8 +80,7 @@ mod edges {
       dot at b.sw same ".sw" sw
       dot at b.se same ".se" se
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -104,8 +100,7 @@ mod edges {
       dot at c.10: same ".10:" left
       dot at c.11: same ".11:" above
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
   #[test]
@@ -123,8 +118,7 @@ mod edges {
       dot at d.270 same ".270" left
       dot at d.315 color blue rad 4pt ".315" nw
       "#;
-    let diagram = create_diagram(string);
-    assert_diagram!(diagram);
+    assert_diagram!(string);
   }
 
 }
