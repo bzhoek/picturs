@@ -319,6 +319,7 @@ impl<'i> Diagram<'i> {
       index.insert(ShapeName::Box, *id, outer);
       index.add_open(ShapeName::Box, attrs.clone());
 
+      // TODO explain the outer bounds concept with regards to the continuation cursor
       let bounds = Self::adjust_rect(&outer, config.continuation.direction, *padding);
       let rectangle = Closed(attrs, inner, paragraph, Shape::Rectangle);
       return Some((bounds, rectangle));

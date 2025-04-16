@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod flow {
   use picturs::assert_diagram;
-
   use picturs::diagram::create_diagram;
 
   #[test]

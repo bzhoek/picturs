@@ -3,6 +3,11 @@
 * https://pikchr.org/home/doc/trunk/homepage.md
 * https://pikchr.org/home/doc/trunk/doc/grammar.md
 
+## Operation
+
+`Diagram::parse_string` -> recurses `Diagram::nodes_from` and lays them out.
+`Renderer::render_to_canvas` just draws.
+
 ## Shapes
 
 Fundamentally there are two shape types: open and closed. Closed shapes claim an area with width and height and can be filled, for example a `circle` or a `box`. Captions are rendered inside the area of the closed shape.

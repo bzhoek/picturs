@@ -1,9 +1,8 @@
+use crate::diagram::parser::Diagram;
+use crate::skia::Canvas;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-
-use crate::diagram::parser::Diagram;
-use crate::skia::Canvas;
 
 #[macro_export]
 macro_rules! assert_canvas {
@@ -55,20 +54,19 @@ fn derive_prefix(path: &Path, function_name: Vec<&str>) -> String {
   prefix
 }
 
-
 fn assert_canvas(mut canvas: Canvas, prefix: &str) -> anyhow::Result<()> {
   let last_file = format!("{}-last.png", prefix);
   canvas.write_png(&last_file);
-  assert_png(prefix, &last_file)
+  assert_png(prefix, &last_file, None)
 }
 
 fn assert_diagram(mut diagram: Diagram, prefix: &str) -> anyhow::Result<()> {
   let last_file = format!("{}-last.png", prefix);
   diagram.shrink_to_file(&last_file);
-  assert_png(prefix, &last_file)
+  assert_png(prefix, &last_file, Some(&diagram))
 }
 
-pub fn assert_png(prefix: &str, last_file: &str) -> anyhow::Result<()> {
+pub fn assert_png(prefix: &str, last_file: &str, diagram: Option<&Diagram>) -> anyhow::Result<()> {
   let ref_file = format!("{}.png", prefix);
   let diff_file = format!("{}-diff.png", prefix);
 
@@ -86,10 +84,15 @@ pub fn assert_png(prefix: &str, last_file: &str) -> anyhow::Result<()> {
       .arg("-metric")
       .arg("rmse")
       .arg(last_file)
-      .arg(ref_file)
+      .arg(&ref_file)
       .arg(&diff_file)
       .output()?;
-    assert!(output.status.success());
+    if !output.status.success() {
+      if let Some(diagram) = diagram {
+        eprint!("{:?}", diagram);
+      }
+      panic!("difference {} between {} and {}", String::from_utf8(output.stderr)?, last_file, ref_file);
+    }
     fs::remove_file(last_file)?;
     fs::remove_file(diff_file)?;
   }
