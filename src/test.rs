@@ -118,13 +118,15 @@ pub fn dump_nested(level: usize, nodes: &[Node]) {
         dump_nested(level + 1, nodes);
       }
       Node::Closed(attrs, used, _, shape) => {
-        println!("{} {}. {:?} used {:?} attrs: {:?}", indent, index, shape, used, attrs);
+        println!("{} {}. Closed {:?} used {:?} attrs: {:?}", indent, index, shape, used, attrs);
       }
       Node::Primitive(attrs, shape) => {
-        println!("{} {}. {:?} {:?}", indent, index, shape, attrs);
+        println!("{} {}. Primitive {:?} {:?}", indent, index, shape, attrs);
       }
       Node::Font(_) => {}
-      Node::Move(_) => {}
+      Node::Move(rect) => {
+        println!("{} {}. Move used {:?}", indent, index, rect);
+      }
     }
   }
 }
