@@ -8,7 +8,7 @@ use skia_safe::textlayout::TextAlign;
 use crate::diagram::attributes::Attributes;
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
-use crate::diagram::types::Node::{Closed, Container, Primitive};
+use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
 use crate::skia::Canvas;
 use crate::skia::Effect::Solid;
 
@@ -38,6 +38,10 @@ impl Renderer {
         Primitive(common, shape) => {
           let used = Self::align_rect(&common.used, common.thickness);
           Self::render_shape(canvas, &used, &common.stroke, shape, &common.thickness);
+        }
+        Open(Attributes::Open { thickness, stroke, .. }, used, shape) => {
+          let used = Self::align_rect(used, *thickness);
+          Self::render_shape(canvas, &used, stroke, shape, thickness);
         }
         Closed(Attributes::Closed { radius, thickness, effect, stroke, fill, text, location, endings, .. }, used, paragraph, shape) => {
           let used = Self::align_rect(used, *thickness);

@@ -11,7 +11,7 @@ use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Continuation, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
-use crate::diagram::types::Node::{Closed, Container, Primitive};
+use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
 use crate::skia::Canvas;
 
 #[cfg(test)]
@@ -83,6 +83,10 @@ impl<'i> Diagram<'i> {
           attrs.used.offset(offset);
         }
         Closed(_, ref mut used, _, _) => {
+          used.offset(offset);
+          println!("Closed {:?}", used);
+        }
+        Open(_, ref mut used, _) => {
           used.offset(offset);
           println!("Closed {:?}", used);
         }
@@ -377,10 +381,8 @@ impl<'i> Diagram<'i> {
       index.insert(ShapeName::Arrow, *id, used);
       index.add_open(ShapeName::Arrow, attrs.clone());
 
-      let common = CommonAttributes::new(*id, rect, Color::BLACK, 1.);
-      let node = Primitive(
-        common,
-        Shape::Arrow(source_edge, movement, target_edge, caption.clone()));
+      let shape = Shape::Arrow(source_edge, movement, target_edge, caption.clone());
+      let node = Open(attrs, rect, shape);
       return Some((used, node));
     }
     None
@@ -416,11 +418,9 @@ impl<'i> Diagram<'i> {
 
         index.insert(ShapeName::Line, *id, used);
         index.add_open(ShapeName::Line, attrs.clone());
+        let shape = Shape::Line(start, movement.clone(), end, caption.clone(), endings.clone());
 
-        let common = CommonAttributes::new(*id, rect, Color::BLACK, 1.);
-        let node = Primitive(
-          common,
-          Shape::Line(start, movement.clone(), end, caption.clone(), endings.clone()));
+        let node = Open(attrs, rect, shape);
         Some((used, node))
       }
     }
@@ -441,7 +441,6 @@ impl<'i> Diagram<'i> {
         length,
         ref endings,
         stroke,
-        thickness,
         ..
       } => {
         let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
@@ -455,10 +454,8 @@ impl<'i> Diagram<'i> {
         index.insert(ShapeName::Line, *id, rect);
         index.add_open(ShapeName::Line, attrs.clone());
 
-        let common = CommonAttributes::new(*id, rect, *stroke, *thickness);
-        let node = Primitive(
-          common,
-          Shape::Sline(vec!(start, end), caption.clone(), endings.clone()));
+        let shape = Shape::Sline(vec!(start, end), caption.clone(), endings.clone());
+        let node = Open(attrs, rect, shape);
         Some((rect, node))
       }
     }
@@ -602,9 +599,8 @@ impl<'i> Diagram<'i> {
     index.insert(ShapeName::Text, id, used);
 
     let common = CommonAttributes::new(id, used, Color::BLACK, 1.);
-    let text = Primitive(
-      common,
-      Shape::Text(paragraph, location));
+    let shape = Shape::Text(paragraph, location);
+    let text = Primitive(common, shape);
     Some((used, text))
   }
 
@@ -620,7 +616,6 @@ impl<'i> Diagram<'i> {
         source,
         ..
       } => {
-        let color = Conversion::stroke_color_in(&attributes).unwrap_or(Color::BLUE);
         let radius = Conversion::radius_into(&attributes, &config.unit).unwrap_or(config.dot.pixels());
 
         let point = match source {
@@ -638,10 +633,8 @@ impl<'i> Diagram<'i> {
 
         index.insert(ShapeName::Dot, *id, bounds);
 
-        let common = CommonAttributes::new(None, bounds, color, 1.);
-        let node = Primitive(
-          common,
-          Shape::Dot(point, radius, caption.clone()));
+        let shape = Shape::Dot(point, radius, caption.clone());
+        let node = Open(attrs, bounds, shape);
         Some((bounds, node))
       }
     }

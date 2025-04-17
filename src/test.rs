@@ -120,6 +120,9 @@ pub fn dump_nested(level: usize, nodes: &[Node]) {
       Node::Closed(attrs, used, _, shape) => {
         println!("{} {}. Closed {:?} used {:?} attrs: {:?}", indent, index, shape, used, attrs);
       }
+      Node::Open(attrs, used, shape) => {
+        println!("{} {}. Open {:?} used {:?} attrs: {:?}", indent, index, shape, used, attrs);
+      }
       Node::Primitive(attrs, shape) => {
         println!("{} {}. Primitive {:?} {:?}", indent, index, shape, attrs);
       }
