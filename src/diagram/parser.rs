@@ -71,6 +71,28 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
+  fn transform_nodes(nodes: &mut Vec<Node>, delta: (f32, f32)) {
+    for node in nodes {
+      match node {
+        Container(_, ref mut used, ref mut nodes) => {
+          used.offset(delta);
+          println!("Container {:?} delta {:?}", used, delta);
+          Self::transform_nodes(nodes, delta);
+        }
+        Primitive(ref mut attrs, _) => {
+          attrs.used.offset(delta);
+        }
+        Closed(_, ref mut used, _, _) => {
+          used.offset(delta);
+          println!("Closed {:?}", used);
+        }
+        Node::Font(_) => {}
+        Node::Move(_) => {
+        }
+      }
+    }
+  }
+
   fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index<'a>, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
     let result = match pair.as_rule() {
       Rule::container => Self::container_from(&pair, config, index, cursor, &config.container),
@@ -143,7 +165,7 @@ impl<'i> Diagram<'i> {
       let mut inset = Point::new(used.left, used.bottom);
       inset.offset((*padding, *padding));
 
-      let (nodes, inner) = {
+      let (mut nodes, inner) = {
         let mut config = config.clone();
         Conversion::continuation_in(&attributes).into_iter().for_each(|continuation| {
           config.continuation = continuation;
@@ -159,11 +181,15 @@ impl<'i> Diagram<'i> {
         used.bottom = inner.bottom + down + TEXT_PADDING;
       }
 
-      index.insert(ShapeName::Container, *id, used);
+      let mut shifted = used;
+      Self::adjust_topleft(&config.continuation, &mut shifted);
+      Self::transform_nodes(&mut nodes, (shifted.left - used.left, shifted.top - used.top));
 
-      let mut rect = used;
-      rect.bottom += padding;
-      return Some((rect, Container(attrs, used, nodes)));
+      index.insert(ShapeName::Container, *id, shifted);
+
+      let mut padded = shifted;
+      padded.bottom += padding;
+      return Some((padded, Container(attrs, shifted, nodes)));
     }
     None
   }
@@ -834,6 +860,7 @@ impl<'i> Diagram<'i> {
     canvas.write_png(filepath);
   }
 }
+
 
 pub const TEXT_PADDING: f32 = 4.;
 

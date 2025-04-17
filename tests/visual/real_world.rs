@@ -245,7 +245,7 @@ mod real_world {
           box "thinka-zwave"
           box "Cloud"
         }
-        box.model "thinka-boot"
+        box.boot "thinka-boot"
       }
     "#;
     assert_diagram!(string);
