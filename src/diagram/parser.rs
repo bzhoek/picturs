@@ -82,24 +82,32 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  fn transform_node_rect(delta: (scalar, scalar), node: &mut Node) {
+  fn transform_node_rect(delta: (scalar, scalar), node: &mut Node, last: Rect) -> Rect {
     match node {
       Container(_, ref mut used, nodes) => {
         used.offset(delta);
+        let mut last = last;
+        println!("Container {:?} last {:?} delta {:?}", used, last.bottom(), delta);
         for node in nodes.iter_mut() {
-          Self::transform_node_rect(delta, node);
+          last = Self::transform_node_rect(delta, node, last);
         }
+        return *used;
       }
       Primitive(ref mut attrs, _) => {
         attrs.used.offset(delta);
-        // attrs.used.top += 20.;
+        return attrs.used;
       }
       Closed(_, ref mut used, _, _) => {
         used.offset(delta);
+        println!("Closed {:?} last {:?}", used, last.bottom());
+        return *used;
       }
       Node::Font(_) => {}
-      Node::Move(_) => {}
+      Node::Move(point) => {
+        return last.with_offset(*point);
+      }
     }
+    last.with_offset(delta)
   }
 
   fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index<'a>, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
