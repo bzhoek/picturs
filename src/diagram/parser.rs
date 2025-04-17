@@ -71,24 +71,23 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  fn transform_nodes(nodes: &mut Vec<Node>, delta: (f32, f32)) {
+  fn transform_nodes(nodes: &mut Vec<Node>, offset: (f32, f32)) {
     for node in nodes {
       match node {
         Container(_, ref mut used, ref mut nodes) => {
-          used.offset(delta);
-          println!("Container {:?} delta {:?}", used, delta);
-          Self::transform_nodes(nodes, delta);
+          used.offset(offset);
+          println!("Container {:?} delta {:?}", used, offset);
+          Self::transform_nodes(nodes, offset);
         }
         Primitive(ref mut attrs, _) => {
-          attrs.used.offset(delta);
+          attrs.used.offset(offset);
         }
         Closed(_, ref mut used, _, _) => {
-          used.offset(delta);
+          used.offset(offset);
           println!("Closed {:?}", used);
         }
+        Node::Move(_) => {}
         Node::Font(_) => {}
-        Node::Move(_) => {
-        }
       }
     }
   }
