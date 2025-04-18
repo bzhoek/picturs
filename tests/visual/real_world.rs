@@ -229,7 +229,7 @@ mod real_world {
     let string = r#"
       box.thinka down {
         box.ui "UI"
-        box.functions top {
+        box.functions right {
           box "HAP"
           box "Alexa"
           box "Google"
@@ -240,7 +240,7 @@ mod real_world {
           box "History"
         }
         box.model "Home Model"
-        box.transport top {
+        box.transport right {
           box "thinka(-knx)"
           box "thinka-zwave"
           box "Cloud"

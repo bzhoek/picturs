@@ -69,6 +69,7 @@ impl<'a> Index<'a> {
     }).last()
   }
 
+  /// modify a rectangle by any edge and displacements
   pub fn position_rect(&self, location: &Option<(Edge, Vec<Displacement>, ObjectEdge)>, used: &mut Rect) {
     if let Some((edge, movements, object)) = &location {
       if let Some(rect) = self.offset_index(object, movements) {

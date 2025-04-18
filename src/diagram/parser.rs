@@ -3,7 +3,7 @@ use std::path::Path;
 use log::{debug, info, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
-use skia_safe::{Color, ISize, Point, Rect, Size};
+use skia_safe::{Color, ISize, Point, Rect, Size, Vector};
 
 use crate::diagram::attributes::Attributes;
 use crate::diagram::conversion::Conversion;
@@ -71,7 +71,8 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  fn transform_nodes(nodes: &mut Vec<Node>, offset: (f32, f32)) {
+  fn transform_nodes(nodes: &mut Vec<Node>, offset: impl Into<Vector>) {
+    let offset: Point = offset.into();
     for node in nodes {
       match node {
         Container(_, ref mut used, ref mut nodes) => {
@@ -168,7 +169,9 @@ impl<'i> Diagram<'i> {
       let mut inset = Point::new(used.left, used.bottom);
       inset.offset((*padding, *padding));
 
-      let (mut nodes, inner) = {
+      let original = inset;
+
+      let (mut nodes, bounds) = {
         let mut config = config.clone();
         Conversion::continuation_in(&attributes).into_iter().for_each(|continuation| {
           config.continuation = continuation;
@@ -176,17 +179,19 @@ impl<'i> Diagram<'i> {
         Self::nodes_from(pair.clone().into_inner(), vec![], &inset, config, index)
       };
 
-      used = inner.with_outset((*padding, *padding));
+      let moved = original - Point::new(bounds.left, bounds.top);
+      used = bounds.with_outset((*padding, *padding));
 
       if let Some(title) = title {
-        let text_inset = inner.with_inset((TEXT_PADDING, TEXT_PADDING));
+        let text_inset = bounds.with_inset((TEXT_PADDING, TEXT_PADDING));
         let (_widths, down) = config.measure_strings(title, text_inset.width());
-        used.bottom = inner.bottom + down + TEXT_PADDING;
+        used.bottom = bounds.bottom + down + TEXT_PADDING;
       }
 
-      let mut shifted = used;
+      let mut shifted = used.with_offset(moved);
       Self::adjust_topleft(&config.continuation, &mut shifted);
-      Self::transform_nodes(&mut nodes, (shifted.left - used.left, shifted.top - used.top));
+      let offset = Point::new(shifted.left, shifted.top) - Point::new(used.left, used.top);
+      Self::transform_nodes(&mut nodes, offset);
 
       index.insert(ShapeName::Container, *id, shifted);
 
