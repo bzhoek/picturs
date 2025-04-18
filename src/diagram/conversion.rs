@@ -65,7 +65,7 @@ impl Conversion {
 
   // https://www.rapidtables.com/web/color/RGB_Color.html
   // https://www.colordic.org/w (Japanese)
-  fn color_from(pair: Pair<Rule>) -> Option<Color> {
+  pub(crate) fn color_from(pair: Pair<Rule>) -> Option<Color> {
     let mut pairs = pair.into_inner();
     pairs.find_map(|pair| {
       match pair.as_rule() {

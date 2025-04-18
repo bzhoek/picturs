@@ -466,7 +466,7 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  fn path_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+  pub(crate) fn path_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let (attrs, _) = Attributes::open_attributes(&pair, config, Rule::line_attributes);
 
     if let Attributes::Open {
