@@ -47,10 +47,11 @@ rgb = ${ "#" ~ ASCII_HEX_DIGIT{6} }
 arrow = { "arrow" ~ line_attributes }
 line = { "line" ~ identified? ~ line_attributes }
 sline = { "sline" ~ identified? ~ line_attributes }
-path = { "path" ~ identified? ~ movements ~ caption? }
+path = { "path" ~ identified? ~ line_attributes }
+// path = { "path" ~ identified? ~ movements ~ caption? }
 
 line_attributes = { line_attribute* }
-line_attribute = _{ stroke | length | source | rel_movement | target | caption | endings | same | thickness }
+line_attribute = _{ stroke | length | source | rel_movement | target | caption | endings | same | thickness | abs_movement }
 
 length = { ("ln" | "length") ~ size_ }
 source = { ("from" | "at") ~ object_fraction }

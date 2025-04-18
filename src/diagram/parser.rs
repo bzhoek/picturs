@@ -467,32 +467,35 @@ impl<'i> Diagram<'i> {
   }
 
   fn path_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let mut id = None;
-    let mut caption = None;
-    let mut movements = vec![];
+    let (attrs, _) = Attributes::open_attributes(&pair, config, Rule::line_attributes);
 
-    let pairs = pair.clone().into_inner();
+    if let Attributes::Open {
+      id,
+      caption,
+      ..
+    } = &attrs {
+      let mut movements = vec![];
+      let pairs = Rules::get_rule(&pair, Rule::line_attributes).into_inner();
 
-    pairs.for_each(|pair| match pair.as_rule() {
-      Rule::identified => id = pair.into_inner().next().unwrap().as_str().into(),
-      Rule::caption => caption = Conversion::caption_from(pair, config).into(),
-      Rule::movements => {
-        movements = pair.into_inner()
-          .map(|inner| Conversion::movement_from(inner, &config.unit))
-          .collect::<Vec<_>>();
-      }
-      _ => panic!("Unexpected {:?}", pair)
-    });
+      pairs.for_each(|pair| {
+        match pair.as_rule() {
+          Rule::rel_movement | Rule::abs_movement => {
+            let movement1 = Conversion::movement_from(pair, &config.unit);
+            movements.push(movement1);
+          }
+          _ => {}
+        }
+      });
 
-    let points = Self::points_from_movements(cursor, &movements, index);
-    let used = Self::bounds_from_points(cursor, &points);
-    index.insert(ShapeName::Path, id, used);
+      let points = Self::points_from_movements(cursor, &movements, index);
+      let used = Self::bounds_from_points(cursor, &points);
+      index.insert(ShapeName::Path, *id, used);
 
-    let common = CommonAttributes::new(id, used, Color::BLACK, 1.);
-    let node = Primitive(
-      common,
-      Shape::Path(*cursor, points, caption));
-    Some((used, node))
+      let shape = Shape::Path(*cursor, points, caption.clone());
+      let node = Open(attrs, used, shape);
+      return Some((used, node));
+    };
+    None
   }
 
   fn points_from_movements(cursor: &Point, movements: &[Movement], index: &mut Index) -> Vec<Point> {
