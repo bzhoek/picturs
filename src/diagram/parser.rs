@@ -423,8 +423,8 @@ impl<'i> Diagram<'i> {
 
         index.insert(ShapeName::Line, *id, used);
         index.add_open(ShapeName::Line, attrs.clone());
-        let shape = Shape::Line(start, movement.clone(), end, caption.clone(), endings.clone());
 
+        let shape = Shape::Line(start, movement.clone(), end, caption.clone(), endings.clone());
         let node = Open(attrs, rect, shape);
         Some((used, node))
       }
@@ -779,16 +779,7 @@ impl<'i> Diagram<'i> {
     bounds.left = bounds.left.min(point.x);
     bounds.right = bounds.right.max(point.x);
   }
-
-  pub fn used_rect(&self, id: &str) -> Option<&Rect> {
-    self.find_node(id).map(|node| {
-      match node {
-        Primitive(used, _) => &used.used,
-        _ => panic!("not a primitive")
-      }
-    })
-  }
-
+  #[allow(dead_code)]
   fn find_node(&self, id: &str) -> Option<&Node> {
     Self::find_nodes(&self.nodes, id)
   }

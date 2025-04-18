@@ -25,10 +25,6 @@ fn should_copy_same_attributes_from_line() {
   Diagram::line_from(same, &config, &mut index, &cursor);
 }
 
-fn box_used() -> Rect {
-  Rect::from_xywh(0.5, 0.5, 88., 67.)
-}
-
 #[test]
 fn should_parse_font() {
   let string = r#"set font "Menlo" 15pt"#;
@@ -41,25 +37,6 @@ fn should_parse_font() {
     }
     _ => panic!("Expected Font")
   }
-}
-
-#[ignore]
-#[test]
-fn layout_node() {
-  let string =
-    r#"
-      box.left "This goes to the left hand side"
-      box.right "While this goes to the right hand side" .nw 2cm right from left.ne
-      "#;
-  let diagram = create_diagram(string);
-
-  let left = diagram.used_rect("left").unwrap();
-  let expected = box_used();
-  assert_eq!(left, &expected);
-
-  let right = diagram.used_rect("right").unwrap();
-  let expected = Rect::from_xywh(164.5, 0.5, 88., 76.);
-  assert_eq!(right, &expected);
 }
 
 #[test]
