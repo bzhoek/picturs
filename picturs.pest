@@ -55,7 +55,7 @@ line_attribute = _{ stroke | length | source | rel_movement | target | caption |
 
 length = { ("ln" | "length") ~ size_ }
 source = { ("from" | "at") ~ object_fraction }
-target = { "to" ~ object_fraction }
+target = { "end" ~ object_fraction }
 
 object_fraction = _{ fraction? ~ object_edge }
 fraction = ${ number ~ "/" ~ number }

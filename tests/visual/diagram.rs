@@ -14,7 +14,7 @@ mod diagram {
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
       }
-      line from now.e 1cm right to future.e
+      line from now.e 1cm right end future.e
       "#;
     assert_diagram!(string);
   }
@@ -27,9 +27,9 @@ mod diagram {
       box.step2 "Output"  .w 2cm right 1cm up from step1.n
       box.step3 "Outcome" .n 2cm right 1cm down from step2.e
       box.step4 "Impact"  .e 2cm left 1cm down from step3.s
-      arrow from step1.n to step2.w
-      arrow from step2.e to step3.n
-      arrow from step3.s to step4.e
+      arrow from step1.n end step2.w
+      arrow from step2.e end step3.n
+      arrow from step3.s end step4.e
       "#;
     assert_diagram!(string);
   }
@@ -71,8 +71,8 @@ mod diagram {
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
       }
-      line from now.n 1cm up to future.n
-      line from future.s 1cm down to now.s
+      line from now.n 1cm up end future.n
+      line from future.s 1cm down end now.s
       "#;
     assert_diagram!(string);
   }
@@ -128,7 +128,7 @@ mod diagram {
       continue down-left
       box.top    "Top"
       box.bottom "Bottom" .n 2cm down from top.s
-      arrow from top.s to bottom.n
+      arrow from top.s end bottom.n
       dot at top.s color red rad 4pt
       dot at top.n color green rad 4pt
       "#;

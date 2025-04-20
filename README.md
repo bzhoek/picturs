@@ -196,7 +196,7 @@ box.future "March" {
   box.step2 "What would you like to write about the past period"
   box.note "IMPORTANT: write in past tense"
 }
-line from now.n to future.n
+line from now.n end future.n
 
 balloon
 list

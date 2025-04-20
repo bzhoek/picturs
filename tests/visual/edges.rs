@@ -9,7 +9,7 @@ mod edges {
       box.a "A" wd 1in
       text "Align top"
       box.b "B" wd 2in
-      arrow from a.ne to b.nw
+      arrow from a.ne end b.nw
       dot at a.ne color red rad 4pt
       dot at b.nw color green rad 4pt
       "#;
@@ -23,7 +23,7 @@ mod edges {
       box.a "A" wd 1in
       text "Default align left"
       box.b "B" wd 2in
-      arrow from a.sw to b.nw
+      arrow from a.sw end b.nw
       "#;
     assert_diagram!(string);
   }
@@ -37,8 +37,8 @@ mod edges {
       box.b "B" wd 2in
       flow 2cm
       box.c "C" wd 3in
-      arrow from a.s to b.n "Caption left" left
-      line from b.s to c.n "Caption right" right
+      arrow from a.s end b.n "Caption left" left
+      line from b.s end c.n "Caption right" right
       "#;
     assert_diagram!(string);
   }

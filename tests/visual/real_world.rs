@@ -58,8 +58,8 @@ mod real_world {
       path.ui20 1in right 1in down 3in left 0.5in up 1in right "Vue" below
       path.fix 1in right to ui20.se 1in up "Improve" above
       path.ux 1in down 1in left to fix.ne "UX" below
-      line from 1/3 ui20.e to fix.ne
-      line from ui20.se to 2/3 fix.e
+      line from 1/3 ui20.e end fix.ne
+      line from ui20.se end 2/3 fix.e
       "#;
     assert_diagram!(string);
   }

@@ -138,7 +138,7 @@ mod tests {
   #[test]
   fn test_attributes() {
     let string = r#"
-      path.ui13 <-> ln 2cm from id1.n to id2.s same stroke red thick 1in up 3in right 0.5in down 2in left 0.5in down 1in left "jQuery 😇" above
+      path.ui13 <-> ln 2cm from id1.n end id2.s same stroke red thick 1in up 3in right 0.5in down 2in left 0.5in down 1in left "jQuery 😇" above
       "#;
 
     let attrs = attrs_from(string, None);
