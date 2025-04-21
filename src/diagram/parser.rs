@@ -470,19 +470,13 @@ impl<'i> Diagram<'i> {
     let attrs = OpenAttributes::from(&pair, config);
     let (open, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
 
-    if let Attributes::Open {
-      id,
-      ..
-    } = &open {
-      let points = Self::points_from_movements(cursor, &attrs.movements, index);
-      let used = Self::bounds_from_points(cursor, &points);
-      index.insert(ShapeName::Path, *id, used);
+    let points = Self::points_from_movements(cursor, &attrs.movements, index);
+    let used = Self::bounds_from_points(cursor, &points);
+    index.insert(ShapeName::Path, attrs.id, used);
 
-      let shape = Shape::Path(*cursor, points, attrs.caption.clone());
-      let node = Open(open, used, shape);
-      return Some((used, node));
-    };
-    None
+    let shape = Shape::Path(*cursor, points, attrs.caption.clone());
+    let node = Open(open, used, shape);
+    Some((used, node))
   }
 
   fn points_from_movements(cursor: &Point, movements: &[Movement], index: &mut Index) -> Vec<Point> {
