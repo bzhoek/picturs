@@ -76,7 +76,7 @@ impl Attributes<'_> {
   }
 
   pub(crate) fn closed_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> (Attributes<'a>, Pair<'a, Rule>) {
-    let attributes = Rules::get_rule(pair, Rule::attributes);
+    let attributes = Rules::get_rule(pair, Rule::closed_attributes);
     let (stroke, fill, text) = Conversion::colors_from(&attributes, &shape.stroke);
 
     (Attributes::Closed {

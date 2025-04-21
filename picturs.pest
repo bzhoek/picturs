@@ -20,17 +20,17 @@ circle_config = { "set circle" ~ (height) }
 line_config = { "set line" ~ length }
 
 // closed shapes
-group = { "group" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
-container = { "box" ~ identified? ~ attributes ~ "{" ~ statements* ~ "}" }
-rectangle = { "box" ~ identified? ~ attributes }
-file = { "file" ~ identified? ~ attributes }
-circle = { "circle" ~ identified? ~ attributes }
-ellipse = { "ellipse" ~ identified? ~ attributes }
-cylinder = { "cylinder" ~ identified? ~ attributes }
-oval = { "oval" ~ identified? ~ attributes }
+group = { "group" ~ identified? ~ closed_attributes ~ "{" ~ statements* ~ "}" }
+container = { "box" ~ identified? ~ closed_attributes ~ "{" ~ statements* ~ "}" }
+rectangle = { "box" ~ identified? ~ closed_attributes }
+file = { "file" ~ identified? ~ closed_attributes }
+circle = { "circle" ~ identified? ~ closed_attributes }
+ellipse = { "ellipse" ~ identified? ~ closed_attributes }
+cylinder = { "cylinder" ~ identified? ~ closed_attributes }
+oval = { "oval" ~ identified? ~ closed_attributes }
 
-attributes = { attribute* }
-attribute = _{ string | stroke | fill | width | height | padding | radius | space | location | endings | text_color | flow_cmd | same | thickness | effect }
+closed_attributes = { closed_attribute* }
+closed_attribute = _{ string | stroke | fill | width | height | padding | radius | space | location | endings | text_color | flow_cmd | same | thickness | effect }
 stroke = { ("stroke" | "color") ~ color }
 fill = { "fill" ~ id }
 width = { ("wd" | "wid" | "width") ~ size_ }
