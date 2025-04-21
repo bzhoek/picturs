@@ -371,7 +371,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, attributes) = Attributes::open_attributes(&pair, config, Rule::line_attributes);
+    let (mut attrs, attributes) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Arrow);
 
     if let Attributes::Open {
@@ -394,7 +394,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::line_attributes);
+    let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
     match &attrs {
@@ -432,7 +432,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn sline_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::line_attributes);
+    let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
     match &attrs {
@@ -467,7 +467,7 @@ impl<'i> Diagram<'i> {
   }
 
   pub(crate) fn path_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, _) = Attributes::open_attributes(&pair, config, Rule::line_attributes);
+    let (attrs, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
 
     if let Attributes::Open {
       id,
@@ -475,7 +475,7 @@ impl<'i> Diagram<'i> {
       ..
     } = &attrs {
       let mut movements = vec![];
-      let pairs = Rules::get_rule(&pair, Rule::line_attributes).into_inner();
+      let pairs = Rules::get_rule(&pair, Rule::open_attributes).into_inner();
 
       pairs.for_each(|pair| {
         match pair.as_rule() {

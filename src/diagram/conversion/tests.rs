@@ -155,7 +155,7 @@ mod fractions {
   }
 
   fn subject(string: &str) -> Option<ObjectEdge> {
-    let pair = Conversion::pair_for(Rule::line_attributes, string);
+    let pair = Conversion::pair_for(Rule::open_attributes, string);
     Conversion::fraction_edge_for(&pair, Rule::source)
   }
 }

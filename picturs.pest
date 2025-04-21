@@ -44,14 +44,13 @@ color = _{ ( id | rgb) }
 rgb = ${ "#" ~ ASCII_HEX_DIGIT{6} }
 
 // open shapes
-arrow = { "arrow" ~ line_attributes }
-line = { "line" ~ identified? ~ line_attributes }
-sline = { "sline" ~ identified? ~ line_attributes }
-path = { "path" ~ identified? ~ line_attributes }
-// path = { "path" ~ identified? ~ movements ~ caption? }
+arrow = { "arrow" ~ open_attributes }
+line = { "line" ~ identified? ~ open_attributes }
+sline = { "sline" ~ identified? ~ open_attributes }
+path = { "path" ~ identified? ~ open_attributes }
 
-line_attributes = { line_attribute* }
-line_attribute = _{ stroke | length | source | rel_movement | target | caption | endings | same | thickness | abs_movement }
+open_attributes = { open_attribute* }
+open_attribute = _{ stroke | length | source | target | abs_movement | rel_movement | caption | endings | same | thickness }
 
 length = { ("ln" | "length") ~ size_ }
 source = { ("from" | "at") ~ object_fraction }

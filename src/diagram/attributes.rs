@@ -113,7 +113,7 @@ mod tests {
     let config = config.unwrap_or_default();
     let mut top = Conversion::pairs_for(Rule::picture, string);
     let next = top.next().unwrap();
-    let pairs = Rules::get_rule(&next, Rule::line_attributes);
+    let pairs = Rules::get_rule(&next, Rule::open_attributes);
     let mut attrs = OpenAttributes::default();
     pairs.into_inner().for_each(|pair| {
       match pair.as_rule() {
