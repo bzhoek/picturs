@@ -41,21 +41,6 @@ pub enum Attributes<'a> {
   },
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
-struct OpenAttributes<'a> {
-  id: Option<&'a str>,
-  same: bool,
-  caption: Option<Caption>,
-  length: f32,
-  endings: Endings,
-  source: Option<ObjectEdge>,
-  target: Option<ObjectEdge>,
-  movement: Option<Displacement>,
-  movements: Vec<Movement>,
-  stroke: Color,
-  thickness: f32,
-}
-
 impl Attributes<'_> {
   pub(crate) fn open_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, rule: Rule) -> (Attributes<'a>, Pair<'a, Rule>) {
     let attributes = Rules::get_rule(pair, rule);
@@ -99,26 +84,29 @@ impl Attributes<'_> {
   }
 }
 
-#[cfg(test)]
-mod tests {
-  use skia_safe::Color;
-  use crate::diagram::attributes::OpenAttributes;
-  use crate::diagram::conversion::Conversion;
-  use crate::diagram::parser::Rule;
-  use crate::diagram::rules::Rules;
-  use crate::diagram::types::{Caption, Config, Edge, Ending, Endings, ObjectEdge};
-  use crate::diagram::types::EdgeDirection::Vertical;
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct OpenAttributes<'a> {
+  pub(crate) id: Option<&'a str>,
+  same: bool,
+  pub(crate) caption: Option<Caption>,
+  length: f32,
+  endings: Endings,
+  source: Option<ObjectEdge>,
+  target: Option<ObjectEdge>,
+  movement: Option<Displacement>,
+  pub(crate) movements: Vec<Movement>,
+  stroke: Color,
+  thickness: f32,
+}
 
-  fn attrs_from(string: &str, config: Option<Config>) -> OpenAttributes {
-    let config = config.unwrap_or_default();
-    let mut top = Conversion::pairs_for(Rule::picture, string);
-    let next = top.next().unwrap();
-    let pairs = Rules::get_rule(&next, Rule::open_attributes);
+impl OpenAttributes<'_> {
+  pub(crate) fn from(pair: &Pair<Rule>, config: &Config) -> Self {
+    let pairs = Rules::get_rule(pair, Rule::open_attributes);
     let mut attrs = OpenAttributes::default();
     pairs.into_inner().for_each(|pair| {
       match pair.as_rule() {
         Rule::endings => attrs.endings = Conversion::endings_from(pair),
-        Rule::caption => attrs.caption = Some(Conversion::caption_from(pair, &config)),
+        Rule::caption => attrs.caption = Some(Conversion::caption_from(pair, config)),
         Rule::length => attrs.length = Conversion::length_from(pair, &config.unit).pixels(),
         Rule::same => attrs.same = true,
         Rule::source => attrs.source = Some(Conversion::fraction_edge_from(pair)),
@@ -133,6 +121,23 @@ mod tests {
       }
     });
     attrs
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use skia_safe::Color;
+  use crate::diagram::attributes::OpenAttributes;
+  use crate::diagram::conversion::Conversion;
+  use crate::diagram::parser::Rule;
+  use crate::diagram::types::{Caption, Config, Edge, Ending, Endings, ObjectEdge};
+  use crate::diagram::types::EdgeDirection::Vertical;
+
+  fn attrs_from(string: &str, config: Option<Config>) -> OpenAttributes {
+    let config = config.unwrap_or_default();
+    let mut top = Conversion::pairs_for(Rule::picture, string);
+    let next = top.next().unwrap();
+    OpenAttributes::from(&next, &config)
   }
 
   #[test]

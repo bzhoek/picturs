@@ -5,7 +5,7 @@ use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, Point, Rect, Size, Vector};
 
-use crate::diagram::attributes::Attributes;
+use crate::diagram::attributes::{Attributes, OpenAttributes};
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
@@ -467,32 +467,19 @@ impl<'i> Diagram<'i> {
   }
 
   pub(crate) fn path_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (attrs, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
+    let attrs = OpenAttributes::from(&pair, config);
+    let (open, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
 
     if let Attributes::Open {
       id,
-      caption,
       ..
-    } = &attrs {
-      let mut movements = vec![];
-      let pairs = Rules::get_rule(&pair, Rule::open_attributes).into_inner();
-
-      pairs.for_each(|pair| {
-        match pair.as_rule() {
-          Rule::rel_movement | Rule::abs_movement => {
-            let movement1 = Conversion::movement_from(pair, &config.unit);
-            movements.push(movement1);
-          }
-          _ => {}
-        }
-      });
-
-      let points = Self::points_from_movements(cursor, &movements, index);
+    } = &open {
+      let points = Self::points_from_movements(cursor, &attrs.movements, index);
       let used = Self::bounds_from_points(cursor, &points);
       index.insert(ShapeName::Path, *id, used);
 
-      let shape = Shape::Path(*cursor, points, caption.clone());
-      let node = Open(attrs, used, shape);
+      let shape = Shape::Path(*cursor, points, attrs.caption.clone());
+      let node = Open(open, used, shape);
       return Some((used, node));
     };
     None
@@ -507,7 +494,7 @@ impl<'i> Diagram<'i> {
           point
         }
         Movement::Absolute { object } => {
-          point = index.point_from(object).unwrap();
+          point = index.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
           point
         }
       }
