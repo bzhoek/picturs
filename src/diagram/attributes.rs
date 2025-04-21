@@ -99,11 +99,21 @@ pub struct OpenAttributes<'a> {
   thickness: f32,
 }
 
-impl OpenAttributes<'_> {
-  pub(crate) fn from(pair: &Pair<Rule>, config: &Config) -> Self {
-    let pairs = Rules::get_rule(pair, Rule::open_attributes);
+impl<'a> OpenAttributes<'a> {
+  pub(crate) fn from(pair: &Pair<'a, Rule>, config: &Config) -> OpenAttributes<'a> {
     let mut attrs = OpenAttributes::default();
-    pairs.into_inner().for_each(|pair| {
+    pair.clone().into_inner().for_each(|pair| {
+      match pair.as_rule() {
+        Rule::identified => attrs.id = Some(pair.into_inner().next().unwrap().as_str()),
+        Rule::open_attributes => OpenAttributes::attributes(&pair, config, &mut attrs),
+        _ => println!("Unexpected {:?}", pair)
+      }
+    });
+    attrs
+  }
+
+  pub(crate) fn attributes(pair: &Pair<'a, Rule>, config: &Config, attrs: &mut OpenAttributes<'a>) {
+    pair.clone().into_inner().for_each(|pair| {
       match pair.as_rule() {
         Rule::endings => attrs.endings = Conversion::endings_from(pair),
         Rule::caption => attrs.caption = Some(Conversion::caption_from(pair, config)),
@@ -120,7 +130,6 @@ impl OpenAttributes<'_> {
         _ => panic!("Unexpected {:?}", pair)
       }
     });
-    attrs
   }
 }
 
@@ -147,6 +156,7 @@ mod tests {
       "#;
 
     let attrs = attrs_from(string, None);
+    assert_eq!(Some("ui13"), attrs.id);
     assert_eq!(Endings { start: Ending::Arrow, end: Ending::Arrow }, attrs.endings);
     assert_eq!(76., attrs.length);
     assert_eq!(Some(ObjectEdge { id: "id1".into(), edge: Edge { direction: Vertical, x: 0.0, y: -0.5 } }), attrs.source);
