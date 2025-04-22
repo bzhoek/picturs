@@ -474,7 +474,7 @@ impl<'i> Diagram<'i> {
     let used = Self::bounds_from_points(cursor, &points);
     index.insert(ShapeName::Path, attrs.id, used);
 
-    let shape = Shape::Path(*cursor, points, attrs.caption.clone());
+    let shape = Shape::Path(points, attrs.caption.clone());
     let node = Open(open, used, shape);
     Some((used, node))
   }

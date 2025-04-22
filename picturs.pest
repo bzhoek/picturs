@@ -5,6 +5,7 @@ statements = _{ comment | group | container | shape | font_config | unit_config 
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ dot | arrow | line | sline | rectangle | file | circle | ellipse | cylinder | oval | text | path }
 
+// TODO check if top is the same as right-top
 flow_cmd = _{ "flow"? ~ continuation }
 continuation = { "down" | "right" | "top" | "left" }
 

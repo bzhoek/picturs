@@ -106,11 +106,13 @@ impl Renderer {
 
   fn render_shape(canvas: &mut Canvas, used: &Rect, color: &Color, shape: &Shape, thickness: &f32) {
     match shape {
-      Shape::Path(start, points, caption) => {
+      Shape::Path(points, caption) => {
         canvas.paint.set_style(PaintStyle::Stroke);
         canvas.paint.set_color(*color);
+        let mut iter = points.iter();
+        let start = iter.next().unwrap();
         canvas.move_to(start.x, start.y);
-        for point in points.iter() {
+        for point in iter {
           canvas.line_to(point.x, point.y);
         }
         canvas.stroke();
@@ -119,13 +121,13 @@ impl Renderer {
       }
       Shape::Sline(points, caption, endings) => {
         canvas.stroke_with(*thickness, *color, &Solid);
-        let mut points_iter = points.iter();
-        let start = points_iter.next().unwrap();
+        let mut iter = points.iter();
+        let start = iter.next().unwrap();
         let start = Self::align_point(start, *thickness);
 
         if *thickness > 0. {
           canvas.move_to(start.x, start.y);
-          for point in points_iter {
+          for point in iter {
             let point = Self::align_point(point, *thickness);
             canvas.line_to(point.x, point.y);
           }
