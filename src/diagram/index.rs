@@ -5,7 +5,7 @@ use log::error;
 use skia_safe::{Point, Rect};
 
 use crate::diagram::attributes::Attributes;
-use crate::diagram::types::{Displacement, Edge, ObjectEdge};
+use crate::diagram::types::{Displacement, Edge, Movement, ObjectEdge};
 
 #[derive(Debug, PartialEq)]
 pub enum ShapeName {
@@ -119,6 +119,22 @@ impl<'a> Index<'a> {
     })
   }
 
+  pub fn points_from_movements(&self, cursor: &Point, movements: &[Movement]) -> Vec<Point> {
+    let mut point = *cursor;
+    movements.iter().map(|movement| {
+      match movement {
+        Movement::Relative { displacement: movement } => {
+          point = point.add(movement.offset());
+          point
+        }
+        Movement::Absolute { object } => {
+          point = self.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
+          point
+        }
+      }
+    }).collect::<Vec<_>>()
+  }
+
   pub fn point_from(&self, edge: &ObjectEdge) -> Option<Point> {
     let rect = self.ids.get(&edge.id);
     rect.map(|rect| {
@@ -133,4 +149,5 @@ impl<'a> Index<'a> {
     }
     point
   }
+
 }

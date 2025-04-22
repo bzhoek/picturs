@@ -10,7 +10,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Continuation, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Continuation, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
 use crate::skia::Canvas;
 
@@ -470,29 +470,13 @@ impl<'i> Diagram<'i> {
     let attrs = OpenAttributes::from(&pair, config);
     let (open, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
 
-    let points = Self::points_from_movements(cursor, &attrs.movements, index);
+    let points = index.points_from_movements(cursor, &attrs.movements);
     let used = Self::bounds_from_points(cursor, &points);
     index.insert(ShapeName::Path, attrs.id, used);
 
     let shape = Shape::Path(*cursor, points, attrs.caption.clone());
     let node = Open(open, used, shape);
     Some((used, node))
-  }
-
-  fn points_from_movements(cursor: &Point, movements: &[Movement], index: &mut Index) -> Vec<Point> {
-    let mut point = *cursor;
-    movements.iter().map(|movement| {
-      match movement {
-        Movement::Relative { displacement: movement } => {
-          point = point.add(movement.offset());
-          point
-        }
-        Movement::Absolute { object } => {
-          point = index.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
-          point
-        }
-      }
-    }).collect::<Vec<_>>()
   }
 
   fn bounds_from_points(cursor: &Point, points: &[Point]) -> Rect {
