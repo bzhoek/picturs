@@ -529,7 +529,10 @@ impl<'i> Diagram<'i> {
   }
 
   fn copy_same_attributes(index: &mut Index, attrs: &mut Attributes, shape: ShapeName) {
-    let other = index.last_closed(shape.clone()).map(|(_, attrs)| attrs);
+    let other = match attrs {
+      Attributes::Closed { .. } => index.last_closed(shape.clone()),
+      Attributes::Open { .. } => index.last_open(shape.clone())
+    }.map(|(_, attrs)| attrs);
     attrs.copy_attributes(other);
   }
 
