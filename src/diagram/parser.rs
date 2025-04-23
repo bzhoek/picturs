@@ -1,6 +1,6 @@
 use std::ops::Add;
 use std::path::Path;
-use log::{debug, info, warn};
+use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, Point, Rect, Size, Vector};
@@ -10,7 +10,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Continuation, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit};
+use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Continuation, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, Movement};
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
 use crate::skia::Canvas;
 
@@ -409,26 +409,50 @@ impl<'i> Diagram<'i> {
         ref endings,
         ..
       } => {
-        let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
-        let end = index.point_index(target.as_ref(), &[])
-          .unwrap_or(Self::displace_from_start(start, movement, &config.continuation, *length));
+        let points = Self::points_from(cursor, source, movement, target, length, config, index);
+        let (start, end) = Self::first_last_from(&points);
+        // TODO bepalen wat het verschil is tussen `rect` en `used`
+        let (rect, used) = Self::rect_from_points(*start, movement, *end);
 
-        let (rect, used) = Self::rect_from_points(start, movement, end);
-
-        if let Some((caption, movement)) = caption.as_ref().zip(movement.as_ref()) {
-          if caption.inner.vertical() && movement.edge.vertical() {
-            info!("VERTICAL! {:?}", caption.size);
-          }
-        }
+        // let used = Self::bounds_from_points(&points);
 
         index.insert(ShapeName::Line, *id, used);
         index.add_open(ShapeName::Line, attrs.clone());
 
-        let shape = Shape::Line(start, movement.clone(), end, caption.clone(), endings.clone());
+        let shape = Shape::Line(*start, movement.clone(), *end, caption.clone(), endings.clone());
         let node = Open(attrs, rect, shape);
+        // FIXME zou used niet het laatste point moeten zijn?
         Some((used, node))
       }
     }
+  }
+
+  fn first_last_from(points: &[Point]) -> (&Point, &Point) {
+    let start = points.first().unwrap();
+    let end = points.last().unwrap();
+    (start, end)
+  }
+
+  // FIXME dit doet eigenlijk twee dingen: source, target en displacement naar vector van movements omzetten
+  fn points_from(start: &Point, source: &Option<ObjectEdge>, movement: &Option<Displacement>, target: &Option<ObjectEdge>, length: &f32, config: &Config, index: &mut Index) -> Vec<Point> {
+    let mut movements = vec!();
+    let mut points = vec!();
+    if let Some(object) = source {
+      movements.push(Movement::Absolute { object: object.clone() })
+    } else {
+      points.push(*start);
+    }
+    if let Some(movement) = movement {
+      movements.push(Movement::Relative { displacement: movement.clone() })
+    } else {
+      let movement = Displacement::new(*length, Unit::Px, config.continuation.end.clone());
+      movements.push(Movement::Relative { displacement: movement })
+    }
+    if let Some(object) = target {
+      movements.push(Movement::Absolute { object: object.clone() })
+    }
+    index.add_movements_as_points(start, &movements, &mut points);
+    points
   }
 
   fn sline_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
@@ -448,6 +472,20 @@ impl<'i> Diagram<'i> {
         stroke,
         ..
       } => {
+        let mut movements = vec!();
+        let mut points = vec!();
+        if let Some(object) = source {
+          movements.push(Movement::Absolute { object: object.clone() })
+        } else {
+          points.push(*cursor);
+        }
+        if let Some(movement) = movement {
+          movements.push(Movement::Relative { displacement: movement.clone() })
+        }
+        if let Some(object) = target {
+          movements.push(Movement::Absolute { object: object.clone() })
+        }
+
         let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
         let end = index.point_index(target.as_ref(), &[])
           .unwrap_or(Self::displace_from_start(start, movement, &config.continuation, *length));
@@ -471,7 +509,7 @@ impl<'i> Diagram<'i> {
     let (open, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
 
     let points = index.points_from_movements(cursor, &attrs.movements);
-    let used = Self::bounds_from_points(cursor, &points);
+    let used = Self::bounds_from_points(&points);
     index.insert(ShapeName::Path, attrs.id, used);
 
     let shape = Shape::Path(points, attrs.caption.clone());
@@ -479,9 +517,11 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn bounds_from_points(cursor: &Point, points: &[Point]) -> Rect {
-    let mut used = Rect::from_point_and_size(*cursor, (0, 0));
-    for point in points.iter() {
+  fn bounds_from_points(points: &[Point]) -> Rect {
+    let mut iter = points.iter();
+    let first = iter.next().unwrap();
+    let mut used = Rect::from_point_and_size(*first, (0, 0));
+    for point in iter {
       Self::bounds_from_point(&mut used, point);
     }
     used
@@ -747,6 +787,7 @@ impl<'i> Diagram<'i> {
     bounds.left = bounds.left.min(point.x);
     bounds.right = bounds.right.max(point.x);
   }
+
   #[allow(dead_code)]
   fn find_node(&self, id: &str) -> Option<&Node> {
     Self::find_nodes(&self.nodes, id)

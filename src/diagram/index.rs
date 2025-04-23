@@ -119,6 +119,23 @@ impl<'a> Index<'a> {
     })
   }
 
+  /// add points from movements to a vector
+  pub fn add_movements_as_points(&self, start: &Point, movements: &[Movement], points: &mut Vec<Point>) {
+    let mut point = *start;
+    for movement in movements.iter() {
+      match movement {
+        Movement::Relative { displacement: movement } => {
+          point = point.add(movement.offset());
+        }
+        Movement::Absolute { object } => {
+          point = self.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
+        }
+      }
+      points.push(point);
+    }
+  }
+
+  /// return points from movements relative to a start point
   pub fn points_from_movements(&self, start: &Point, movements: &[Movement]) -> Vec<Point> {
     let mut point = *start;
     let points = movements.iter().map(|movement| {
@@ -133,7 +150,7 @@ impl<'a> Index<'a> {
         }
       }
     }).collect::<Vec<_>>();
-    vec![*start].into_iter().chain(points.into_iter()).collect()
+    vec![*start].into_iter().chain(points).collect()
   }
 
   pub fn point_from(&self, edge: &ObjectEdge) -> Option<Point> {
@@ -150,5 +167,4 @@ impl<'a> Index<'a> {
     }
     point
   }
-
 }
