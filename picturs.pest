@@ -84,7 +84,7 @@ number = @{ (ASCII_DIGIT+ ~ decimals?) | decimals }
 decimals = _{ "." ~ ASCII_DIGIT+ }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" | "u" }
 
-location = { edge? ~ rel_movement+ ~ (last_object | from_object)? }
+location = { edge_point? ~ rel_movement+ ~ (last_object | from_object)? }
 rel_movement = { offset ~ direction }
 offset = { size_ }
 direction = { "up" | "down" | "left" | "right" }
@@ -105,8 +105,8 @@ dot = { "dot" ~ identified? ~ dot_attributes }
 dot_attributes = { dot_attribute* }
 dot_attribute = _{ source | stroke | radius | same | caption }
 
-object_edge = ${ id ~ edge? }
-edge = ${ "." ~ (compass | hours | degrees) }
+object_edge = ${ id ~ edge_point? }
+edge_point = ${ "." ~ (compass | hours | degrees) }
 compass = { "ne" | "nw" | "n" | "e" | "se" | "sw" | "s" | "w" |  "c" }
 hours = ${ ASCII_DIGIT{1,2} ~ ":" ~ ASCII_DIGIT{0,2} }
 degrees = { ASCII_DIGIT{1,3} }

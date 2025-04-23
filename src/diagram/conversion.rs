@@ -422,7 +422,7 @@ impl Conversion {
 
         for pair in p.into_inner() {
           match pair.as_rule() {
-            Rule::edge => { edge = Some(Self::edge_from(pair)); }
+            Rule::edge_point => { edge = Some(Self::edge_from(pair)); }
             Rule::rel_movement => {
               let movement = Self::displacement_from(pair, unit);
               directions.push(movement);
