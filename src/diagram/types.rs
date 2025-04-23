@@ -436,10 +436,17 @@ impl Edge {
     Vector::new(self.x, self.y).mul(2.0)
   }
 
+  /// Return the absolute edge point of the `rect`
   pub fn edge_point(&self, rect: &Rect) -> Point {
     let mut point = rect.center();
     point.offset((self.x * rect.width(), self.y * rect.height()));
     point
+  }
+
+  /// Returns the delta from the center of `rect`
+  pub fn edge_delta(&self, rect: &Rect) -> Point {
+    let delta = Point::new(-self.x * rect.width(), -self.y * rect.height());
+    delta
   }
 
   /// Returns the offset to adjust top-left corner with
