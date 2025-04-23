@@ -12,10 +12,7 @@ use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
-use crate::diagram::types::{
-  CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Movement, Node, ObjectEdge, Paragraph,
-  Shape, ShapeConfig, Unit, BLOCK_PADDING,
-};
+use crate::diagram::types::{CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING, R};
 use crate::skia::Canvas;
 
 #[cfg(test)]

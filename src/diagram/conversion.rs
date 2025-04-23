@@ -195,10 +195,10 @@ impl Conversion {
       _ => panic!("Unexpected rule for caption {:?}", pair.as_rule())
     });
 
-    let (inner, outer) = alignment.unwrap_or((Edge::center(), Edge::center()));
+    let (rect_edge, caption_edge) = alignment.unwrap_or((Edge::center(), Edge::center()));
     let text = text.unwrap();
     let size = config.measure_string(&text);
-    Caption { text, inner: inner.mirror(), outer, size, opaque }
+    Caption { text, rect_edge: rect_edge.mirror(), caption_edge, size, opaque }
   }
 
   pub(crate) fn endings(pair: &Pair<Rule>) -> Option<Endings> {

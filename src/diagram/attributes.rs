@@ -128,8 +128,8 @@ impl Attributes<'_> {
         }
         if let Some(caption) = &mut *caption {
           if let Some(last) = last_caption.as_ref() {
-            caption.inner = last.inner.clone();
-            caption.outer = last.outer.clone();
+            caption.rect_edge = last.rect_edge.clone();
+            caption.caption_edge = last.caption_edge.clone();
             caption.opaque = last.opaque;
           }
         }

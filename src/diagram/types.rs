@@ -84,8 +84,8 @@ pub struct Paragraph {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Caption {
   pub text: String,
-  pub inner: Edge,
-  pub outer: Edge,
+  pub rect_edge: Edge, // to edge of containing rect
+  pub caption_edge: Edge, // to edge of caption
   pub size: Size,
   pub opaque: bool,
 }
