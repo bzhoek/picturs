@@ -82,6 +82,61 @@ impl Attributes<'_> {
       effect: Conversion::effect_for(&attributes),
     }, attributes)
   }
+
+  pub(crate) fn copy_attributes(&mut self, other: Option<&Attributes>) {
+    match (self, other) {
+      (Attributes::Closed {
+        same,
+        width,
+        height,
+        ..
+      }, Some(Attributes::Closed {
+        width: last_width,
+        height: last_height,
+        ..
+      })
+      ) => {
+        if !*same {
+          return;
+        }
+        if width.is_none() {
+          *width = *last_width;
+        }
+        if height.is_none() {
+          *height = *last_height;
+        }
+      }
+      (Attributes::Open {
+        same,
+        endings,
+        movement,
+        caption,
+        ..
+      }, Some(Attributes::Open {
+        endings: last_endings,
+        movement: last_movement,
+        caption: last_caption,
+        ..
+      })
+      ) => {
+        if !*same {
+          return;
+        }
+        *endings = last_endings.clone();
+        if movement.is_none() {
+          movement.clone_from(last_movement);
+        }
+        if let Some(caption) = &mut *caption {
+          if let Some(last) = last_caption.as_ref() {
+            caption.inner = last.inner.clone();
+            caption.outer = last.outer.clone();
+            caption.opaque = last.opaque;
+          }
+        }
+      }
+      _ => {}
+    }
+  }
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]

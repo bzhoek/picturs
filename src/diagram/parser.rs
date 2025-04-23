@@ -529,63 +529,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn copy_same_attributes(index: &mut Index, attrs: &mut Attributes, shape: ShapeName) {
-    match attrs {
-      Attributes::Closed {
-        same,
-        width,
-        height,
-        ..
-      } => {
-        if !*same {
-          return;
-        }
-        if let Some((
-          _shape,
-          Attributes::Closed {
-            width: last_width,
-            height: last_height,
-            ..
-          })) = index.last_closed(shape) {
-          if width.is_none() {
-            *width = *last_width;
-          }
-          if height.is_none() {
-            *height = *last_height;
-          }
-        }
-      }
-      Attributes::Open {
-        same,
-        endings,
-        movement,
-        caption,
-        ..
-      } => {
-        if !*same {
-          return;
-        }
-        if let Some((
-          _shape,
-          Attributes::Open {
-            endings: last_endings,
-            movement: last_movement,
-            caption: last_caption,
-            ..
-          })) = index.last_open(shape) {
-          *endings = last_endings.clone();
-          if movement.is_none() {
-            movement.clone_from(last_movement);
-          }
-          if let Some(caption) = &mut *caption {
-            if let Some(last) = last_caption.as_ref() {
-              caption.inner = last.inner.clone();
-              caption.outer = last.outer.clone();
-              caption.opaque = last.opaque;
-            }
-          }
-        }
-      }
-    }
+    let other = index.last_closed(shape.clone()).map(|(_, attrs)| attrs);
+    attrs.copy_attributes(other);
   }
 
   fn text_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
