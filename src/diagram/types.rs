@@ -90,6 +90,21 @@ pub struct Caption {
   pub opaque: bool,
 }
 
+impl Caption {
+
+  pub fn place_in_rect(&self, used: &Rect) -> Rect {
+    let edge_point = self.rect_edge.edge_point(&used);
+    let caption_rect = Rect::from_size(self.size);
+    let caption_center = caption_rect.center();
+    let delta = edge_point - caption_center;
+    let moved_caption = caption_rect.with_offset(delta);
+    let caption_delta = self.caption_edge.edge_delta(&caption_rect);
+    let final_caption = moved_caption.with_offset(caption_delta);
+    final_caption
+  }
+
+}
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum Ending {
   #[default]

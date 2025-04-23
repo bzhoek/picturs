@@ -242,26 +242,12 @@ impl Renderer {
   pub fn dot_offset_of(point: &Point, radius: &Radius, caption: &Caption) -> Rect {
     let mut used = Rect::from_point_and_size(*point, (0., 0.));
     used.outset((radius * 2., radius * 2.));
-    let used_edge_point = caption.rect_edge.edge_point(&used);
-    let caption_rect = Rect::from_size(caption.size);
-    let center = caption_rect.center();
-    let delta = used_edge_point - center;
-    let moved_caption = caption_rect.with_offset(delta);
-    let caption_delta = caption.caption_edge.edge_delta(&caption_rect);
-    let final_caption = moved_caption.with_offset(caption_delta);
-    final_caption
+    caption.place_in_rect(&used)
   }
 
   fn draw_caption_in(caption: &Option<Caption>, used: &Rect, canvas: &mut Canvas) {
     if let Some(caption) = caption {
-      let used_edge_point = caption.rect_edge.edge_point(used);
-      let caption_rect = Rect::from_size(caption.size);
-      let center = caption_rect.center();
-      let delta = used_edge_point - center;
-      let moved_caption = caption_rect.with_offset(delta);
-      let caption_delta = caption.caption_edge.edge_delta(&caption_rect);
-      let final_caption = moved_caption.with_offset(caption_delta);
-      let rect = final_caption;
+      let rect = caption.place_in_rect(&used);
       let mut topleft = Point::new(rect.left, rect.bottom);
 
       if caption.opaque {
@@ -276,24 +262,9 @@ impl Renderer {
 
       let (_, font_metrics) = canvas.font.metrics();
       topleft.offset((0., -font_metrics.descent));
-      // canvas.paint.set_color(Color::BLACK);
       canvas.paint.set_style(PaintStyle::Fill);
       canvas.text(&caption.text, topleft);
     }
-  }
-
-  pub fn topleft_of(caption: &Caption, used: &Rect) -> (Point, Rect) {
-    let edge = caption.rect_edge.edge_point(used);
-    let mut bounds = Rect::from_size(caption.size);
-    bounds.outset((TEXT_PADDING, TEXT_PADDING));
-    let offset = caption.rect_edge.topleft_offset(&bounds);
-
-    let mut topleft = caption.caption_edge.edge_point(used);
-
-    topleft.offset(offset);
-    let rect = Rect::from_point_and_size(topleft, bounds.size());
-    topleft.offset((TEXT_PADDING, TEXT_PADDING + bounds.height() / 2.));
-    (topleft, rect)
   }
 
   fn paint_paragraph(canvas: &mut Canvas, used: &Rect, text_color: &Color, paragraph: &Option<Paragraph>) {
