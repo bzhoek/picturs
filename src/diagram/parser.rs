@@ -160,7 +160,6 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Container);
 
     if let Attributes::Closed {
-      id,
       title,
       padding,
       location,
@@ -197,7 +196,7 @@ impl<'i> Diagram<'i> {
       let offset = Point::new(shifted.left, shifted.top) - Point::new(used.left, used.top);
       Self::transform_nodes(&mut nodes, offset);
 
-      index.insert(ShapeName::Container, *id, shifted);
+      index.add(ShapeName::Container, attrs.clone(), shifted);
 
       let mut padded = shifted;
       padded.bottom += padding;
@@ -206,12 +205,11 @@ impl<'i> Diagram<'i> {
     None
   }
 
-  fn circle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
+  fn circle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.circle);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Circle);
 
     if let Attributes::Closed {
-      id,
       title,
       width,
       height,
@@ -224,7 +222,7 @@ impl<'i> Diagram<'i> {
 
       Self::adjust_topleft(&config.continuation, &mut used);
       index.position_rect(location, &mut used);
-      index.insert(ShapeName::Circle, *id, used);
+      index.add(ShapeName::Circle, attrs.clone(), used);
 
       let circle = Closed(attrs, used, paragraph, Shape::Circle);
       return Some((used, circle));
@@ -349,7 +347,6 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Box);
 
     if let Attributes::Closed {
-      id,
       title,
       width,
       height,
@@ -370,8 +367,7 @@ impl<'i> Diagram<'i> {
       index.position_rect(location, &mut inner);
 
       let outer = Self::adjust_rect(&inner, config.continuation.direction, *space);
-      index.insert(ShapeName::Box, *id, outer);
-      index.add_open(ShapeName::Box, attrs.clone());
+      index.add(ShapeName::Box, attrs.clone(), outer);
 
       // TODO explain the outer bounds concept with regards to the continuation cursor
       let bounds = Self::adjust_rect(&outer, config.continuation.direction, *padding);
@@ -558,7 +554,7 @@ impl<'i> Diagram<'i> {
             width: last_width,
             height: last_height,
             ..
-          })) = index.last_open(shape) {
+          })) = index.last_closed(shape) {
           if width.is_none() {
             *width = *last_width;
           }

@@ -49,12 +49,16 @@ pub struct Index<'i> {
   ids: HashMap<String, Rect>,
   shapes: Vec<(ShapeName, Rect)>,
   open: Vec<(ShapeName, Attributes<'i>)>,
+  closed: Vec<(ShapeName, Attributes<'i>)>,
 }
 
 impl<'a> Index<'a> {
   pub fn add(&mut self, name: ShapeName, attrs: Attributes<'a>, rect: Rect) {
     let id = match attrs {
-      Attributes::Closed { id, .. } => id,
+      Attributes::Closed { id, .. } => {
+        self.closed.push((name.clone(), attrs));
+        id
+      }
       Attributes::Open { id, .. } => {
         self.open.push((name.clone(), attrs));
         id
@@ -73,12 +77,16 @@ impl<'a> Index<'a> {
     self.shapes.push((name, rect));
   }
 
-  pub(crate) fn add_open(&mut self, name: ShapeName, attrs: Attributes<'a>) {
-    self.open.push((name, attrs));
+  pub(crate) fn last_open(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes)> {
+    Self::last_shape(shape, &self.open)
   }
 
-  pub(crate) fn last_open(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes)> {
-    self.open.iter().filter(|(name, _)| {
+  pub(crate) fn last_closed(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes)> {
+    Self::last_shape(shape, &self.closed)
+  }
+
+  fn last_shape<'b>(shape: ShapeName, vec: &'b Vec<(ShapeName, Attributes<'b>)>) -> Option<&'b (ShapeName, Attributes<'b>)> {
+    vec.iter().filter(|(name, _)| {
       shape == *name
     }).last()
   }
