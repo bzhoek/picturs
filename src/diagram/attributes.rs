@@ -87,11 +87,11 @@ impl Attributes<'_> {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct OpenAttributes<'a> {
   pub(crate) id: Option<&'a str>,
-  same: bool,
+  pub(crate) same: bool,
   pub(crate) route: bool,
   pub(crate) caption: Option<Caption>,
   length: f32,
-  endings: Endings,
+  pub(crate) endings: Endings,
   source: Option<ObjectEdge>,
   target: Option<ObjectEdge>,
   movement: Option<Displacement>,

@@ -420,7 +420,9 @@ impl<'i> Diagram<'i> {
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let open = OpenAttributes::from(&pair, config);
+    let mut open = OpenAttributes::from(&pair, config);
+    index.copy_open_attributes(&mut open, ShapeName::Line);
+
     let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
@@ -449,7 +451,7 @@ impl<'i> Diagram<'i> {
         index.insert(ShapeName::Line, *id, used);
         index.add_open(ShapeName::Line, attrs.clone());
 
-        let shape = Shape::Line(points, caption.clone(), endings.clone());
+        let shape = Shape::Line(points, caption.clone(), open.endings);
         let node = Open(attrs, rect, shape);
         // FIXME zou used niet het laatste point moeten zijn?
         Some((used, node))

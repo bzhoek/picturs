@@ -4,7 +4,7 @@ use std::ops::Add;
 use log::error;
 use skia_safe::{Point, Rect};
 
-use crate::diagram::attributes::Attributes;
+use crate::diagram::attributes::{Attributes, OpenAttributes};
 use crate::diagram::types::{Displacement, Edge, Movement, ObjectEdge};
 
 #[derive(Debug, PartialEq)]
@@ -207,5 +207,14 @@ impl<'a> Index<'a> {
       let _ = point.add(displacement.offset());
     }
     point
+  }
+
+  pub(crate) fn copy_open_attributes(&self, attrs: &mut OpenAttributes, shape: ShapeName) {
+    if !attrs.same {
+      return;
+    }
+    if let Some((_, Attributes::Open { endings, .. })) = self.last_open(shape) {
+      attrs.endings = endings.clone();
+    }
   }
 }
