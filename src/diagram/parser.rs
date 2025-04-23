@@ -249,7 +249,7 @@ impl<'i> Diagram<'i> {
       Self::adjust_topleft(&config.continuation, &mut used);
       index.position_rect(location, &mut used);
 
-      index.insert(ShapeName::Cylinder, *id, used);
+      index.insert_shape(ShapeName::Cylinder, *id, used);
 
       let cylinder = Closed(attrs, used, paragraph, Shape::Cylinder);
       return Some((used, cylinder));
@@ -275,7 +275,7 @@ impl<'i> Diagram<'i> {
 
       Self::adjust_topleft(&config.continuation, &mut used);
       index.position_rect(location, &mut used);
-      index.insert(ShapeName::Ellipse, *id, used);
+      index.insert_shape(ShapeName::Ellipse, *id, used);
 
       let ellipse = Closed(attrs, used, paragraph, Shape::Ellipse);
       return Some((used, ellipse));
@@ -302,7 +302,7 @@ impl<'i> Diagram<'i> {
       Self::adjust_topleft(&config.continuation, &mut used);
       index.position_rect(location, &mut used);
 
-      index.insert(ShapeName::File, *id, used);
+      index.insert_shape(ShapeName::File, *id, used);
 
       let file = Closed(attrs, used, paragraph, Shape::File);
       return Some((used, file));
@@ -328,7 +328,7 @@ impl<'i> Diagram<'i> {
 
       Self::position_rect_on_edge(&config.continuation.start, location, &mut used);
       index.position_rect(location, &mut used);
-      index.insert(ShapeName::Oval, *id, used);
+      index.insert_shape(ShapeName::Oval, *id, used);
 
       let oval = Closed(attrs, used, paragraph, Shape::Oval);
       return Some((used, oval));
@@ -520,7 +520,7 @@ impl<'i> Diagram<'i> {
 
     let points = index.points_from_movements(cursor, &attrs.movements);
     let used = Self::bounds_from_points(&points);
-    index.insert(ShapeName::Path, attrs.id, used);
+    index.insert_shape(ShapeName::Path, attrs.id, used);
 
     let shape = Shape::Path(points, attrs.caption.clone());
     let node = Open(open, used, shape);
@@ -623,7 +623,7 @@ impl<'i> Diagram<'i> {
     Self::adjust_topleft(&config.continuation, &mut used);
     index.position_rect(&location, &mut used);
 
-    index.insert(ShapeName::Text, id, used);
+    index.insert_shape(ShapeName::Text, id, used);
 
     let common = CommonAttributes::new(id, used, Color::BLACK, 1.);
     let shape = Shape::Text(paragraph, location);
@@ -660,7 +660,7 @@ impl<'i> Diagram<'i> {
           Self::bounds_from_rect(&mut bounds, rect);
         }
 
-        index.insert(ShapeName::Dot, *id, bounds);
+        index.insert_shape(ShapeName::Dot, *id, bounds);
 
         let shape = Shape::Dot(point, radius, caption.clone());
         let node = Open(attrs, bounds, shape);

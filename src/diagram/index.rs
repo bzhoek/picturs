@@ -53,8 +53,14 @@ pub struct Index<'i> {
 }
 
 impl<'a> Index<'a> {
+
   pub fn add(&mut self, name: ShapeName, attrs: Attributes<'a>, rect: Rect) {
-    let id = match attrs {
+    let id = self.insert_type(&name, attrs);
+    self.insert_shape(name, id, rect);
+  }
+
+  fn insert_type(&mut self, name: &ShapeName, attrs: Attributes<'a>) -> Option<&'a str> {
+    match attrs {
       Attributes::Closed { id, .. } => {
         self.closed.push((name.clone(), attrs));
         id
@@ -63,14 +69,10 @@ impl<'a> Index<'a> {
         self.open.push((name.clone(), attrs));
         id
       }
-    };
-    if let Some(id) = id {
-      self.ids.insert(id.into(), rect);
     }
-    self.shapes.push((name, rect));
   }
 
-  pub fn insert(&mut self, name: ShapeName, id: Option<&str>, rect: Rect) {
+  pub fn insert_shape(&mut self, name: ShapeName, id: Option<&str>, rect: Rect) {
     if let Some(id) = id {
       self.ids.insert(id.into(), rect);
     }
