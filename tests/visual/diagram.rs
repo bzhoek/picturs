@@ -14,7 +14,7 @@ mod diagram {
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
       }
-      line from now.e 1cm right end future.e
+      line route from now.e 1cm right end future.e
       "#;
     assert_diagram!(string);
   }
@@ -71,8 +71,8 @@ mod diagram {
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
       }
-      line from now.n 1cm up end future.n
-      line from future.s 1cm down end now.s
+      line route from now.n 1cm up end future.n
+      line route from future.s 1cm down end now.s
       "#;
     assert_diagram!(string);
   }

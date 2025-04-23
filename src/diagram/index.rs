@@ -120,16 +120,16 @@ impl<'a> Index<'a> {
   }
 
   /// add points from movements to a vector
-  pub fn add_movements_as_points(&self, start: &Point, movements: &[Movement], points: &mut Vec<Point>) {
+  pub fn add_movements_as_points(&self, start: &Point, movements: &[Movement], route: bool, points: &mut Vec<Point>) {
     let mut last = *start;
     for movement in movements.iter() {
       match movement {
         Movement::ObjectEnd { object } => {
           let terminal = self.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
-          if object.edge.vertical() && terminal.x != last.x {
-            points.push(Point::new(terminal.x, last.y));
-          } else if terminal.y != last.y {
-            points.push(Point::new(last.x, terminal.y));
+          if route {
+            if let Some(point) = Self::straighten_point(last, terminal, object.edge.vertical()) {
+              points.push(point);
+            }
           }
           last = terminal;
         }
@@ -141,6 +141,16 @@ impl<'a> Index<'a> {
         }
       }
       points.push(last);
+    }
+  }
+
+  fn straighten_point(last: Point, current: Point, vertical: bool) -> Option<Point> {
+    if vertical && current.x != last.x {
+      Point::new(current.x, last.y).into()
+    } else if current.y != last.y {
+      Point::new(last.x, current.y).into()
+    } else {
+      None
     }
   }
 

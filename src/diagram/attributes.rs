@@ -88,6 +88,7 @@ impl Attributes<'_> {
 pub struct OpenAttributes<'a> {
   pub(crate) id: Option<&'a str>,
   same: bool,
+  pub(crate) route: bool,
   pub(crate) caption: Option<Caption>,
   length: f32,
   endings: Endings,
@@ -106,7 +107,7 @@ impl<'a> OpenAttributes<'a> {
       match pair.as_rule() {
         Rule::identified => attrs.id = Some(pair.into_inner().next().unwrap().as_str()),
         Rule::open_attributes => OpenAttributes::attributes(&pair, config, &mut attrs),
-        _ => println!("Unexpected {:?}", pair)
+        _ => panic!("Unexpected {:?}", pair)
       }
     });
     attrs
@@ -119,6 +120,7 @@ impl<'a> OpenAttributes<'a> {
         Rule::caption => attrs.caption = Some(Conversion::caption_from(pair, config)),
         Rule::length => attrs.length = Conversion::length_from(pair, &config.unit).pixels(),
         Rule::same => attrs.same = true,
+        Rule::route => attrs.route = true,
         Rule::source => attrs.source = Some(Conversion::fraction_edge_from(pair)),
         Rule::target => attrs.target = Some(Conversion::fraction_edge_from(pair)),
         Rule::stroke => attrs.stroke = Conversion::color_from(pair).unwrap_or(attrs.stroke),

@@ -51,7 +51,7 @@ sline = { "sline" ~ identified? ~ open_attributes }
 path = { "path" ~ identified? ~ open_attributes }
 
 open_attributes = { open_attribute* }
-open_attribute = _{ stroke | length | source | target | abs_movement | rel_movement | caption | endings | same | thickness }
+open_attribute = _{ stroke | length | source | target | abs_movement | rel_movement | caption | endings | same | route | thickness }
 
 length = { ("ln" | "length") ~ size_ }
 source = { ("from" | "at") ~ object_fraction }
@@ -92,6 +92,7 @@ last_object = { "last" ~ object_fraction }
 from_object = { "from" ~ object_fraction }
 
 same = { "same" }
+route = { "route" }
 thickness = { "invisible" | "invis" | "nostroke" | "thin" | "normal" | "thicker" | "thickest" | "thick" }
 effect = { "dotted" | "dashed" | "solid" }
 
