@@ -2,13 +2,13 @@ use std::f32::consts::PI;
 use std::ops::{Add, Sub};
 
 use log::warn;
-use skia_safe::{Color, PaintStyle, Point, Rect, Size};
 use skia_safe::textlayout::TextAlign;
+use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::attributes::Attributes;
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
+use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
 use crate::skia::Canvas;
 use crate::skia::Effect::Solid;
 
@@ -116,7 +116,7 @@ impl Renderer {
         }
         canvas.stroke();
 
-        Self::draw_caption(canvas, used, caption);
+        Self::draw_caption_in(caption, used, canvas);
       }
       Shape::Sline(points, caption, endings) => {
         canvas.stroke_with(*thickness, *color, &Solid);
@@ -135,12 +135,14 @@ impl Renderer {
 
         let end = points.last().unwrap();
         Self::draw_endings(endings, &start, end, canvas);
-        Self::draw_caption(canvas, used, caption);
+        Self::draw_caption_in(caption, used, canvas);
       }
       Shape::Dot(point, radius, caption) => {
         canvas.fill_with(*color);
         canvas.circle(point, *radius);
-        Self::draw_dot_caption(canvas, point, radius, caption);
+        let mut used = Rect::from_point_and_size(*point, (0., 0.));
+        used.outset((*radius, *radius));
+        Self::draw_caption_in(caption, &used, canvas);
       }
       Shape::Arrow(from, movement, to, caption) => Self::render_arrow(canvas, used, from, movement, to, caption),
       Shape::Line(points, caption, endings) =>
@@ -171,7 +173,7 @@ impl Renderer {
 
     let end = Self::align_point(points.last().unwrap(), 1.);
     Self::draw_endings(endings, &end, &start, canvas); // FIXME the endings are reverted
-    Self::draw_caption(canvas, used, caption);
+    Self::draw_caption_in(caption, used, canvas);
   }
 
   fn draw_endings(endings: &Endings, start: &Point, end: &Point, canvas: &mut Canvas) {
@@ -230,71 +232,63 @@ impl Renderer {
       canvas.line_to(p2.x, p2.y);
       canvas.stroke();
 
-      Self::draw_caption(canvas, used, caption);
+      Self::draw_caption_in(caption, used, canvas);
 
       let direction = p2.sub(p1);
       Self::draw_arrow_head(canvas, &p2, direction);
     }
   }
 
-  #[allow(unreachable_code)]
-  fn draw_dot_caption(canvas: &mut Canvas, point: &Point, radius: &Radius, caption: &Option<Caption>) {
-    if let Some(caption) = caption {
-      canvas.paint.set_style(PaintStyle::Fill);
-
-      let rect = Self::dot_offset_of(point, radius, caption);
-      let rect = Self::align_rect(&rect, 1.);
-
-      canvas.paint.set_style(PaintStyle::Fill);
-      canvas.text(&caption.text, (rect.left, rect.bottom - (canvas.get_font_descent() / 2.)));
-      return;
-
-      let mut dot = Rect::from_point_and_size(*point, (0., 0.));
-      dot.outset((radius * 2., radius * 2.));
-      let dot_edge = caption.inner.mirror().edge_point(&dot);
-
-      let paragraph = canvas.paragraph(&caption.text, 120., TextAlign::Center);
-      let size = Size::from((120., paragraph.height()));
-
-      let mut rect = Rect::from_point_and_size(dot_edge, size);
-      caption.inner.offset(&mut rect);
-
-      canvas.paint_paragraph(&paragraph, (rect.left, rect.top));
-    }
-  }
-
   pub fn dot_offset_of(point: &Point, radius: &Radius, caption: &Caption) -> Rect {
-    let mut dot = Rect::from_point_and_size(*point, (0., 0.));
-    dot.outset((radius * 2., radius * 2.));
-    let point = caption.inner.mirror().edge_point(&dot);
-    let mut rect = Rect::from_point_and_size(point, caption.size);
-    caption.inner.offset(&mut rect);
-    rect
+    let mut used = Rect::from_point_and_size(*point, (0., 0.));
+    used.outset((radius * 2., radius * 2.));
+    let used_edge_point = caption.rect_edge.edge_point(&used);
+    let caption_rect = Rect::from_size(caption.size);
+    let center = caption_rect.center();
+    let delta = used_edge_point - center;
+    let moved_caption = caption_rect.with_offset(delta);
+    let caption_delta = caption.caption_edge.edge_delta(&caption_rect);
+    let final_caption = moved_caption.with_offset(caption_delta);
+    final_caption
   }
 
-  fn draw_caption(canvas: &mut Canvas, used: &Rect, caption: &Option<Caption>) {
+  fn draw_caption_in(caption: &Option<Caption>, used: &Rect, canvas: &mut Canvas) {
     if let Some(caption) = caption {
-      let (topleft, rect) = Self::topleft_of(caption, used);
+      let used_edge_point = caption.rect_edge.edge_point(used);
+      let caption_rect = Rect::from_size(caption.size);
+      let center = caption_rect.center();
+      let delta = used_edge_point - center;
+      let moved_caption = caption_rect.with_offset(delta);
+      let caption_delta = caption.caption_edge.edge_delta(&caption_rect);
+      let final_caption = moved_caption.with_offset(caption_delta);
+      let rect = final_caption;
+      let mut topleft = Point::new(rect.left, rect.bottom);
 
       if caption.opaque {
-        let rect = Self::align_rect(&rect, 1.);
+        let mut rect = Self::align_rect(&rect, 1.);
+        rect.outset((TEXT_PADDING, TEXT_PADDING));
+        let color = canvas.paint.color();
         canvas.paint.set_color(Color::LIGHT_GRAY);
         canvas.paint.set_style(PaintStyle::StrokeAndFill);
         canvas.rectangle(&rect, 0.);
+        canvas.paint.set_color(color);
       }
 
-      canvas.paint.set_color(Color::BLACK);
+      let (_, font_metrics) = canvas.font.metrics();
+      topleft.offset((0., -font_metrics.descent));
+      // canvas.paint.set_color(Color::BLACK);
       canvas.paint.set_style(PaintStyle::Fill);
       canvas.text(&caption.text, topleft);
     }
   }
 
   pub fn topleft_of(caption: &Caption, used: &Rect) -> (Point, Rect) {
+    let edge = caption.rect_edge.edge_point(used);
     let mut bounds = Rect::from_size(caption.size);
     bounds.outset((TEXT_PADDING, TEXT_PADDING));
-    let offset = caption.inner.topleft_offset(&bounds);
+    let offset = caption.rect_edge.topleft_offset(&bounds);
 
-    let mut topleft = caption.outer.edge_point(used);
+    let mut topleft = caption.caption_edge.edge_point(used);
 
     topleft.offset(offset);
     let rect = Rect::from_point_and_size(topleft, bounds.size());

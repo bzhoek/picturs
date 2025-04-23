@@ -226,9 +226,10 @@ impl Config {
 
   pub fn measure_string(&self, str: &str) -> Size {
     let (width_with_whitespace, _bounds) = self.font.measure_str(str, None);
-    let (font_height, _font_metrics) = self.font.metrics();
+    let (_, metrics) = self.font.metrics();
     // _bounds.size()
-    Size::new(width_with_whitespace.ceil(), font_height.ceil())
+    let font_height = metrics.ascent.abs() + metrics.descent;
+    Size::new(width_with_whitespace.ceil(), font_height)
   }
 
   pub fn measure_strings(&self, text: &str, width: f32) -> (Vec<scalar>, scalar) {

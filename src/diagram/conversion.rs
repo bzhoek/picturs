@@ -187,8 +187,10 @@ impl Conversion {
       Rule::alignment => {
         let string = pair.as_str();
         alignment = match string {
-          "ljust" => (Edge::right(), Edge::right()),
-          _ => (string.into(), Edge::center())
+          "ljust" => (Edge::left(), Edge::left()),
+          "top" => (Edge::above(), Edge::above()),
+          "bottom" => (Edge::below(), Edge::below()),
+          _ => (string.into(), Edge::from(string).mirror())
         }.into();
       }
       Rule::opaque => { opaque = true }
@@ -198,7 +200,7 @@ impl Conversion {
     let (rect_edge, caption_edge) = alignment.unwrap_or((Edge::center(), Edge::center()));
     let text = text.unwrap();
     let size = config.measure_string(&text);
-    Caption { text, rect_edge: rect_edge.mirror(), caption_edge, size, opaque }
+    Caption { text, rect_edge, caption_edge, size, opaque }
   }
 
   pub(crate) fn endings(pair: &Pair<Rule>) -> Option<Endings> {

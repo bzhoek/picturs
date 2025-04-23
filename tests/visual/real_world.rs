@@ -54,8 +54,8 @@ mod real_world {
   fn dependencies_parallel() {
     let string = r#"
       top
-      path.ui13 1in up 3in right 0.5in down 2in left 0.5in down 1in left "jQuery 😇" above
-      path.ui20 1in right 1in down 3in left 0.5in up 1in right "Vue" below
+      path.ui13 1in up 3in right 0.5in down 2in left 0.5in down 1in left "jQuery 😇" top
+      path.ui20 1in right 1in down 3in left 0.5in up 1in right "Vue" bottom
       path.fix 1in right to ui20.se 1in up "Improve" above
       path.ux 1in down 1in left to fix.ne "UX" below
       line from 1/3 ui20.e end fix.ne

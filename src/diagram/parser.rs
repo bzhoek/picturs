@@ -432,16 +432,17 @@ impl<'i> Diagram<'i> {
       } => {
         let displacement = Self::movement_or_default(movement, target, length, &config.continuation.end);
         let points = index.points_from(cursor, source, &displacement, target, open.route);
-        let (start, end) = Self::first_last_from(&points);
         // TODO bepalen wat het verschil is tussen `rect` en `used`
-        let (rect, used) = Bounds::rect_from_points(start, movement, end);
+        // let (rect, used_) = Bounds::rect_from_points(start, movement, end);
 
-        // let used = Self::bounds_from_points(&points);
+        let used = Bounds::bounds_from_points(&points);
+        // info!("{} {} {}", R(used), R(rect), R(used_));
+        // info!("{:?}", points);
 
         index.add(ShapeName::Line, attrs.clone(), used);
 
         let shape = Shape::Line(points, caption.clone(), open.endings);
-        let node = Open(attrs, rect, shape);
+        let node = Open(attrs, used, shape);
         // FIXME zou used niet het laatste point moeten zijn?
         Some((used, node))
       }
@@ -455,13 +456,6 @@ impl<'i> Diagram<'i> {
       _ => None
     }
   }
-
-  fn first_last_from(points: &[Point]) -> (Point, Point) {
-    let start = *points.first().unwrap();
-    let end = *points.last().unwrap();
-    (start, end)
-  }
-
 
   fn sline_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
