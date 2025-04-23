@@ -1,4 +1,4 @@
-use log::{debug, warn};
+use log::{debug, info, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, Point, Rect, Size, Vector};
@@ -395,7 +395,6 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Arrow);
 
     if let Attributes::Open {
-      id,
       source,
       target,
       length,
@@ -409,8 +408,7 @@ impl<'i> Diagram<'i> {
         .unwrap_or(Self::displace_from_start(start, &movement, &config.continuation, *length));
       let (rect, used) = Self::rect_from_points(start, &movement, end);
 
-      index.insert(ShapeName::Arrow, *id, used);
-      index.add_open(ShapeName::Arrow, attrs.clone());
+      index.add(ShapeName::Arrow, attrs.clone(), used);
 
       let shape = Shape::Arrow(source_edge, movement, target_edge, caption.clone());
       let node = Open(attrs, rect, shape);
@@ -431,13 +429,11 @@ impl<'i> Diagram<'i> {
         ..
       } => panic!("Wrong type"),
       Attributes::Open {
-        id,
         source,
         target,
         movement,
         caption,
         length,
-        ref endings,
         ..
       } => {
         let displacement = Self::movement_or_default(movement, target, length, &config.continuation.end);
@@ -448,8 +444,7 @@ impl<'i> Diagram<'i> {
 
         // let used = Self::bounds_from_points(&points);
 
-        index.insert(ShapeName::Line, *id, used);
-        index.add_open(ShapeName::Line, attrs.clone());
+        index.add(ShapeName::Line, attrs.clone(), used);
 
         let shape = Shape::Line(points, caption.clone(), open.endings);
         let node = Open(attrs, rect, shape);
@@ -483,7 +478,6 @@ impl<'i> Diagram<'i> {
         ..
       } => panic!("Wrong type"),
       Attributes::Open {
-        id,
         source,
         target,
         movement,
@@ -515,8 +509,7 @@ impl<'i> Diagram<'i> {
         Self::bounds_from_point(&mut rect, &end);
         debug!("sline_from {:?} {:?}", pair.as_str(), stroke);
 
-        index.insert(ShapeName::Line, *id, rect);
-        index.add_open(ShapeName::Line, attrs.clone());
+        index.add(ShapeName::Line, attrs.clone(), rect);
 
         let shape = Shape::Sline(vec!(start, end), caption.clone(), endings.clone());
         let node = Open(attrs, rect, shape);

@@ -7,7 +7,7 @@ use skia_safe::{Point, Rect};
 use crate::diagram::attributes::{Attributes, OpenAttributes};
 use crate::diagram::types::{Displacement, Edge, Movement, ObjectEdge};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ShapeName {
   Box,
   Dot,
@@ -52,6 +52,20 @@ pub struct Index<'i> {
 }
 
 impl<'a> Index<'a> {
+  pub fn add(&mut self, name: ShapeName, attrs: Attributes<'a>, rect: Rect) {
+    let id = match attrs {
+      Attributes::Closed { id, .. } => id,
+      Attributes::Open { id, .. } => {
+        self.open.push((name.clone(), attrs));
+        id
+      }
+    };
+    if let Some(id) = id {
+      self.ids.insert(id.into(), rect);
+    }
+    self.shapes.push((name, rect));
+  }
+
   pub fn insert(&mut self, name: ShapeName, id: Option<&str>, rect: Rect) {
     if let Some(id) = id {
       self.ids.insert(id.into(), rect);
