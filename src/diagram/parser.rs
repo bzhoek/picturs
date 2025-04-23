@@ -466,7 +466,7 @@ impl<'i> Diagram<'i> {
     let mut movements = vec!();
     let mut points = vec!();
     if let Some(object) = source {
-      movements.push(Movement::Absolute { object: object.clone() })
+      movements.push(Movement::ObjectStart { object: object.clone() })
     } else {
       points.push(*start);
     }
@@ -477,7 +477,7 @@ impl<'i> Diagram<'i> {
       movements.push(Movement::Relative { displacement: movement })
     }
     if let Some(object) = target {
-      movements.push(Movement::Absolute { object: object.clone() })
+      movements.push(Movement::ObjectEnd { object: object.clone() })
     }
     index.add_movements_as_points(start, &movements, &mut points);
     points
@@ -505,7 +505,7 @@ impl<'i> Diagram<'i> {
         let mut movements = vec!();
         let mut points = vec!();
         if let Some(object) = source {
-          movements.push(Movement::Absolute { object: object.clone() })
+          movements.push(Movement::ObjectStart { object: object.clone() })
         } else {
           points.push(*cursor);
         }
@@ -513,7 +513,7 @@ impl<'i> Diagram<'i> {
           movements.push(Movement::Relative { displacement: movement.clone() })
         }
         if let Some(object) = target {
-          movements.push(Movement::Absolute { object: object.clone() })
+          movements.push(Movement::ObjectStart { object: object.clone() })
         }
 
         let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);

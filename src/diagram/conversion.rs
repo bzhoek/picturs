@@ -228,7 +228,7 @@ impl Conversion {
       .find(|pair| pair.as_rule() == Rule::object_edge)
       .map(Self::object_edge_from)
       .unwrap();
-    Movement::Absolute { object }
+    Movement::ObjectStart { object }
   }
 
   pub(crate) fn length_in(pair: &Pair<Rule>, rule: Rule, unit: &Unit) -> Option<Length> {

@@ -121,17 +121,26 @@ impl<'a> Index<'a> {
 
   /// add points from movements to a vector
   pub fn add_movements_as_points(&self, start: &Point, movements: &[Movement], points: &mut Vec<Point>) {
-    let mut point = *start;
+    let mut last = *start;
     for movement in movements.iter() {
       match movement {
-        Movement::Relative { displacement: movement } => {
-          point = point.add(movement.offset());
+        Movement::ObjectEnd { object } => {
+          let terminal = self.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
+          if object.edge.vertical() && terminal.x != last.x {
+            points.push(Point::new(terminal.x, last.y));
+          } else if terminal.y != last.y {
+            points.push(Point::new(last.x, terminal.y));
+          }
+          last = terminal;
         }
-        Movement::Absolute { object } => {
-          point = self.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
+        Movement::ObjectStart { object } => {
+          last = self.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
+        }
+        Movement::Relative { displacement: movement } => {
+          last = last.add(movement.offset());
         }
       }
-      points.push(point);
+      points.push(last);
     }
   }
 
@@ -144,7 +153,11 @@ impl<'a> Index<'a> {
           point = point.add(movement.offset());
           point
         }
-        Movement::Absolute { object } => {
+        Movement::ObjectStart { object } => {
+          point = self.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
+          point
+        }
+        Movement::ObjectEnd { object } => {
           point = self.point_from(object).unwrap_or_else(|| panic!("Index to have {:?}", object));
           point
         }

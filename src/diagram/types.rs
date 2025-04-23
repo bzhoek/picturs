@@ -521,7 +521,10 @@ pub enum Movement {
   Relative {
     displacement: Displacement,
   },
-  Absolute {
+  ObjectStart {
+    object: ObjectEdge,
+  },
+  ObjectEnd {
     object: ObjectEdge,
   },
 }
