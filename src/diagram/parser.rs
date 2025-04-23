@@ -6,7 +6,8 @@ use std::ops::Add;
 use std::path::Path;
 
 use crate::diagram::attributes::{Attributes, OpenAttributes};
-use crate::diagram::conversion::Conversion;
+use crate::diagram::bounds::Bounds;
+use crate::diagram::conversion::{Conversion};
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
@@ -66,7 +67,7 @@ impl<'i> Diagram<'i> {
 
       if let Some((rect, node)) = result {
         ast.push(node);
-        Self::bounds_from_rect(&mut bounds, rect);
+        Bounds::bounds_from_rect(&mut bounds, rect);
         let point = config.continuation.end.edge_point(&rect);
         cursor = point
       }
@@ -402,7 +403,7 @@ impl<'i> Diagram<'i> {
       let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
       let end = index.point_index(target.as_ref(), &[])
         .unwrap_or(Self::displace_from_start(start, &movement, &config.continuation, *length));
-      let (rect, used) = Self::rect_from_points(start, &movement, end);
+      let (rect, used) = Bounds::rect_from_points(start, &movement, end);
 
       index.add(ShapeName::Arrow, attrs.clone(), used);
 
@@ -436,7 +437,7 @@ impl<'i> Diagram<'i> {
         let points = index.points_from(cursor, source, &displacement, target, open.route);
         let (start, end) = Self::first_last_from(&points);
         // TODO bepalen wat het verschil is tussen `rect` en `used`
-        let (rect, used) = Self::rect_from_points(start, movement, end);
+        let (rect, used) = Bounds::rect_from_points(start, movement, end);
 
         // let used = Self::bounds_from_points(&points);
 
@@ -502,7 +503,7 @@ impl<'i> Diagram<'i> {
           .unwrap_or(Self::displace_from_start(start, movement, &config.continuation, *length));
 
         let mut rect = Rect::from_point_and_size(start, (0, 0));
-        Self::bounds_from_point(&mut rect, &end);
+        Bounds::bounds_from_point(&mut rect, &end);
         debug!("sline_from {:?} {:?}", pair.as_str(), stroke);
 
         index.add(ShapeName::Line, attrs.clone(), rect);
@@ -515,26 +516,16 @@ impl<'i> Diagram<'i> {
   }
 
   pub(crate) fn path_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let attrs = OpenAttributes::from(&pair, config);
-    let (open, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
+    let open = OpenAttributes::from(&pair, config);
+    let (attrs, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
 
-    let points = index.points_from_movements(cursor, &attrs.movements);
-    let used = Self::bounds_from_points(&points);
-    index.insert_shape(ShapeName::Path, attrs.id, used);
+    let points = index.points_from_movements(cursor, &open.movements);
+    let used = Bounds::bounds_from_points(&points);
+    index.insert_shape(ShapeName::Path, open.id, used);
 
-    let shape = Shape::Path(points, attrs.caption.clone());
-    let node = Open(open, used, shape);
+    let shape = Shape::Path(points, open.caption.clone());
+    let node = Open(attrs, used, shape);
     Some((used, node))
-  }
-
-  fn bounds_from_points(points: &[Point]) -> Rect {
-    let mut iter = points.iter();
-    let first = iter.next().unwrap();
-    let mut used = Rect::from_point_and_size(*first, (0, 0));
-    for point in iter {
-      Self::bounds_from_point(&mut used, point);
-    }
-    used
   }
 
   fn copy_same_attributes(index: &mut Index, attrs: &mut Attributes, shape: ShapeName) {
@@ -657,7 +648,7 @@ impl<'i> Diagram<'i> {
         let mut bounds = Rect::from_xywh(point.x, point.y, 0., 0.);
         if let Some(caption) = &caption {
           let rect = Renderer::dot_offset_of(&point, &radius, caption);
-          Self::bounds_from_rect(&mut bounds, rect);
+          Bounds::bounds_from_rect(&mut bounds, rect);
         }
 
         index.insert_shape(ShapeName::Dot, *id, bounds);
@@ -736,15 +727,6 @@ impl<'i> Diagram<'i> {
     })
   }
 
-  fn rect_from_points(start: Point, displacement: &Option<Displacement>, end: Point) -> (Rect, Rect) {
-    let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
-    let mut used = rect;
-    if let Some(movement) = &displacement {
-      used.offset(movement.offset());
-    }
-    (rect, used)
-  }
-
   fn paragraph_sized(title: Option<&str>, width: &Option<f32>, height: &Option<f32>, config: &Config, shape: &ShapeConfig) -> (Option<Paragraph>, Size) {
     let width = width.unwrap_or(shape.width);
     let height = height.unwrap_or(shape.height);
@@ -783,21 +765,6 @@ impl<'i> Diagram<'i> {
 
   fn adjust_topleft(continuation: &Continuation, used: &mut Rect) {
     continuation.start.offset(used);
-  }
-
-  /// Adjust bounds so that rect fits in it
-  fn bounds_from_rect(bounds: &mut Rect, rect: Rect) {
-    bounds.top = bounds.top.min(rect.top);
-    bounds.left = bounds.left.min(rect.left);
-    bounds.right = bounds.right.max(rect.right);
-    bounds.bottom = bounds.bottom.max(rect.bottom);
-  }
-
-  fn bounds_from_point(bounds: &mut Rect, point: &Point) {
-    bounds.top = bounds.top.min(point.y);
-    bounds.bottom = bounds.bottom.max(point.y);
-    bounds.left = bounds.left.min(point.x);
-    bounds.right = bounds.right.max(point.x);
   }
 
   #[allow(dead_code)]
