@@ -575,7 +575,7 @@ impl<'i> Diagram<'i> {
             width: last_width,
             height: last_height,
             ..
-        })) = index.last_open(shape) {
+          })) = index.last_open(shape) {
           if width.is_none() {
             *width = *last_width;
           }
@@ -601,7 +601,7 @@ impl<'i> Diagram<'i> {
             movement: last_movement,
             caption: last_caption,
             ..
-        })) = index.last_open(shape) {
+          })) = index.last_open(shape) {
           *endings = last_endings.clone();
           if movement.is_none() {
             movement.clone_from(last_movement);
@@ -713,28 +713,28 @@ impl<'i> Diagram<'i> {
   fn config_shape(config: &mut ShapeConfig, pair: Pair<Rule>, unit: &Unit) {
     pair.into_inner().for_each(|pair| {
       match pair.as_rule() {
-      Rule::padding => {
-        let length = Conversion::length_from(pair, unit);
-        config.padding = length.pixels();
-      }
-      Rule::height => {
-        let length = Conversion::length_from(pair, unit);
-        config.height = length.pixels();
-      }
-      Rule::width => {
-        let length = Conversion::length_from(pair, unit);
-        config.width = length.pixels();
-      }
-      Rule::radius => {
-        let length = Conversion::length_from(pair, unit);
-        config.radius = length.pixels();
-      }
-      Rule::space => {
-        let length = Conversion::length_from(pair, unit);
-        config.space = length.pixels();
-      }
-      _ => {
-        warn!("Ignored {:?}", pair);
+        Rule::padding => {
+          let length = Conversion::length_from(pair, unit);
+          config.padding = length.pixels();
+        }
+        Rule::height => {
+          let length = Conversion::length_from(pair, unit);
+          config.height = length.pixels();
+        }
+        Rule::width => {
+          let length = Conversion::length_from(pair, unit);
+          config.width = length.pixels();
+        }
+        Rule::radius => {
+          let length = Conversion::length_from(pair, unit);
+          config.radius = length.pixels();
+        }
+        Rule::space => {
+          let length = Conversion::length_from(pair, unit);
+          config.space = length.pixels();
+        }
+        _ => {
+          warn!("Ignored {:?}", pair);
         }
       }
     });
@@ -833,14 +833,14 @@ impl<'i> Diagram<'i> {
           common.id == Some(node_id)
         }
         Container(Attributes::Closed { id, .. }, _, nodes) => {
-        if let Some(id) = id {
-          if id == &node_id {
-            return true;
+          if let Some(id) = id {
+            if id == &node_id {
+              return true;
+            }
           }
+          Self::find_nodes(nodes, node_id).is_some()
         }
-        Self::find_nodes(nodes, node_id).is_some()
-      }
-      _ => false,
+        _ => false,
       }
     })
   }
