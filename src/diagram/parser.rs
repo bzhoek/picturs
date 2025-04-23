@@ -1,4 +1,4 @@
-use log::{debug, info, warn};
+use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, Point, Rect, Size, Vector};
@@ -438,7 +438,8 @@ impl<'i> Diagram<'i> {
         ref endings,
         ..
       } => {
-        let points = Self::points_from(cursor, source, movement, target, open.route, length, config, index);
+        let displacement = Self::movement_or_default(movement, target, length, &config.continuation.end);
+        let points = index.points_from(cursor, source, &displacement, target, open.route);
         let (start, end) = Self::first_last_from(&points);
         // TODO bepalen wat het verschil is tussen `rect` en `used`
         let (rect, used) = Self::rect_from_points(start, movement, end);
@@ -456,33 +457,20 @@ impl<'i> Diagram<'i> {
     }
   }
 
+  fn movement_or_default(movement: &Option<Displacement>, target: &Option<ObjectEdge>, length: &f32, edge: &Edge) -> Option<Displacement> {
+    match movement {
+      Some(movement) => movement.clone().into(),
+      None if target.is_none() => Displacement::new(*length, Unit::Px, edge.clone()).into(),
+      _ => None
+    }
+  }
+
   fn first_last_from(points: &[Point]) -> (Point, Point) {
     let start = *points.first().unwrap();
     let end = *points.last().unwrap();
     (start, end)
   }
 
-  // FIXME dit doet eigenlijk twee dingen: source, target en displacement naar vector van movements omzetten
-  fn points_from(start: &Point, source: &Option<ObjectEdge>, movement: &Option<Displacement>, target: &Option<ObjectEdge>, route: bool, length: &f32, config: &Config, index: &mut Index) -> Vec<Point> {
-    let mut movements = vec!();
-    let mut points = vec!();
-    if let Some(object) = source {
-      movements.push(Movement::ObjectStart { object: object.clone() })
-    } else {
-      points.push(*start);
-    }
-    if let Some(movement) = movement {
-      movements.push(Movement::Relative { displacement: movement.clone() })
-    } else if target.is_none() {
-      let movement = Displacement::new(*length, Unit::Px, config.continuation.end.clone());
-      movements.push(Movement::Relative { displacement: movement })
-    }
-    if let Some(object) = target {
-      movements.push(Movement::ObjectEnd { object: object.clone() })
-    }
-    index.add_movements_as_points(start, &movements, route, &mut points);
-    points
-  }
 
   fn sline_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
     let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);

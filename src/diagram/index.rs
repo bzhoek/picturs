@@ -119,6 +119,24 @@ impl<'a> Index<'a> {
     })
   }
 
+  pub fn points_from(&self, start: &Point, source: &Option<ObjectEdge>, movement: &Option<Displacement>, target: &Option<ObjectEdge>, route: bool) -> Vec<Point> {
+    let mut movements = vec!();
+    let mut points = vec!();
+    if let Some(object) = source {
+      movements.push(Movement::ObjectStart { object: object.clone() })
+    } else {
+      points.push(*start);
+    }
+    if let Some(movement) = movement {
+      movements.push(Movement::Relative { displacement: movement.clone() })
+    }
+    if let Some(object) = target {
+      movements.push(Movement::ObjectEnd { object: object.clone() })
+    }
+    self.add_movements_as_points(start, &movements, route, &mut points);
+    points
+  }
+
   /// add points from movements to a vector
   pub fn add_movements_as_points(&self, start: &Point, movements: &[Movement], route: bool, points: &mut Vec<Point>) {
     let mut last = *start;
