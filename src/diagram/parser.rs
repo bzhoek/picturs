@@ -1,17 +1,20 @@
-use std::ops::Add;
-use std::path::Path;
 use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, Point, Rect, Size, Vector};
+use std::ops::Add;
+use std::path::Path;
 
 use crate::diagram::attributes::{Attributes, OpenAttributes};
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::{BLOCK_PADDING, CommonAttributes, Config, Displacement, Edge, EdgeDirection, Continuation, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, Movement};
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
+use crate::diagram::types::{
+  CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Movement, Node, ObjectEdge, Paragraph,
+  Shape, ShapeConfig, Unit, BLOCK_PADDING,
+};
 use crate::skia::Canvas;
 
 #[cfg(test)]
@@ -162,7 +165,8 @@ impl<'i> Diagram<'i> {
       padding,
       location,
       ..
-    } = &attrs {
+    } = &attrs
+    {
       let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
       index.position_rect(location, &mut used);
 
@@ -207,11 +211,14 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Circle);
 
     if let Attributes::Closed {
-      id, title,
-      width, height,
+      id,
+      title,
+      width,
+      height,
       location,
       ..
-    } = &attrs {
+    } = &attrs
+    {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.circle);
       let mut used = Rect::from_xywh(cursor.x, cursor.y, size.height, size.height);
 
@@ -230,11 +237,14 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Cylinder);
 
     if let Attributes::Closed {
-      id, title,
-      width, height,
+      id,
+      title,
+      width,
+      height,
       location,
       ..
-    } = &attrs {
+    } = &attrs
+    {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.cylinder);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
@@ -254,11 +264,14 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Ellipse);
 
     if let Attributes::Closed {
-      id, title,
-      width, height,
+      id,
+      title,
+      width,
+      height,
       location,
       ..
-    } = &attrs {
+    } = &attrs
+    {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.ellipse);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
@@ -277,11 +290,14 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::File);
 
     if let Attributes::Closed {
-      id, title,
-      width, height,
+      id,
+      title,
+      width,
+      height,
       location,
       ..
-    } = &attrs {
+    } = &attrs
+    {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.file);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
@@ -301,11 +317,14 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Oval);
 
     if let Attributes::Closed {
-      id, title,
-      width, height,
+      id,
+      title,
+      width,
+      height,
       location,
       ..
-    } = &attrs {
+    } = &attrs
+    {
       let (paragraph, size) = Self::paragraph_sized(title.as_deref(), width, height, config, &config.oval);
       let mut used = Rect::from_point_and_size(*cursor, size);
 
@@ -338,7 +357,8 @@ impl<'i> Diagram<'i> {
       space,
       location,
       ..
-    } = &attrs {
+    } = &attrs
+    {
       let rect = Self::create_rect(*width, *height, &config.rectangle);
       let rect = Self::adjust_rect(&rect, config.continuation.direction, -*space);
 
@@ -375,8 +395,14 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Arrow);
 
     if let Attributes::Open {
-      id, source, target, length, ref caption, ..
-    } = &attrs {
+      id,
+      source,
+      target,
+      length,
+      ref caption,
+      ..
+    } = &attrs
+    {
       let (source_edge, movement, target_edge) = Self::source_movement_target_from_pair(&attributes, &config.unit);
       let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
       let end = index.point_index(target.as_ref(), &[])
@@ -398,7 +424,9 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
     match &attrs {
-      Attributes::Closed { .. } => panic!("Wrong type"),
+      Attributes::Closed {
+        ..
+      } => panic!("Wrong type"),
       Attributes::Open {
         id,
         source,
@@ -412,14 +440,14 @@ impl<'i> Diagram<'i> {
         let points = Self::points_from(cursor, source, movement, target, length, config, index);
         let (start, end) = Self::first_last_from(&points);
         // TODO bepalen wat het verschil is tussen `rect` en `used`
-        let (rect, used) = Self::rect_from_points(*start, movement, *end);
+        let (rect, used) = Self::rect_from_points(start, movement, end);
 
         // let used = Self::bounds_from_points(&points);
 
         index.insert(ShapeName::Line, *id, used);
         index.add_open(ShapeName::Line, attrs.clone());
 
-        let shape = Shape::Line(*start, movement.clone(), *end, caption.clone(), endings.clone());
+        let shape = Shape::Line(points, caption.clone(), endings.clone());
         let node = Open(attrs, rect, shape);
         // FIXME zou used niet het laatste point moeten zijn?
         Some((used, node))
@@ -427,9 +455,9 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  fn first_last_from(points: &[Point]) -> (&Point, &Point) {
-    let start = points.first().unwrap();
-    let end = points.last().unwrap();
+  fn first_last_from(points: &[Point]) -> (Point, Point) {
+    let start = *points.first().unwrap();
+    let end = *points.last().unwrap();
     (start, end)
   }
 
@@ -460,7 +488,9 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Line);
 
     match &attrs {
-      Attributes::Closed { .. } => panic!("Wrong type"),
+      Attributes::Closed {
+        ..
+      } => panic!("Wrong type"),
       Attributes::Open {
         id,
         source,
@@ -538,10 +568,12 @@ impl<'i> Diagram<'i> {
         if !*same {
           return;
         }
-        if let Some((_shape, Attributes::Closed {
-          width: last_width,
-          height: last_height,
-          ..
+        if let Some((
+          _shape,
+          Attributes::Closed {
+            width: last_width,
+            height: last_height,
+            ..
         })) = index.last_open(shape) {
           if width.is_none() {
             *width = *last_width;
@@ -561,11 +593,13 @@ impl<'i> Diagram<'i> {
         if !*same {
           return;
         }
-        if let Some((_shape, Attributes::Open {
-          endings: last_endings,
-          movement: last_movement,
-          caption: last_caption,
-          ..
+        if let Some((
+          _shape,
+          Attributes::Open {
+            endings: last_endings,
+            movement: last_movement,
+            caption: last_caption,
+            ..
         })) = index.last_open(shape) {
           *endings = last_endings.clone();
           if movement.is_none() {
@@ -622,7 +656,9 @@ impl<'i> Diagram<'i> {
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Dot);
 
     match &attrs {
-      Attributes::Closed { .. } => panic!("Wrong type"),
+      Attributes::Closed {
+        ..
+      } => panic!("Wrong type"),
       Attributes::Open {
         id,
         caption,
@@ -676,52 +712,48 @@ impl<'i> Diagram<'i> {
   fn config_shape(config: &mut ShapeConfig, pair: Pair<Rule>, unit: &Unit) {
     pair.into_inner().for_each(|pair| {
       match pair.as_rule() {
-        Rule::padding => {
-          let length = Conversion::length_from(pair, unit);
-          config.padding = length.pixels();
-        }
-        Rule::height => {
-          let length = Conversion::length_from(pair, unit);
-          config.height = length.pixels();
-        }
-        Rule::width => {
-          let length = Conversion::length_from(pair, unit);
-          config.width = length.pixels();
-        }
-        Rule::radius => {
-          let length = Conversion::length_from(pair, unit);
-          config.radius = length.pixels();
-        }
-        Rule::space => {
-          let length = Conversion::length_from(pair, unit);
-          config.space = length.pixels();
-        }
-        _ => {
-          warn!("Ignored {:?}", pair);
+      Rule::padding => {
+        let length = Conversion::length_from(pair, unit);
+        config.padding = length.pixels();
+      }
+      Rule::height => {
+        let length = Conversion::length_from(pair, unit);
+        config.height = length.pixels();
+      }
+      Rule::width => {
+        let length = Conversion::length_from(pair, unit);
+        config.width = length.pixels();
+      }
+      Rule::radius => {
+        let length = Conversion::length_from(pair, unit);
+        config.radius = length.pixels();
+      }
+      Rule::space => {
+        let length = Conversion::length_from(pair, unit);
+        config.space = length.pixels();
+      }
+      _ => {
+        warn!("Ignored {:?}", pair);
         }
       }
     });
   }
 
   fn source_movement_target_from_pair(pair: &Pair<Rule>, unit: &Unit) -> (ObjectEdge, Option<Displacement>, ObjectEdge) {
-    let source = Conversion::fraction_edge_for(pair, Rule::source)
-      .unwrap_or(ObjectEdge::new("source", "e"));
+    let source = Conversion::fraction_edge_for(pair, Rule::source).unwrap_or(ObjectEdge::new("source", "e"));
 
     let movement = Conversion::displacement_for(pair, Rule::rel_movement, unit);
 
-    let target = Conversion::fraction_edge_for(pair, Rule::target)
-      .unwrap_or(ObjectEdge::new("source", "w"));
+    let target = Conversion::fraction_edge_for(pair, Rule::target).unwrap_or(ObjectEdge::new("source", "w"));
 
     (source, movement, target)
   }
 
   fn displace_from_start(start: Point, movement: &Option<Displacement>, flow: &Continuation, default: f32) -> Point {
-    movement.as_ref()
-      .map(|movement| start.add(movement.offset()))
-      .unwrap_or_else(|| {
-        let movement = Displacement::new(default, Unit::Px, flow.end.clone());
-        start.add(movement.offset())
-      })
+    movement.as_ref().map(|movement| start.add(movement.offset())).unwrap_or_else(|| {
+      let movement = Displacement::new(default, Unit::Px, flow.end.clone());
+      start.add(movement.offset())
+    })
   }
 
   fn rect_from_points(start: Point, displacement: &Option<Displacement>, end: Point) -> (Rect, Rect) {
@@ -800,14 +832,14 @@ impl<'i> Diagram<'i> {
           common.id == Some(node_id)
         }
         Container(Attributes::Closed { id, .. }, _, nodes) => {
-          if let Some(id) = id {
-            if id == &node_id {
-              return true;
-            }
+        if let Some(id) = id {
+          if id == &node_id {
+            return true;
           }
-          Self::find_nodes(nodes, node_id).is_some()
         }
-        _ => false,
+        Self::find_nodes(nodes, node_id).is_some()
+      }
+      _ => false,
       }
     })
   }
@@ -857,7 +889,6 @@ impl<'i> Diagram<'i> {
     canvas.write_png(filepath);
   }
 }
-
 
 pub const TEXT_PADDING: f32 = 4.;
 

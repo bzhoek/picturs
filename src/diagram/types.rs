@@ -58,7 +58,7 @@ pub enum Shape {
   Text(Paragraph, Option<EdgeMovement>),
 
   Arrow(ObjectEdge, Option<Displacement>, ObjectEdge, Option<Caption>),
-  Line(Point, Option<Displacement>, Point, Option<Caption>, Endings),
+  Line(Vec<Point>, Option<Caption>, Endings),
   Sline(Vec<Point>, Option<Caption>, Endings),
   Path(Vec<Point>, Option<Caption>),
 

@@ -88,7 +88,6 @@ impl Renderer {
             _ => {}
           }
 
-
           match shape {
             Shape::Cylinder => {
               let rect = Rect::from_xywh(used.left, used.top + used.height() / 3., used.width(), used.height() * 0.666);
@@ -143,10 +142,9 @@ impl Renderer {
         canvas.circle(point, *radius);
         Self::draw_dot_caption(canvas, point, radius, caption);
       }
-      Shape::Arrow(from, movement, to, caption) =>
-        Self::render_arrow(canvas, used, from, movement, to, caption),
-      Shape::Line(start, movement, end, caption, endings) =>
-        Self::render_line(canvas, used, start, movement, end, caption, endings),
+      Shape::Arrow(from, movement, to, caption) => Self::render_arrow(canvas, used, from, movement, to, caption),
+      Shape::Line(points, caption, endings) =>
+        Self::render_line(canvas, used, points, caption, endings),
       Shape::Text(paragraph, _) => {
         if paragraph.widths.len() > 1 {
           Self::render_paragraph(canvas, used, &paragraph.text);
@@ -158,26 +156,21 @@ impl Renderer {
     }
   }
 
-  fn render_line(canvas: &mut Canvas, used: &Rect, start: &Point, movement: &Option<Displacement>, end: &Point, caption: &Option<Caption>, endings: &Endings) {
+  fn render_line(canvas: &mut Canvas, used: &Rect, points: &[Point], caption: &Option<Caption>, endings: &Endings) {
     canvas.paint.set_style(PaintStyle::Stroke);
-    canvas.move_to(used.left, used.top);
-    let mut point = Point::new(used.left, used.top);
-    if let Some(movement) = movement {
-      point = point.add(movement.offset());
+    let mut iter = points.iter();
+    let start = Self::align_point(iter.next().unwrap(), 1.);
+    canvas.move_to(start.x, start.y);
 
-      if movement.is_horizontal() {
-        canvas.line_to(point.x, point.y);
-        canvas.line_to(point.x, used.bottom);
-      } else {
-        canvas.line_to(point.x, point.y);
-        canvas.line_to(used.right, point.y);
-      }
+    for point in iter {
+      let point = Self::align_point(point, 1.);
+      canvas.line_to(point.x, point.y);
     }
 
-    canvas.line_to(used.right, used.bottom);
     canvas.stroke();
 
-    Self::draw_endings(endings, end, start, canvas); // FIXME the endings are reverted
+    let end = Self::align_point(points.last().unwrap(), 1.);
+    Self::draw_endings(endings, &end, &start, canvas); // FIXME the endings are reverted
     Self::draw_caption(canvas, used, caption);
   }
 
@@ -343,13 +336,9 @@ impl Renderer {
     let angle = direction.y.atan2(direction.x);
     let arrow = 25. * PI / 180.;
     let size = 15.;
-    canvas.move_to(
-      p2.x - size * (angle - arrow).cos(),
-      p2.y - size * (angle - arrow).sin());
+    canvas.move_to(p2.x - size * (angle - arrow).cos(), p2.y - size * (angle - arrow).sin());
     canvas.line_to(p2.x, p2.y);
-    canvas.line_to(
-      p2.x - size * (angle + arrow).cos(),
-      p2.y - size * (angle + arrow).sin());
+    canvas.line_to(p2.x - size * (angle + arrow).cos(), p2.y - size * (angle + arrow).sin());
     canvas.fill();
   }
 
