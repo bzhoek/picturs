@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests;
 
+use std::fmt::Display;
 use std::ops::{Add, Mul};
 
 use crate::diagram::attributes::{Attributes, EdgeMovement};
@@ -15,6 +16,13 @@ pub const BLOCK_PADDING: f32 = 8.;
 pub type Used = Rect;
 pub type Thickness = f32;
 
+pub struct R(pub Rect);
+
+impl Display for R {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "({:>6.1},{:>6.1})-({:>6.1},{:>6.1})", self.0.left, self.0.top, self.0.right, self.0.bottom)
+  }
+}
 #[derive(Debug, PartialEq)]
 pub struct CommonAttributes<'a> {
   pub(crate) id: Option<&'a str>,
