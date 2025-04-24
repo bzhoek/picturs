@@ -544,8 +544,8 @@ impl<'i> Diagram<'i> {
     let fit = Rules::dig_rule(&attributes, Rule::fit);
     let paragraph = match fit {
       Some(_) => {
-        let size = config.measure_string(title);
-        Paragraph { text: title.into(), widths: vec![size.width], height: size.height, size }
+        let bounds = config.measure_string(title);
+        Paragraph { text: title.into(), widths: vec![bounds.width()], height: bounds.height(), size: bounds.size() }
       }
       None => {
         let width = Conversion::width_into(&attributes, &config.unit).unwrap_or(config.text.width);

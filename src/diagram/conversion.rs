@@ -199,8 +199,8 @@ impl Conversion {
 
     let (rect_edge, caption_edge) = alignment.unwrap_or((Edge::center(), Edge::center()));
     let text = text.unwrap();
-    let size = config.measure_string(&text);
-    Caption { text, rect_edge, caption_edge, size, opaque }
+    let bounds = config.measure_string(&text);
+    Caption { text, rect_edge, caption_edge, size: bounds.size(), opaque }
   }
 
   pub(crate) fn endings(pair: &Pair<Rule>) -> Option<Endings> {

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-  use skia_safe::{Color, Font, FontMgr, FontStyle, PaintStyle, Point, Rect, Size};
+  use skia_safe::{Color, Font, FontMgr, FontStyle, PaintStyle, Point, Rect};
 
   use picturs::assert_canvas;
   use picturs::diagram::types::{Config, Edge};
@@ -21,14 +21,14 @@ mod tests {
   fn measure_str() {
     let config = Config::default();
     let bounds = config.measure_string(TQBF);
-    assert_eq!(bounds, Size::new(331., 17.));
+    assert_eq!(Rect::new(-1.0, -13.1, 331.3, 3.9), bounds);
   }
 
   #[test]
   fn measure_whitespace_str() {
     let config = Config::default();
     let bounds = config.measure_string(" TQBF ");
-    assert_eq!(bounds, Size::new(55., 17.));
+    assert_eq!(Rect::new(3.7, -13.1, 50.7, 3.9), bounds);
   }
 
   #[test]
@@ -37,12 +37,11 @@ mod tests {
     let rect = Rect::from_xywh(40., 40., 10., 20.);
     let bounds = config.measure_string("Title");
     let edge = Edge::from("c");
-    let bounds = Rect::from_size(bounds);
     let offset = edge.topleft_offset(&bounds);
     let center = rect.center();
     let topleft = center + offset;
 
-    assert_eq!(topleft, Point::from((28.5, 41.5)));
+    assert_eq!(Point::from((28.15, 41.5)), topleft);
   }
 
   #[test]
@@ -119,5 +118,4 @@ mod tests {
 
     assert_canvas!(canvas);
   }
-
 }

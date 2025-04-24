@@ -239,12 +239,19 @@ impl Config {
     }
   }
 
-  pub fn measure_string(&self, str: &str) -> Size {
-    let (width_with_whitespace, _bounds) = self.font.measure_str(str, None);
+  pub fn measure_string(&self, str: &str) -> Rect {
+    let (_, mut bounds) = self.font.measure_str(str, None);
     let (_, metrics) = self.font.metrics();
-    // _bounds.size()
-    let font_height = metrics.ascent.abs() + metrics.descent;
-    Size::new(width_with_whitespace.ceil(), font_height)
+    bounds.top = Self::round_to_decimals(metrics.ascent as f64, 1) as f32;
+    bounds.bottom = Self::round_to_decimals(metrics.descent as f64, 1) as f32;
+    bounds.left = Self::round_to_decimals(bounds.left as f64, 1) as f32;
+    bounds.right = Self::round_to_decimals(bounds.right as f64, 1) as f32;
+    bounds
+  }
+
+  fn round_to_decimals(num: f64, decimals: u32) -> f64 {
+    let factor = 10f64.powi(decimals as i32);
+    (num * factor).round() / factor
   }
 
   pub fn measure_strings(&self, text: &str, width: f32) -> (Vec<scalar>, scalar) {
