@@ -180,14 +180,7 @@ pub struct ShapeConfig {
 
 impl Default for ShapeConfig {
   fn default() -> Self {
-    Self {
-      padding: 0.,
-      width: WIDTH.trunc(),
-      height: HEIGHT.trunc(),
-      radius: 0.,
-      space: 0.,
-      stroke: Color::BLUE,
-    }
+    Self::stroke(Color::BLACK)
   }
 }
 
@@ -215,7 +208,7 @@ impl Config {
     let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
     let font = Font::from_typeface(typeface, 17.0);
     Self {
-      container: ShapeConfig::stroke(Color::RED),
+      container: ShapeConfig::default(),
       group: ShapeConfig::stroke(Color::TRANSPARENT),
       continuation: flow,
       dot: Length::new(4., Unit::Px),
