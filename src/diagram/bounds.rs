@@ -1,5 +1,4 @@
 use skia_safe::{Point, Rect};
-use crate::diagram::types::Displacement;
 
 pub(crate) struct Bounds;
 
@@ -28,15 +27,6 @@ impl Bounds {
     bounds.bottom = bounds.bottom.max(point.y);
     bounds.left = bounds.left.min(point.x);
     bounds.right = bounds.right.max(point.x);
-  }
-
-  pub(crate) fn rect_from_points(start: Point, displacement: &Option<Displacement>, end: Point) -> (Rect, Rect) {
-    let rect = Rect { left: start.x, top: start.y, right: end.x, bottom: end.y };
-    let mut used = rect;
-    if let Some(movement) = &displacement {
-      used.offset(movement.offset());
-    }
-    (rect, used)
   }
 
 }

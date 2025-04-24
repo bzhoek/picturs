@@ -1,5 +1,5 @@
 use std::f32::consts::PI;
-use std::ops::{Add, Sub};
+use std::ops::{Sub};
 
 use log::warn;
 use skia_safe::textlayout::TextAlign;
@@ -8,7 +8,7 @@ use skia_safe::{Color, PaintStyle, Point, Rect};
 use crate::diagram::attributes::Attributes;
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
-use crate::diagram::types::{Caption, Displacement, Ending, Endings, Node, ObjectEdge, Paragraph, Radius, Shape};
+use crate::diagram::types::{Caption, Ending, Endings, Node, Paragraph, Radius, Shape};
 use crate::skia::Canvas;
 use crate::skia::Effect::Solid;
 
@@ -144,7 +144,10 @@ impl Renderer {
         used.outset((*radius, *radius));
         Self::draw_caption_in(caption, &used, canvas);
       }
-      Shape::Arrow(from, movement, to, caption) => Self::render_arrow(canvas, used, from, movement, to, caption),
+      Shape::Arrow(points, caption, endings) => {
+        Self::render_line(canvas, used, points, caption, &Endings::default());
+        Self::render_endings(canvas, points);
+      }
       Shape::Line(points, caption, endings) =>
         Self::render_line(canvas, used, points, caption, endings),
       Shape::Text(paragraph, _) => {
@@ -176,6 +179,14 @@ impl Renderer {
     Self::draw_caption_in(caption, used, canvas);
   }
 
+  fn render_endings(canvas: &mut Canvas, points: &[Point]) {
+    let mut iter = points.iter().rev();
+    let last = iter.next().unwrap();
+    let prev = iter.next().unwrap();
+    let direction = last.sub(*prev);
+    Self::draw_arrow_head(canvas, last, direction);
+  }
+
   fn draw_endings(endings: &Endings, start: &Point, end: &Point, canvas: &mut Canvas) {
     Self::draw_ending(&endings.start, start, end, canvas);
     Self::draw_ending(&endings.end, end, start, canvas);
@@ -205,40 +216,6 @@ impl Renderer {
     Rect::from_point_and_size(aligned, (rect.width().round(), rect.height().round()))
   }
 
-  fn render_arrow(canvas: &mut Canvas, used: &Rect, from: &ObjectEdge, movement: &Option<Displacement>, to: &ObjectEdge, caption: &Option<Caption>) {
-    canvas.move_to(used.left, used.top);
-    let mut point = Point::new(used.left, used.top);
-    if let Some(movement) = movement {
-      point = point.add(movement.offset());
-
-      if movement.is_horizontal() {
-        canvas.line_to(point.x, point.y);
-        canvas.line_to(point.x, used.bottom);
-      } else {
-        canvas.line_to(point.x, point.y);
-        canvas.line_to(used.right, point.y);
-      }
-    } else {
-      let p1 = if from.edge.vertical() && to.edge.horizontal() {
-        Point::new(used.left, used.bottom)
-      } else if from.edge.horizontal() && to.edge.vertical() {
-        Point::new(used.right, used.top)
-      } else {
-        Point::new(used.left, used.top)
-      };
-
-      let p2 = Point::new(used.right, used.bottom);
-      canvas.line_to(p1.x, p1.y);
-      canvas.line_to(p2.x, p2.y);
-      canvas.stroke();
-
-      Self::draw_caption_in(caption, used, canvas);
-
-      let direction = p2.sub(p1);
-      Self::draw_arrow_head(canvas, &p2, direction);
-    }
-  }
-
   pub fn dot_offset_of(point: &Point, radius: &Radius, caption: &Caption) -> Rect {
     let mut used = Rect::from_point_and_size(*point, (0., 0.));
     used.outset((radius * 2., radius * 2.));
@@ -247,7 +224,7 @@ impl Renderer {
 
   fn draw_caption_in(caption: &Option<Caption>, used: &Rect, canvas: &mut Canvas) {
     if let Some(caption) = caption {
-      let rect = caption.place_in_rect(&used);
+      let rect = caption.place_in_rect(used);
       let mut topleft = Point::new(rect.left, rect.bottom);
 
       if caption.opaque {

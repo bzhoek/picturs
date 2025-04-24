@@ -27,9 +27,9 @@ mod diagram {
       box.step2 "Output"  .w 2cm right 1cm up from step1.n
       box.step3 "Outcome" .n 2cm right 1cm down from step2.e
       box.step4 "Impact"  .e 2cm left 1cm down from step3.s
-      arrow from step1.n end step2.w
-      arrow from step2.e end step3.n
-      arrow from step3.s end step4.e
+      arrow route from step1.n end step2.w
+      arrow route from step2.e end step3.n
+      arrow route from step3.s end step4.e
       "#;
     assert_diagram!(string);
   }

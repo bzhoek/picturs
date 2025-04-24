@@ -12,7 +12,7 @@ use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
-use crate::diagram::types::{CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING, R};
+use crate::diagram::types::{CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING, R};
 use crate::skia::Canvas;
 
 #[cfg(test)]
@@ -385,27 +385,35 @@ impl<'i> Diagram<'i> {
   }
 
   fn arrow_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, attributes) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
+    let mut open = OpenAttributes::from(&pair, config);
+    index.copy_open_attributes(&mut open, ShapeName::Arrow);
+
+    let (mut attrs, _) = Attributes::open_attributes(&pair, config, Rule::open_attributes);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Arrow);
 
     if let Attributes::Open {
       source,
+      movement,
       target,
       length,
       ref caption,
+      endings,
       ..
     } = &attrs
     {
-      let (source_edge, movement, target_edge) = Self::source_movement_target_from_pair(&attributes, &config.unit);
-      let start = index.point_index(source.as_ref(), &[]).unwrap_or(*cursor);
-      let end = index.point_index(target.as_ref(), &[])
-        .unwrap_or(Self::displace_from_start(start, &movement, &config.continuation, *length));
-      let (rect, used) = Bounds::rect_from_points(start, &movement, end);
+      let displacement = Self::movement_or_default(movement, target, length, &config.continuation.end);
+      let points = index.points_from(cursor, source, &displacement, target, open.route);
+      let used = Bounds::bounds_from_points(&points);
 
       index.add(ShapeName::Arrow, attrs.clone(), used);
 
-      let shape = Shape::Arrow(source_edge, movement, target_edge, caption.clone());
-      let node = Open(attrs, rect, shape);
+      let mut endings = endings.clone();
+      if endings == Endings::default() {
+        endings.end = Ending::Arrow;
+      }
+
+      let shape = Shape::Arrow(points, caption.clone(), endings.clone());
+      let node = Open(attrs, used, shape);
       return Some((used, node));
     }
     None
@@ -647,16 +655,6 @@ impl<'i> Diagram<'i> {
         }
       }
     });
-  }
-
-  fn source_movement_target_from_pair(pair: &Pair<Rule>, unit: &Unit) -> (ObjectEdge, Option<Displacement>, ObjectEdge) {
-    let source = Conversion::fraction_edge_for(pair, Rule::source).unwrap_or(ObjectEdge::new("source", "e"));
-
-    let movement = Conversion::displacement_for(pair, Rule::rel_movement, unit);
-
-    let target = Conversion::fraction_edge_for(pair, Rule::target).unwrap_or(ObjectEdge::new("source", "w"));
-
-    (source, movement, target)
   }
 
   fn displace_from_start(start: Point, movement: &Option<Displacement>, flow: &Continuation, default: f32) -> Point {
