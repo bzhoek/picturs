@@ -12,7 +12,7 @@ use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
-use crate::diagram::types::{CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING, R};
+use crate::diagram::types::{Caption, CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING, R};
 use crate::skia::Canvas;
 
 #[cfg(test)]
@@ -63,10 +63,12 @@ impl<'i> Diagram<'i> {
       let result = Self::node_from(pair, &mut config, index, &mut cursor);
 
       if let Some((rect, node)) = result {
+        match node {
+          Open(_, rect, _) => cursor = config.continuation.end.edge_point(&rect),
+          _ => cursor = config.continuation.end.edge_point(&rect)
+        }
         ast.push(node);
         Bounds::bounds_from_rect(&mut bounds, rect);
-        let point = config.continuation.end.edge_point(&rect);
-        cursor = point
       }
     }
     (ast, bounds)
@@ -403,9 +405,10 @@ impl<'i> Diagram<'i> {
     {
       let displacement = Self::movement_or_default(movement, target, length, &config.continuation.end);
       let points = index.points_from(cursor, source, &displacement, target, open.route);
-      let used = Bounds::bounds_from_points(&points);
+      let rect = Bounds::bounds_from_points(&points);
+      let used = Self::used_with_caption(&caption, rect);
 
-      index.add(ShapeName::Arrow, attrs.clone(), used);
+      index.add(ShapeName::Arrow, attrs.clone(), rect);
 
       let mut endings = endings.clone();
       if endings == Endings::default() {
@@ -413,10 +416,21 @@ impl<'i> Diagram<'i> {
       }
 
       let shape = Shape::Arrow(points, caption.clone(), endings.clone());
-      let node = Open(attrs, used, shape);
+      let node = Open(attrs, rect, shape);
+
       return Some((used, node));
     }
     None
+  }
+
+  /// Captions can be place outside the rect for the shape
+  fn used_with_caption(caption: &&Option<Caption>, rect: Rect) -> Rect {
+    let mut used = rect;
+    if let Some(caption) = &caption {
+      let rect = caption.place_in_rect(&used);
+      Bounds::bounds_from_rect(&mut used, rect);
+    }
+    used
   }
 
   fn line_from<'a>(pair: Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
