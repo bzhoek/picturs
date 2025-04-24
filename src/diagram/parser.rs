@@ -454,18 +454,14 @@ impl<'i> Diagram<'i> {
       } => {
         let displacement = Self::movement_or_default(movement, target, length, &config.continuation.end);
         let points = index.points_from(cursor, source, &displacement, target, open.route);
-        // TODO bepalen wat het verschil is tussen `rect` en `used`
-        // let (rect, used_) = Bounds::rect_from_points(start, movement, end);
 
-        let used = Bounds::bounds_from_points(&points);
-        // info!("{} {} {}", R(used), R(rect), R(used_));
-        // info!("{:?}", points);
+        let rect = Bounds::bounds_from_points(&points);
+        let used = Self::used_with_caption(&caption, rect);
 
-        index.add(ShapeName::Line, attrs.clone(), used);
+        index.add(ShapeName::Line, attrs.clone(), rect);
 
         let shape = Shape::Line(points, caption.clone(), open.endings);
-        let node = Open(attrs, used, shape);
-        // FIXME zou used niet het laatste point moeten zijn?
+        let node = Open(attrs, rect, shape);
         Some((used, node))
       }
     }
