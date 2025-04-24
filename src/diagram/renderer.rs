@@ -133,8 +133,7 @@ impl Renderer {
           canvas.stroke();
         }
 
-        let end = points.last().unwrap();
-        Self::draw_endings(endings, &start, end, canvas);
+        Self::render_endings(points, endings, canvas);
         Self::draw_caption_in(caption, used, canvas);
       }
       Shape::Dot(point, radius, caption) => {
@@ -145,8 +144,7 @@ impl Renderer {
         Self::draw_caption_in(caption, &used, canvas);
       }
       Shape::Arrow(points, caption, endings) => {
-        Self::render_line(canvas, used, points, caption, &Endings::default());
-        Self::render_endings(canvas, points);
+        Self::render_line(canvas, used, points, caption, endings);
       }
       Shape::Line(points, caption, endings) =>
         Self::render_line(canvas, used, points, caption, endings),
@@ -174,30 +172,27 @@ impl Renderer {
 
     canvas.stroke();
 
-    let end = Self::align_point(points.last().unwrap(), 1.);
-    Self::draw_endings(endings, &end, &start, canvas); // FIXME the endings are reverted
+    Self::render_endings(points, endings, canvas);
     Self::draw_caption_in(caption, used, canvas);
   }
 
-  fn render_endings(canvas: &mut Canvas, points: &[Point]) {
+  fn render_endings(points: &[Point], endings: &Endings, canvas: &mut Canvas) {
     let mut iter = points.iter().rev();
     let last = iter.next().unwrap();
     let prev = iter.next().unwrap();
-    let direction = last.sub(*prev);
-    Self::draw_arrow_head(canvas, last, direction);
+    Self::draw_ending(&endings.end, last, prev, canvas);
+    let mut iter = points.iter();
+    let first = iter.next().unwrap();
+    let next = iter.next().unwrap();
+    Self::draw_ending(&endings.start, first, next, canvas);
   }
 
-  fn draw_endings(endings: &Endings, start: &Point, end: &Point, canvas: &mut Canvas) {
-    Self::draw_ending(&endings.start, start, end, canvas);
-    Self::draw_ending(&endings.end, end, start, canvas);
-  }
-
-  fn draw_ending(ending: &Ending, at: &Point, from: &Point, canvas: &mut Canvas) {
+  fn draw_ending(ending: &Ending, last: &Point, before: &Point, canvas: &mut Canvas) {
     match ending {
-      Ending::Dot => Self::draw_dot(canvas, at),
+      Ending::Dot => Self::draw_dot(canvas, last),
       Ending::Arrow => {
-        let direction = at.sub(*from);
-        Self::draw_arrow_head(canvas, at, direction);
+        let direction = last.sub(*before);
+        Self::draw_arrow_head(canvas, last, direction);
       }
       _ => {}
     }

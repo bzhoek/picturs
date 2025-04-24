@@ -7,7 +7,7 @@ mod real_world {
     let string = r#"
       continue down-left
       box.pic1 ht 2in wd 1in "Primary Interrupt Controller"
-      line from 1/9 pic1.w 1.5in left "Timer" ljust opaque ->
+      line from 1/9 pic1.w 1.5in left "Timer" ljust opaque <-
       box.pic2 same "Secondary Interrupt Controller" 2.5in left from pic1
       "#;
     assert_diagram!(string);
@@ -19,7 +19,7 @@ mod real_world {
       continue down-left
       box.pic1 ht 2in wd 1in "Primary Interrupt Controller"
       line from 3/9 pic1.w 2in left <->
-      line from 1/9 pic1.w 1.5in left "Timer" ljust opaque ->
+      line from 1/9 pic1.w 1.5in left "Timer" ljust opaque <-
       line from 2/9 pic1.w "Keyboard" same
       line from 4/9 pic1.w "Serial Port 2" same
       line from 5/9 pic1.w "Serial Port 1" same
