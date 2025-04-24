@@ -8,6 +8,7 @@ use crate::diagram::attributes::{Attributes, EdgeMovement};
 use skia_safe::{scalar, Color, Font, FontMgr, FontStyle, Point, Rect, Size, Vector};
 
 use crate::diagram::conversion::{HEIGHT, WIDTH};
+use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
 use crate::trig::{x_from_degrees, y_from_degrees};
 
@@ -91,18 +92,17 @@ pub struct Caption {
 }
 
 impl Caption {
-
   pub fn place_in_rect(&self, used: &Rect) -> Rect {
     let edge_point = self.rect_edge.edge_point(used);
-    let caption_rect = Rect::from_size(self.size);
+    let padding = (TEXT_PADDING, TEXT_PADDING);
+    let caption_rect = Rect::from_size(self.size).with_outset(padding);
     let caption_center = caption_rect.center();
     let delta = edge_point - caption_center;
     let moved_caption = caption_rect.with_offset(delta);
     let caption_delta = self.caption_edge.edge_delta(&caption_rect);
     let final_caption = moved_caption.with_offset(caption_delta);
-    final_caption
+    final_caption.with_inset(padding)
   }
-
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -461,8 +461,7 @@ impl Edge {
 
   /// Returns the delta from the center of `rect`
   pub fn edge_delta(&self, rect: &Rect) -> Point {
-    let delta = Point::new(-self.x * rect.width(), -self.y * rect.height());
-    delta
+    Point::new(-self.x * rect.width(), -self.y * rect.height())
   }
 
   /// Returns the offset to adjust top-left corner with
