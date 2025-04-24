@@ -87,7 +87,7 @@ pub struct Caption {
   pub text: String,
   pub rect_edge: Edge, // to edge of containing rect
   pub caption_edge: Edge, // to edge of caption
-  pub size: Size,
+  pub bounds: Rect,
   pub opaque: bool,
 }
 
@@ -95,7 +95,7 @@ impl Caption {
   pub fn place_in_rect(&self, used: &Rect) -> Rect {
     let edge_point = self.rect_edge.edge_point(used);
     let padding = (TEXT_PADDING, TEXT_PADDING);
-    let caption_rect = Rect::from_size(self.size).with_outset(padding);
+    let caption_rect = Rect::from_size(self.bounds.size()).with_outset(padding);
     let caption_center = caption_rect.center();
     let delta = edge_point - caption_center;
     let moved_caption = caption_rect.with_offset(delta);

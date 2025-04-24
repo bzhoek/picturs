@@ -232,8 +232,7 @@ impl Renderer {
         canvas.paint.set_color(color);
       }
 
-      let (_, font_metrics) = canvas.font.metrics();
-      topleft.offset((0., -font_metrics.descent));
+      topleft.offset((0., -caption.bounds.bottom));
       canvas.paint.set_style(PaintStyle::Fill);
       canvas.text(&caption.text, topleft);
     }
