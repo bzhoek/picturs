@@ -18,12 +18,12 @@ mod units {
     let string = r#"
       set font "Courier"
       right
-      text "ssh" fit
-      text " -L " fit
+      text "ssh " fit
+      text "-L " fit
       text.local "1025" fit
       text ":localhost:" fit
-      text.remote "25" fit
-      text.host " home.hoek.com" fit
+      text.remote "25 " fit
+      text.host "home.hoek.com" fit
       set font "Helvetica"
       line from local.n 1cm up "local port" above
       line from remote.s 1cm down "remote port" below

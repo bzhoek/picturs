@@ -21,14 +21,14 @@ mod tests {
   fn measure_str() {
     let config = Config::default();
     let bounds = config.measure_string(TQBF);
-    assert_eq!(Rect::new(-1.0, -13.1, 331.3, 3.9), bounds);
+    assert_eq!(Rect::new(0., -13.1, 330.7, 3.9), bounds);
   }
 
   #[test]
   fn measure_whitespace_str() {
     let config = Config::default();
     let bounds = config.measure_string(" TQBF ");
-    assert_eq!(Rect::new(3.7, -13.1, 50.7, 3.9), bounds);
+    assert_eq!(Rect::new(0., -13.1, 54.8, 3.9), bounds);
   }
 
   #[test]
@@ -41,7 +41,7 @@ mod tests {
     let center = rect.center();
     let topleft = center + offset;
 
-    assert_eq!(Point::from((28.15, 41.5)), topleft);
+    assert_eq!(Point::from((28.95, 41.5)), topleft);
   }
 
   #[test]

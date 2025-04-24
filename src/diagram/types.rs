@@ -240,12 +240,12 @@ impl Config {
   }
 
   pub fn measure_string(&self, str: &str) -> Rect {
-    let (_, mut bounds) = self.font.measure_str(str, None);
+    let (width, mut bounds) = self.font.measure_str(str, None);
     let (_, metrics) = self.font.metrics();
+    bounds.left = 0.;
+    bounds.right = Self::round_to_decimals(width as f64, 1) as f32;
     bounds.top = Self::round_to_decimals(metrics.ascent as f64, 1) as f32;
     bounds.bottom = Self::round_to_decimals(metrics.descent as f64, 1) as f32;
-    bounds.left = Self::round_to_decimals(bounds.left as f64, 1) as f32;
-    bounds.right = Self::round_to_decimals(bounds.right as f64, 1) as f32;
     bounds
   }
 
