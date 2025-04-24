@@ -84,7 +84,7 @@ number = @{ (ASCII_DIGIT+ ~ decimals?) | decimals }
 decimals = _{ "." ~ ASCII_DIGIT+ }
 unit = { "in" | "cm" | "mm" | "pt" | "pc" | "px" | "u" }
 
-location = { edge_point? ~ rel_movement+ ~ (last_object | from_object)? }
+location = { edge_point? ~ (rel_movement+ | "at") ~ (last_object | from_object)? }
 rel_movement = { offset ~ direction }
 offset = { size_ }
 direction = { "up" | "down" | "left" | "right" }

@@ -393,7 +393,8 @@ impl Conversion {
           "sw" => 225,
           "w" => 270,
           "nw" => 315,
-          _ => panic!("unexpected compass direction")
+          "c" => return Edge::center(),
+          _ => panic!("unexpected compass direction {}", str)
         }
       }
       Rule::degrees => str.parse().unwrap(),

@@ -121,4 +121,18 @@ mod edges {
     assert_diagram!(string);
   }
 
+  #[test]
+  fn place_center_at_edge() {
+    let string = r#"
+      box.m1 wd 2in ht 1in
+      box.m2 2cm right from m1.e wd 2in ht 1in
+      box.c1 .c at from m1.ne stroke red
+      box.c2 .c at from m2.ne stroke red dotted
+      box.c3 .se at from m2.ne stroke red
+      arrow from m1.c end m1.ne "ne" stroke black
+      arrow from c3.c end m2.ne "sw" stroke black
+      "#;
+    assert_diagram!(string);
+  }
+
 }
