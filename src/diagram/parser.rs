@@ -1,18 +1,18 @@
-use log::{debug, info, warn};
+use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
 use skia_safe::{Color, ISize, Point, Rect, Size, Vector};
 use std::ops::Add;
 use std::path::Path;
 
-use crate::diagram::attributes::{Attributes, OpenAttributes};
+use crate::diagram::attributes::{Attributes, ClosedAttributes, OpenAttributes};
 use crate::diagram::bounds::Bounds;
 use crate::diagram::conversion::{Conversion};
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
-use crate::diagram::types::{Caption, CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING, R};
+use crate::diagram::types::{Caption, CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING};
 use crate::skia::Canvas;
 
 #[cfg(test)]
@@ -343,7 +343,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn box_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.rectangle);
+    let closed = ClosedAttributes::from(pair, config, &config.rectangle);
+    let mut attrs = Self::closed_attrs(closed);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Box);
 
     if let Attributes::Closed {
@@ -375,6 +376,26 @@ impl<'i> Diagram<'i> {
       return Some((bounds, rectangle));
     }
     None
+  }
+
+  fn closed_attrs(closed: ClosedAttributes) -> Attributes {
+    Attributes::Closed {
+      id: closed.id,
+      same: closed.same,
+      width: closed.width,
+      height: closed.height,
+      padding: closed.padding,
+      radius: closed.radius,
+      space: closed.space,
+      title: closed.title,
+      location: closed.location,
+      endings: closed.endings,
+      stroke: closed.stroke,
+      fill: closed.fill,
+      text: closed.text,
+      thickness: closed.thickness,
+      effect: closed.effect,
+    }
   }
 
   fn adjust_rect(rect: &Rect, direction: EdgeDirection, change: f32) -> Rect {
@@ -549,7 +570,7 @@ impl<'i> Diagram<'i> {
     let id = Conversion::identified_in(pair);
     let title = Conversion::string_in(pair, Rule::inner).unwrap();
     let attributes = Rules::find_rule(pair, Rule::text_attributes).unwrap();
-    let location = Conversion::location_for(pair, &config.continuation.end, &config.unit);
+    let location = Conversion::location_for(pair, &config.unit);
 
     let fit = Rules::dig_rule(&attributes, Rule::fit);
     let paragraph = match fit {
