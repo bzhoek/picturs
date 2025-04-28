@@ -73,7 +73,7 @@ impl Attributes<'_> {
       radius: Conversion::radius_into(&attributes, &config.unit).unwrap_or(shape.radius),
       space: Conversion::space_into(&attributes, &config.unit).unwrap_or(shape.space),
       title: Conversion::strings_for(&attributes),
-      location: Conversion::location_for(&attributes, &Edge::default(), &config.unit),
+      location: Conversion::location_for(&attributes, &config.unit),
       endings: Conversion::endings(&attributes),
       stroke,
       fill,
@@ -140,6 +140,73 @@ impl Attributes<'_> {
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
+pub struct ClosedAttributes<'a> {
+  pub(crate) id: Option<&'a str>,
+  pub(crate) same: bool,
+  pub(crate) width: Option<f32>,
+  pub(crate) height: Option<f32>,
+  pub(crate) padding: f32,
+  pub(crate) radius: f32,
+  pub(crate) space: f32,
+  pub(crate) title: Option<String>,
+  pub(crate) strings: Vec<String>,
+  pub(crate) location: Option<EdgeMovement>,
+  pub(crate) endings: Option<Endings>,
+  pub(crate) stroke: Color,
+  pub(crate) fill: Color,
+  pub(crate) text: Color,
+  pub(crate) thickness: f32,
+  pub(crate) effect: Effect,
+}
+
+impl<'a> ClosedAttributes<'a> {
+  pub(crate) fn from(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> Self {
+    let mut attrs = ClosedAttributes::default();
+    pair.clone().into_inner().for_each(|pair| {
+      match pair.as_rule() {
+        Rule::identified => attrs.id = Some(pair.into_inner().next().unwrap().as_str()),
+        Rule::closed_attributes => Self::attributes(&pair, config, shape, &mut attrs),
+        _ => panic!("Unexpected {:?}", pair)
+      }
+    });
+    attrs
+  }
+
+  pub(crate) fn attributes(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig, attrs: &mut ClosedAttributes<'a>) {
+    attrs.fill = Color::TRANSPARENT;
+    attrs.stroke = shape.stroke;
+    attrs.thickness = 1.0;
+    attrs.text = Color::BLACK;
+    attrs.radius = shape.radius;
+    attrs.space = shape.space;
+    attrs.padding = shape.padding;
+
+    pair.clone().into_inner().for_each(|pair| {
+      match pair.as_rule() {
+        Rule::string => {
+          attrs.strings.push(Conversion::string_from(pair));
+        },
+        Rule::same => attrs.same = true,
+        Rule::height => attrs.height = Conversion::length_from_(pair, &config.unit, shape.height).pixels().into(),
+        Rule::width => attrs.width = Conversion::length_from_(pair, &config.unit, shape.width).pixels().into(),
+        Rule::location => attrs.location = Some(Conversion::location_from(pair, &config.unit)),
+        Rule::stroke => attrs.stroke = Conversion::color_from(pair).unwrap_or(attrs.stroke),
+        Rule::fill => attrs.fill = Conversion::color_from(pair).unwrap_or(attrs.fill),
+        Rule::thickness => attrs.thickness = Conversion::thickness_from(pair),
+        Rule::effect => attrs.effect = Conversion::effect_from(pair),
+        Rule::radius => attrs.radius = Conversion::length_from(pair, &config.unit).pixels(),
+        Rule::text_color => attrs.text = Conversion::color_from(pair).unwrap_or(attrs.text),
+        Rule::endings => attrs.endings = Conversion::endings_from(pair).into(),
+        _ => panic!("Unexpected {:?}", pair)
+      }
+    });
+    if !attrs.strings.is_empty() {
+      attrs.title = Some(attrs.strings.join("\n"));
+    }
+  }
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct OpenAttributes<'a> {
   pub(crate) id: Option<&'a str>,
   pub(crate) same: bool,
@@ -192,12 +259,12 @@ impl<'a> OpenAttributes<'a> {
 
 #[cfg(test)]
 mod tests {
-  use skia_safe::Color;
   use crate::diagram::attributes::OpenAttributes;
   use crate::diagram::conversion::Conversion;
   use crate::diagram::parser::Rule;
-  use crate::diagram::types::{Caption, Config, Edge, Ending, Endings, ObjectEdge};
   use crate::diagram::types::EdgeDirection::Vertical;
+  use crate::diagram::types::{Caption, Config, Edge, Ending, Endings, ObjectEdge};
+  use skia_safe::Color;
 
   fn attrs_from(string: &str, config: Option<Config>) -> OpenAttributes {
     let config = config.unwrap_or_default();

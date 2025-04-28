@@ -416,42 +416,44 @@ impl Conversion {
     hour * 30 + minutes as i32
   }
 
-  pub(crate) fn location_for(pair: &Pair<Rule>, _end: &Edge, unit: &Unit) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
+  pub(crate) fn location_for(pair: &Pair<Rule>, unit: &Unit) -> Option<(Edge, Vec<Displacement>, ObjectEdge)> {
     Rules::find_rule(pair, Rule::location)
-      .map(|p| {
-        let mut object: Option<ObjectEdge> = None;
-        let mut directions: Vec<Displacement> = vec![];
-        let mut edge: Option<Edge> = None;
+      .map(|p| Self::location_from(p, unit))
+  }
 
-        for pair in p.into_inner() {
-          match pair.as_rule() {
-            Rule::edge_point => { edge = Some(Self::edge_from(pair)); }
-            Rule::rel_movement => {
-              let movement = Self::displacement_from(pair, unit);
-              directions.push(movement);
-            }
-            Rule::last_object => { object = Some(Self::fraction_edge_from(pair)); }
-            Rule::from_object => { object = Some(Self::fraction_edge_from(pair)); }
-            _ => {}
-          }
-        };
+  pub(crate) fn location_from(pair: Pair<Rule>, unit: &Unit) -> (Edge, Vec<Displacement>, ObjectEdge) {
+    let mut object: Option<ObjectEdge> = None;
+    let mut directions: Vec<Displacement> = vec![];
+    let mut edge: Option<Edge> = None;
 
-        if let Some(movement) = directions.first() {
-          if let Some(object) = object.as_mut() {
-            if ShapeName::some(object.id.as_str()).is_some() {
-              object.edge = movement.edge.clone()
-            }
-          }
-          if object.is_none() {
-            object = Some(ObjectEdge::new("#last", movement.edge.clone()))
-          }
-          if edge.is_none() {
-            edge = Some(movement.edge.flip())
-          }
+    for pair in pair.into_inner() {
+      match pair.as_rule() {
+        Rule::edge_point => { edge = Some(Self::edge_from(pair)); }
+        Rule::rel_movement => {
+          let movement = Self::displacement_from(pair, unit);
+          directions.push(movement);
         }
+        Rule::last_object => { object = Some(Self::fraction_edge_from(pair)); }
+        Rule::from_object => { object = Some(Self::fraction_edge_from(pair)); }
+        _ => {}
+      }
+    };
 
-        (edge.unwrap(), directions, object.unwrap())
-      })
+    if let Some(movement) = directions.first() {
+      if let Some(object) = object.as_mut() {
+        if ShapeName::some(object.id.as_str()).is_some() {
+          object.edge = movement.edge.clone()
+        }
+      }
+      if object.is_none() {
+        object = Some(ObjectEdge::new("#last", movement.edge.clone()))
+      }
+      if edge.is_none() {
+        edge = Some(movement.edge.flip())
+      }
+    }
+
+    (edge.unwrap_or_default(), directions, object.unwrap())
   }
 
   pub(crate) fn endings_from(pair: Pair<Rule>) -> Endings {
