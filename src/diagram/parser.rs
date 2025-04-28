@@ -1,4 +1,3 @@
-use log::info;
 use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
@@ -157,7 +156,6 @@ impl<'i> Diagram<'i> {
   }
 
   fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point, shape: &ShapeConfig) -> Option<(Rect, Node<'a>)> {
-    info!("container_from {:?}", pair.as_str());
     let closed = ClosedAttributes::from(pair, config, shape);
     let mut attrs = Self::closed_attrs(closed);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Container);

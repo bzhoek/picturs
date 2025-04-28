@@ -250,24 +250,9 @@ impl Conversion {
       .map(|length| length.pixels())
   }
 
-  pub(crate) fn space_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
-    Conversion::length_in(attributes, Rule::space, unit)
-      .map(|length| length.pixels())
-  }
-
   pub(crate) fn width_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_in(attributes, Rule::width, unit)
       .map(|length| length.pixels())
-  }
-
-  pub(crate) fn width_into_(attributes: &Pair<Rule>, unit: &Unit, size: f32) -> Option<f32> {
-    Conversion::length_in_(attributes, Rule::width, unit, size)
-      .map(|length| length.pixels())
-  }
-
-  pub(crate) fn length_in_(pair: &Pair<Rule>, rule: Rule, unit: &Unit, size: f32) -> Option<Length> {
-    Rules::dig_rule(pair, rule)
-      .map(|pair| Self::length_from_(pair, unit, size))
   }
 
   pub(crate) fn length_from_(pair: Pair<Rule>, unit: &Unit, size: f32) -> Length {
@@ -284,18 +269,8 @@ impl Conversion {
     }
   }
 
-  pub(crate) fn height_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
-    Conversion::length_in(attributes, Rule::height, unit)
-      .map(|length| length.pixels())
-  }
-
   pub(crate) fn length_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
     Conversion::length_in(attributes, Rule::length, unit)
-      .map(|length| length.pixels())
-  }
-
-  pub(crate) fn padding_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {
-    Conversion::length_in(attributes, Rule::padding, unit)
       .map(|length| length.pixels())
   }
 

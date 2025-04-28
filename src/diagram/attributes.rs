@@ -60,29 +60,6 @@ impl Attributes<'_> {
     }, attributes)
   }
 
-  pub(crate) fn closed_attributes<'a>(pair: &Pair<'a, Rule>, config: &Config, shape: &ShapeConfig) -> (Attributes<'a>, Pair<'a, Rule>) {
-    let attributes = Rules::get_rule(pair, Rule::closed_attributes);
-    let (stroke, fill, text) = Conversion::colors_from(&attributes, &shape.stroke);
-
-    (Attributes::Closed {
-      id: Conversion::identified_in(pair),
-      same: Rules::find_rule(&attributes, Rule::same).is_some(),
-      width: Conversion::width_into_(&attributes, &config.unit, shape.width),
-      height: Conversion::height_into(&attributes, &config.unit),
-      padding: Conversion::padding_into(&attributes, &config.unit).unwrap_or(shape.padding),
-      radius: Conversion::radius_into(&attributes, &config.unit).unwrap_or(shape.radius),
-      space: Conversion::space_into(&attributes, &config.unit).unwrap_or(shape.space),
-      title: Conversion::strings_for(&attributes),
-      location: Conversion::location_for(&attributes, &config.unit),
-      endings: Conversion::endings(&attributes),
-      stroke,
-      fill,
-      text,
-      thickness: Conversion::thickness_for(&attributes),
-      effect: Conversion::effect_for(&attributes),
-    }, attributes)
-  }
-
   pub(crate) fn copy_attributes(&mut self, other: Option<&Attributes>) {
     match (self, other) {
       (Attributes::Closed {
