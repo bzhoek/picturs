@@ -166,7 +166,8 @@ impl<'a> ClosedAttributes<'a> {
       match pair.as_rule() {
         Rule::identified => attrs.id = Some(pair.into_inner().next().unwrap().as_str()),
         Rule::closed_attributes => Self::attributes(&pair, config, shape, &mut attrs),
-        _ => panic!("Unexpected {:?}", pair)
+        // _ => panic!("Unexpected {:?}", pair)
+        _ => {}
       }
     });
     attrs
@@ -185,10 +186,11 @@ impl<'a> ClosedAttributes<'a> {
       match pair.as_rule() {
         Rule::string => {
           attrs.strings.push(Conversion::string_from(pair));
-        },
+        }
         Rule::same => attrs.same = true,
         Rule::height => attrs.height = Conversion::length_from_(pair, &config.unit, shape.height).pixels().into(),
         Rule::width => attrs.width = Conversion::length_from_(pair, &config.unit, shape.width).pixels().into(),
+        Rule::padding => attrs.padding = Conversion::length_from(pair, &config.unit).pixels(),
         Rule::location => attrs.location = Some(Conversion::location_from(pair, &config.unit)),
         Rule::stroke => attrs.stroke = Conversion::color_from(pair).unwrap_or(attrs.stroke),
         Rule::fill => attrs.fill = Conversion::color_from(pair).unwrap_or(attrs.fill),
@@ -197,6 +199,7 @@ impl<'a> ClosedAttributes<'a> {
         Rule::radius => attrs.radius = Conversion::length_from(pair, &config.unit).pixels(),
         Rule::text_color => attrs.text = Conversion::color_from(pair).unwrap_or(attrs.text),
         Rule::endings => attrs.endings = Conversion::endings_from(pair).into(),
+        Rule::continuation => {}
         _ => panic!("Unexpected {:?}", pair)
       }
     });

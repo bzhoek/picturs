@@ -1,3 +1,4 @@
+use log::info;
 use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest_derive::Parser;
@@ -156,7 +157,9 @@ impl<'i> Diagram<'i> {
   }
 
   fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point, shape: &ShapeConfig) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, attributes) = Attributes::closed_attributes(pair, config, shape);
+    info!("container_from {:?}", pair.as_str());
+    let closed = ClosedAttributes::from(pair, config, shape);
+    let mut attrs = Self::closed_attrs(closed);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Container);
 
     if let Attributes::Closed {
@@ -176,7 +179,7 @@ impl<'i> Diagram<'i> {
 
       let (mut nodes, bounds) = {
         let mut config = config.clone();
-        Conversion::continuation_in(&attributes).into_iter().for_each(|continuation| {
+        Conversion::continuation_in(pair).into_iter().for_each(|continuation| {
           config.continuation = continuation;
         });
         Self::nodes_from(pair.clone().into_inner(), vec![], &inset, config, index)
@@ -206,7 +209,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn circle_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.circle);
+    let closed = ClosedAttributes::from(pair, config, &config.circle);
+    let mut attrs = Self::closed_attrs(closed);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Circle);
 
     if let Attributes::Closed {
@@ -231,7 +235,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn cylinder_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.cylinder);
+    let closed = ClosedAttributes::from(pair, config, &config.cylinder);
+    let mut attrs = Self::closed_attrs(closed);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Cylinder);
 
     if let Attributes::Closed {
@@ -258,7 +263,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn ellipse_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.ellipse);
+    let closed = ClosedAttributes::from(pair, config, &config.ellipse);
+    let mut attrs = Self::closed_attrs(closed);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Ellipse);
 
     if let Attributes::Closed {
@@ -284,7 +290,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn file_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.file);
+    let closed = ClosedAttributes::from(pair, config, &config.rectangle);
+    let mut attrs = Self::closed_attrs(closed);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::File);
 
     if let Attributes::Closed {
@@ -311,7 +318,8 @@ impl<'i> Diagram<'i> {
   }
 
   fn oval_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index, cursor: &Point) -> Option<(Rect, Node<'a>)> {
-    let (mut attrs, _) = Attributes::closed_attributes(pair, config, &config.oval);
+    let closed = ClosedAttributes::from(pair, config, &config.oval);
+    let mut attrs = Self::closed_attrs(closed);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Oval);
 
     if let Attributes::Closed {
