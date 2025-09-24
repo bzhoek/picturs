@@ -106,8 +106,9 @@ impl<'i> Diagram<'i> {
     let mut size = Size::new_empty();
     pair.clone().into_inner().for_each(|pair| {
       match pair.as_rule() {
-        Rule::height => size.height = Conversion::length_from(pair, &config.unit).pixels(),
+        Rule::sized => size = Conversion::sized_from(pair, &config.unit),
         Rule::width => size.width = Conversion::length_from(pair, &config.unit).pixels(),
+        Rule::height => size.height = Conversion::length_from(pair, &config.unit).pixels(),
         _ => panic!("Unexpected {:?}", pair)
       }
     });

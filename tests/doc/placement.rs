@@ -3,7 +3,16 @@ mod placement {
   use picturs::assert_diagram;
 
   #[test]
-  fn size() {
+  fn sized() {
+    let string = r#"
+      canvas 0.75x0.5in
+      grid
+      "#;
+    assert_diagram!(string, None);
+  }
+
+  #[test]
+  fn size_width_height() {
     let string = r#"
       canvas wd 0.75in ht 0.5in
       grid

@@ -3,7 +3,8 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 picture = _{ SOI ~ configuration* ~ statements* ~ EOI }
 configuration = _{ grid | canvas }
 grid = { "grid" }
-canvas = { "canvas" ~ width ~ height }
+canvas = { "canvas" ~ (width ~ height | sized) }
+sized = { number ~ "x" ~ number ~ unit? }
 
 statements = _{ comment | group | container | shape | font_config | unit_config | box_config | circle_config | line_config | continue_from | continuation | flow_to | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }

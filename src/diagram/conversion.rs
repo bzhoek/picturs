@@ -3,7 +3,7 @@
 use log::{debug, warn};
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
-use skia_safe::{Color, Font, FontMgr, FontStyle};
+use skia_safe::{Color, Font, FontMgr, FontStyle, Size};
 
 use crate::diagram::index::ShapeName;
 use crate::diagram::parser::{DiagramParser, Rule};
@@ -243,6 +243,14 @@ impl Conversion {
     let length = Self::next_to_f32(&mut width).unwrap();
     let unit = Self::next_to_string(&mut width).map(|str| str.into()).unwrap_or(*unit);
     Length::new(length, unit)
+  }
+
+  pub(crate) fn sized_from(pair: Pair<Rule>, unit: &Unit) -> Size {
+    let mut sized = pair.into_inner();
+    let width = Self::next_to_f32(&mut sized).expect("width as f32");
+    let height = Self::next_to_f32(&mut sized).expect("height as f32");
+    let unit = Self::next_to_string(&mut sized).map(|str| str.into()).unwrap_or(*unit);
+    Size::new(Length::pixels_for(width, unit), Length::pixels_for(height, unit))
   }
 
   pub(crate) fn radius_into(attributes: &Pair<Rule>, unit: &Unit) -> Option<f32> {

@@ -528,12 +528,16 @@ impl Length {
   }
 
   pub fn pixels(&self) -> f32 {
-    match self.unit {
-      Unit::Cm => (self.length * 39.3701).trunc(),
-      Unit::In => self.length * INCH,
-      Unit::Pc => self.length * INCH / 6.,
-      Unit::Pt => self.length * INCH / 72.,
-      _ => self.length * 1.,
+    Self::pixels_for(self.length, self.unit)
+  }
+
+  pub fn pixels_for(length: f32, unit: Unit) -> f32 {
+    match unit {
+      Unit::Cm => (length * 39.3701).trunc(),
+      Unit::In => length * INCH,
+      Unit::Pc => length * INCH / 6.,
+      Unit::Pt => length * INCH / 72.,
+      _ => length * 1.,
     }
   }
 
