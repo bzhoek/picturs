@@ -1,7 +1,7 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 // WHITESPACE = { ( " "* ~ "\\" ~ NEWLINE ~ " "* ) }
 picture = _{ SOI ~ statements* ~ EOI }
-statements = _{ comment | group | container | shape | font_config | unit_config | box_config | circle_config | line_config | continue_from | continuation | flow_to | move_to }
+statements = _{ comment | group | container | grid | shape | font_config | unit_config | box_config | circle_config | line_config | continue_from | continuation | flow_to | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ dot | arrow | line | sline | rectangle | file | circle | ellipse | cylinder | oval | text | path }
 
@@ -49,6 +49,7 @@ arrow = { "arrow" ~ open_attributes }
 line = { "line" ~ identified? ~ open_attributes }
 sline = { "sline" ~ identified? ~ open_attributes }
 path = { "path" ~ identified? ~ open_attributes }
+grid = { "grid" }
 
 open_attributes = { open_attribute* }
 open_attribute = _{ stroke | length | source | target | abs_movement | rel_movement | caption | endings | same | route | thickness }

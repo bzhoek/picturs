@@ -13,6 +13,7 @@ mod visual {
 }
 
 mod doc {
+  mod placement;
   mod align;
   mod edges;
   mod spacing;

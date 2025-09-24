@@ -53,7 +53,10 @@ impl Canvas {
     self.surface.canvas().clear(color);
   }
 
-  #[inline]
+  pub fn restore(&mut self) {
+    self.canvas().restore();
+  }
+
   pub fn save(&mut self) {
     self.canvas().save();
   }

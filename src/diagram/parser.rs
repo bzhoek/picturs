@@ -11,7 +11,7 @@ use crate::diagram::conversion::{Conversion};
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
+use crate::diagram::types::Node::{Closed, Container, Grid, Open, Primitive};
 use crate::diagram::types::{Caption, CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING};
 use crate::skia::Canvas;
 
@@ -94,14 +94,16 @@ impl<'i> Diagram<'i> {
           used.offset(offset);
           println!("Closed {:?}", used);
         }
-        Node::Move(_) => {}
         Node::Font(_) => {}
+        Node::Grid => {}
+        Node::Move(_) => {}
       }
     }
   }
 
   fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index<'a>, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
     let result = match pair.as_rule() {
+      Rule::grid => Some((Rect::new_empty(), Grid)),
       Rule::container => Self::container_from(&pair, config, index, cursor, &config.container),
       Rule::group => Self::container_from(&pair, config, index, cursor, &config.group),
       Rule::circle => Self::circle_from(&pair, config, index, cursor),
@@ -805,6 +807,10 @@ impl<'i> Diagram<'i> {
   }
 
   fn write_to_file<P: AsRef<Path>>(&mut self, filepath: P, canvas: &mut Canvas) {
+    if let Some(_) = self.nodes.iter().find(|&node| matches!(node, Node::Grid)) {
+      Renderer::render_grid(canvas, self.inset);
+    }
+
     canvas.translate(-self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
     Renderer::render_to_canvas(canvas, &self.nodes);
     canvas.write_png(filepath);

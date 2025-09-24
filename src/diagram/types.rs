@@ -46,6 +46,7 @@ impl<'a> CommonAttributes<'a> {
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, PartialEq)]
 pub enum Node<'a> {
+  Grid,
   Container(Attributes<'a>, Used, Vec<Node<'a>>),
   Primitive(CommonAttributes<'a>, Shape),
   Closed(Attributes<'a>, Used, Option<Paragraph>, Shape),

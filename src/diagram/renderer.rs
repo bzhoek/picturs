@@ -8,13 +8,38 @@ use skia_safe::{Color, PaintStyle, Point, Rect};
 use crate::diagram::attributes::Attributes;
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
-use crate::diagram::types::{Caption, Ending, Endings, Node, Paragraph, Radius, Shape};
+use crate::diagram::types::{Caption, Ending, Endings, Length, Node, Paragraph, Radius, Shape, Unit};
 use crate::skia::Canvas;
-use crate::skia::Effect::Solid;
+use crate::skia::Effect::{Dotted, Solid};
 
 pub struct Renderer {}
 
 impl Renderer {
+
+  pub fn render_grid(canvas: &mut Canvas, inset: Point) {
+    canvas.save();
+    canvas.translate(-inset.x, -inset.y);
+    canvas.stroke_with(1.0, Color::GRAY, &Dotted);
+
+    let (width, height) = (canvas.surface.width() + inset.x as i32, canvas.surface.height() + inset.y as i32);
+    let step = Length::new(0.25, Unit::In).pixels() as usize;
+
+    for x in (0..width).step_by(step) {
+      let x = 0.5 + x as f32;
+      canvas.move_to(x, 0.);
+      canvas.line_to(x, height as f32);
+    }
+
+    for y in (0..height).step_by(step) {
+      let y = 0.5 + y as f32;
+      canvas.move_to(0., y);
+      canvas.line_to(width as f32, y);
+    }
+
+    canvas.stroke();
+    canvas.restore();
+  }
+
   pub fn render_to_canvas(canvas: &mut Canvas, nodes: &[Node]) {
     for node in nodes.iter() {
       canvas.paint.set_stroke_width(1.0);
@@ -98,6 +123,7 @@ impl Renderer {
         }
         Node::Font(font) => canvas.font = font.clone(),
         Node::Move(_used) => {}
+        Node::Grid => {}
         _ => warn!("Cannot render: {:?}", node),
       }
     }
