@@ -124,6 +124,9 @@ pub fn dump_nested(level: usize, nodes: &[Node]) {
   let indent = "  ".repeat(level - 1);
   for (index, node) in nodes.iter().enumerate() {
     match node {
+      Node::Canvas(size) => {
+        println!("{} {}. Canvas {:?}", indent, index, size);
+      }
       Node::Grid => {
         println!("{} {}. Grid", indent, index);
       }

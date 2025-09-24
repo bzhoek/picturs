@@ -94,6 +94,7 @@ impl<'i> Diagram<'i> {
           used.offset(offset);
           println!("Closed {:?}", used);
         }
+        Node::Canvas(_) => {}
         Node::Font(_) => {}
         Node::Grid => {}
         Node::Move(_) => {}
@@ -101,9 +102,22 @@ impl<'i> Diagram<'i> {
     }
   }
 
+  fn canvas_from<'a>(pair: &Pair<'a, Rule>, config: &mut Config) -> Option<(Rect, Node<'a>)> {
+    let mut size = Size::new_empty();
+    pair.clone().into_inner().for_each(|pair| {
+      match pair.as_rule() {
+        Rule::height => size.height = Conversion::length_from(pair, &config.unit).pixels(),
+        Rule::width => size.width = Conversion::length_from(pair, &config.unit).pixels(),
+        _ => panic!("Unexpected {:?}", pair)
+      }
+    });
+    Some((Rect::from_size(size), Node::Canvas(size)))
+  }
+
   fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index<'a>, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
     let result = match pair.as_rule() {
       Rule::grid => Some((Rect::new_empty(), Grid)),
+      Rule::canvas => Self::canvas_from(&pair, config),
       Rule::container => Self::container_from(&pair, config, index, cursor, &config.container),
       Rule::group => Self::container_from(&pair, config, index, cursor, &config.group),
       Rule::circle => Self::circle_from(&pair, config, index, cursor),
@@ -152,7 +166,10 @@ impl<'i> Diagram<'i> {
         config.continuation = Continuation::new(direction);
         None
       }
-      _ => None
+      _ => {
+        warn!("Ignored {:?}", pair);
+        None
+      }
     };
     result
   }
@@ -800,8 +817,14 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn shrink_to_file<P: AsRef<Path>>(&mut self, path: P, background: Option<Color>) {
-    let size = self.bounds.with_outset(self.inset);
-    let size = ISize::new(size.width() as i32, size.height() as i32);
+    let rect = self.nodes.iter().find_map(|node| match node {
+      Node::Canvas(size) => Some(Rect::from_size(*size)),
+      _ => None
+    }).unwrap_or(self.bounds);
+
+    let rect = rect.with_outset(self.inset);
+    let size = ISize::new(rect.width() as i32, rect.height() as i32);
+
     let mut canvas = Canvas::new(size, background);
     self.write_to_file(path, &mut canvas);
   }
