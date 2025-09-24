@@ -7,7 +7,7 @@ use std::ops::{Add, Mul};
 use crate::diagram::attributes::{Attributes, EdgeMovement};
 use skia_safe::{scalar, Color, Font, FontMgr, FontStyle, Point, Rect, Size, Vector};
 
-use crate::diagram::conversion::{HEIGHT, INCH, WIDTH};
+use crate::diagram::conversion::{HEIGHT, PPI, WIDTH, WIDTH_IN};
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
 use crate::trig::{x_from_degrees, y_from_degrees};
@@ -217,7 +217,7 @@ impl Config {
       circle: ShapeConfig::default(),
       cylinder: ShapeConfig::default(),
       ellipse: ShapeConfig::default(),
-      line: Length::new(2., Unit::Cm),
+      line: Length::new(WIDTH_IN, Unit::In),
       oval: ShapeConfig::default(),
       rectangle: ShapeConfig::default(),
       text: ShapeConfig::default(),
@@ -534,9 +534,9 @@ impl Length {
   pub fn pixels_for(length: f32, unit: Unit) -> f32 {
     match unit {
       Unit::Cm => (length * 39.3701).trunc(),
-      Unit::In => length * INCH,
-      Unit::Pc => length * INCH / 6.,
-      Unit::Pt => length * INCH / 72.,
+      Unit::In => length * PPI,
+      Unit::Pc => length * PPI / 6.,
+      Unit::Pt => length * PPI / 72.,
       _ => length * 1.,
     }
   }

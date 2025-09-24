@@ -29,4 +29,14 @@ mod placement {
     assert_diagram!(string, None);
   }
 
+  #[test]
+  fn flow_right() {
+    let string = r#"
+      grid
+      line
+      box "Hello"
+      arrow
+      "#;
+    assert_diagram!(string, None);
+  }
 }
