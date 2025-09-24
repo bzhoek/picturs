@@ -9,10 +9,10 @@ textlayout = ["skia-safe/textlayout"]
 
 [dependencies]
 anyhow = "1.0"
-assert_matches = "1.5.0"
 clap = { version = "4.4", features = ["derive"] }
-env_logger = "0.11.0"
-log = "0.4"
 pest = "2.7"
 pest_derive = "2.7"
 skia-safe = { version = "0.70.0", features = ["metal", "textlayout"] }
+
+env_logger = "0.11"
+log = "0.4"
