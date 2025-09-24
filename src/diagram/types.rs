@@ -7,7 +7,7 @@ use std::ops::{Add, Mul};
 use crate::diagram::attributes::{Attributes, EdgeMovement};
 use skia_safe::{scalar, Color, Font, FontMgr, FontStyle, Point, Rect, Size, Vector};
 
-use crate::diagram::conversion::{HEIGHT, WIDTH};
+use crate::diagram::conversion::{HEIGHT, INCH, WIDTH};
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
 use crate::trig::{x_from_degrees, y_from_degrees};
@@ -528,10 +528,10 @@ impl Length {
 
   pub fn pixels(&self) -> f32 {
     match self.unit {
-      Unit::Cm => self.length * 38.,
-      Unit::In => self.length * 118.,
-      Unit::Pc => self.length * 16.,
-      Unit::Pt => self.length * 1.3333,
+      Unit::Cm => (self.length * 39.3701).trunc(),
+      Unit::In => self.length * INCH,
+      Unit::Pc => self.length * INCH / 6.,
+      Unit::Pt => self.length * INCH / 72.,
       _ => self.length * 1.,
     }
   }

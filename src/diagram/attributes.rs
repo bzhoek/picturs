@@ -262,7 +262,7 @@ mod tests {
     let attrs = attrs_from(string, None);
     assert_eq!(Some("ui13"), attrs.id);
     assert_eq!(Endings { start: Ending::Arrow, end: Ending::Arrow }, attrs.endings);
-    assert_eq!(76., attrs.length);
+    assert_eq!(78., attrs.length);
     assert_eq!(Some(ObjectEdge { id: "id1".into(), edge: Edge { direction: Vertical, x: 0.0, y: -0.5 } }), attrs.source);
     assert_eq!(Some(ObjectEdge { id: "id2".into(), edge: Edge { direction: Vertical, x: 0.0, y: 0.5 } }), attrs.target);
     assert_eq!(true, attrs.same);

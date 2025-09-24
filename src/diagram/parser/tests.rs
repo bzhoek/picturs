@@ -63,7 +63,7 @@ fn offset_from_rect() {
     Displacement::new(1., Unit::Cm, Edge::from("s")),
   ];
   let result = Index::offset_from_rect(&rect, &Edge::from("nw"), &movements);
-  let expected = Rect { left: 116.0, top: 78.0, right: 156.0, bottom: 118.0 };
+  let expected = Rect { left: 118.0, top: 79.0, right: 158.0, bottom: 119.0 };
   assert_eq!(result, expected);
 }
 

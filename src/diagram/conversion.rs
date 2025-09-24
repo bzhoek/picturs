@@ -14,7 +14,7 @@ use crate::skia::Effect;
 #[cfg(test)]
 mod tests;
 
-const INCH: f32 = 118.;
+pub const INCH: f32 = 96.;
 
 pub const WIDTH: f32 = INCH * 0.75;
 pub const HEIGHT: f32 = INCH * 0.5;
