@@ -811,7 +811,10 @@ impl<'i> Diagram<'i> {
       Renderer::render_grid(canvas, self.inset);
     }
 
-    canvas.translate(-self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
+    let (dx, dy) = (-self.bounds.left + self.inset.x, -self.bounds.top + self.inset.y);
+    let (dx, dy) = (dx.trunc(), dy.trunc());
+    canvas.translate(dx, dy);
+
     Renderer::render_to_canvas(canvas, &self.nodes);
     canvas.write_png(filepath);
   }

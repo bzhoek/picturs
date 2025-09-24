@@ -66,7 +66,7 @@ impl Canvas {
   }
 
   pub fn translate(&mut self, dx: f32, dy: f32) {
-    self.canvas().translate((dx.trunc(), dy.trunc()));
+    self.canvas().translate((dx, dy));
   }
 
   pub fn scale(&mut self, sx: f32, sy: f32) {
