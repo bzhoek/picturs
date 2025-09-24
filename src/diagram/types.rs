@@ -93,9 +93,14 @@ pub struct Caption {
 }
 
 impl Caption {
+  
+  pub fn padding() -> (f32, f32) {
+    (TEXT_PADDING, TEXT_PADDING / 2.)
+  }
+  
   pub fn place_in_rect(&self, used: &Rect) -> Rect {
     let edge_point = self.rect_edge.edge_point(used);
-    let padding = (TEXT_PADDING, TEXT_PADDING);
+    let padding = Self::padding();
     let caption_rect = Rect::from_size(self.bounds.size()).with_outset(padding);
     let caption_center = caption_rect.center();
     let delta = edge_point - caption_center;

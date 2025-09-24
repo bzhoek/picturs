@@ -33,9 +33,9 @@ mod placement {
   fn captions_multiple() {
     let string = r#"
       grid
-      line "Hello"
-      box "Big," "World!"
-      arrow "Bye"
+      line "line"
+      box "Hello," "World!"
+      arrow "arrow"
       "#;
     assert_diagram!(string, None);
   }

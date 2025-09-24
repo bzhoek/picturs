@@ -246,7 +246,7 @@ impl Renderer {
 
       if caption.opaque {
         let mut rect = Self::align_rect(&rect, 1.);
-        rect.outset((TEXT_PADDING, TEXT_PADDING));
+        rect.outset(Caption::padding());
         let color = canvas.paint.color();
         canvas.paint.set_color(Color::LIGHT_GRAY);
         canvas.paint.set_style(PaintStyle::StrokeAndFill);
