@@ -420,13 +420,13 @@ impl Edge {
     match self.direction {
       Horizontal => Self {
         direction: Horizontal,
-        x: self.x * -1.,
+        x: -self.x,
         y: self.y,
       },
       Vertical => Self {
         direction: Vertical,
         x: self.x,
-        y: self.y * -1.,
+        y: -self.y,
       },
     }
   }
@@ -435,13 +435,13 @@ impl Edge {
     match self.direction {
       Horizontal => Self {
         direction: Horizontal,
-        x: self.x * -1.,
-        y: self.y * -1.,
+        x: -self.x,
+        y: -self.y,
       },
       Vertical => Self {
         direction: Vertical,
-        x: self.x * -1.,
-        y: self.y * -1.,
+        x: -self.x,
+        y: -self.y,
       },
     }
   }

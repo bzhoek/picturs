@@ -246,7 +246,7 @@ mod tests {
   use crate::diagram::types::{Caption, Config, Edge, Ending, Endings, ObjectEdge};
   use skia_safe::Color;
 
-  fn attrs_from(string: &str, config: Option<Config>) -> OpenAttributes {
+  fn attrs_from(string: &str, config: Option<Config>) -> OpenAttributes<'_> {
     let config = config.unwrap_or_default();
     let mut top = Conversion::pairs_for(Rule::picture, string);
     let next = top.next().unwrap();

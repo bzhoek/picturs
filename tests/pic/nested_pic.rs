@@ -9,7 +9,7 @@ mod nested {
   use picturs::pic::Node::{Container, Primitive};
   use picturs::pic::Shape::{Arc, Arrow, Box};
 
-  fn parse_pic(string: &str) -> Pair<Rule> {
+  fn parse_pic(string: &str) -> Pair<'_, Rule> {
     PicParser::parse(Rule::picture, &*string).unwrap().next().unwrap()
   }
 

@@ -12,7 +12,7 @@ pub mod edges;
 mod attributes;
 pub mod bounds;
 
-pub fn create_diagram(string: &str) -> Diagram {
+pub fn create_diagram(string: &str) -> Diagram<'_> {
   init_logging();
   let mut diagram = Diagram::inset(A5, (16., 16.));
   diagram.parse_string(string);

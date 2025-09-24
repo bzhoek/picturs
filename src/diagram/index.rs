@@ -79,18 +79,18 @@ impl<'a> Index<'a> {
     self.shapes.push((name, rect));
   }
 
-  pub(crate) fn last_open(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes)> {
+  pub(crate) fn last_open(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes<'_>)> {
     Self::last_shape(shape, &self.open)
   }
 
-  pub(crate) fn last_closed(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes)> {
+  pub(crate) fn last_closed(&self, shape: ShapeName) -> Option<&(ShapeName, Attributes<'_>)> {
     Self::last_shape(shape, &self.closed)
   }
 
   fn last_shape<'b>(shape: ShapeName, vec: &'b Vec<(ShapeName, Attributes<'b>)>) -> Option<&'b (ShapeName, Attributes<'b>)> {
     vec.iter().filter(|(name, _)| {
       shape == *name
-    }).last()
+    }).next_back()
   }
 
   /// modify a rectangle by any edge and displacements
@@ -116,7 +116,7 @@ impl<'a> Index<'a> {
   fn last(&self, shape: ShapeName) -> Option<&(ShapeName, Rect)> {
     self.shapes.iter().filter(|(name, _)| {
       shape == *name
-    }).last()
+    }).next_back()
   }
 
   pub fn offset_from_rect(rect: &Rect, edge: &Edge, movements: &[Displacement]) -> Rect {

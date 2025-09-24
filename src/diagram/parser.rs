@@ -744,7 +744,7 @@ impl<'i> Diagram<'i> {
   }
 
   #[allow(dead_code)]
-  fn find_node(&self, id: &str) -> Option<&Node> {
+  fn find_node(&self, id: &str) -> Option<&Node<'_>> {
     Self::find_nodes(&self.nodes, id)
   }
 
@@ -807,7 +807,7 @@ impl<'i> Diagram<'i> {
   }
 
   fn write_to_file<P: AsRef<Path>>(&mut self, filepath: P, canvas: &mut Canvas) {
-    if let Some(_) = self.nodes.iter().find(|&node| matches!(node, Node::Grid)) {
+    if self.nodes.iter().any(|node| matches!(node, Node::Grid)) {
       Renderer::render_grid(canvas, self.inset);
     }
 

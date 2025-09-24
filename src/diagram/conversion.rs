@@ -22,11 +22,11 @@ pub const HEIGHT: f32 = INCH * 0.5;
 pub(crate) struct Conversion;
 
 impl Conversion {
-  pub(crate) fn pair_for(rule: Rule, string: &str) -> Pair<Rule> {
+  pub(crate) fn pair_for(rule: Rule, string: &str) -> Pair<'_, Rule> {
     Self::pairs_for(rule, string).next().unwrap()
   }
 
-  pub(crate) fn pairs_for(rule: Rule, string: &str) -> Pairs<Rule> {
+  pub(crate) fn pairs_for(rule: Rule, string: &str) -> Pairs<'_, Rule> {
     DiagramParser::parse(rule, string).unwrap()
   }
 
