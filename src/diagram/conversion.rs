@@ -14,13 +14,6 @@ use crate::skia::Effect;
 #[cfg(test)]
 mod tests;
 
-pub const PPI: f32 = 96.;
-
-pub const WIDTH_IN: f32 = 0.75;
-pub const HEIGHT_IN: f32 = 0.5;
-
-pub const WIDTH: f32 = WIDTH_IN * PPI;
-pub const HEIGHT: f32 = HEIGHT_IN * PPI;
 
 pub(crate) struct Conversion;
 

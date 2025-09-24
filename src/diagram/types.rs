@@ -7,7 +7,6 @@ use std::ops::{Add, Mul};
 use crate::diagram::attributes::{Attributes, EdgeMovement};
 use skia_safe::{scalar, Color, Font, FontMgr, FontStyle, Point, Rect, Size, Vector};
 
-use crate::diagram::conversion::{HEIGHT, PPI, WIDTH, WIDTH_IN};
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
 use crate::trig::{x_from_degrees, y_from_degrees};
@@ -190,8 +189,8 @@ impl ShapeConfig {
   pub fn stroke(color: Color) -> Self {
     Self {
       padding: 0.,
-      width: WIDTH.trunc(),
-      height: HEIGHT.trunc(),
+      width: WIDTH.pixels(),
+      height: HEIGHT.pixels(),
       radius: 0.,
       space: 0.,
       stroke: color,
@@ -217,15 +216,15 @@ impl Config {
       circle: ShapeConfig::default(),
       cylinder: ShapeConfig::default(),
       ellipse: ShapeConfig::default(),
-      line: Length::new(WIDTH_IN, Unit::In),
+      line: WIDTH,
       oval: ShapeConfig::default(),
       rectangle: ShapeConfig::default(),
       text: ShapeConfig::default(),
       unit: Unit::default(),
       file: ShapeConfig {
         padding: 8.0,
-        width: HEIGHT.trunc(),
-        height: WIDTH.trunc(),
+        width: HEIGHT.pixels(),
+        height: WIDTH.pixels(),
         radius: 8.0,
         space: 0.0,
         stroke: Color::BLUE,
@@ -512,6 +511,10 @@ impl From<&str> for Unit {
     }
   }
 }
+
+pub const PPI: f32 = 96.;
+pub const WIDTH: Length = Length { length: 0.75, unit: Unit::In };
+pub const HEIGHT: Length = Length { length: 0.5, unit: Unit::In };
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Length {
