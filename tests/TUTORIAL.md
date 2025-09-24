@@ -18,8 +18,6 @@ The origin for each shape is its center.
 
 ![](snapshots/placement-grid_center.png)
 
-Captions are also centered. Both in closed and open shapes.
-
 When you add more shapes, they continue in a `flow` direction. The default flows right from the `center` of the last shape.
 
 ```pic
@@ -29,3 +27,13 @@ arrow
 ```
 ![](snapshots/placement-flow_right.png)
 
+### Captions
+
+Captions are also centered. Both in closed and open shapes. For open shapes the default is `above` the center.
+
+```pic
+line "Hello"
+box "Big," "World!"
+arrow "Bye"
+```
+![](snapshots/placement-captions_multiple.png)

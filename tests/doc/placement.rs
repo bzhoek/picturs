@@ -30,12 +30,12 @@ mod placement {
   }
 
   #[test]
-  fn flow_right() {
+  fn captions_multiple() {
     let string = r#"
       grid
-      line
-      box "Hello"
-      arrow
+      line "Hello"
+      box "Big," "World!"
+      arrow "Bye"
       "#;
     assert_diagram!(string, None);
   }

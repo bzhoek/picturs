@@ -185,6 +185,7 @@ impl Conversion {
         alignment = match string {
           "ljust" => (Edge::left(), Edge::left()),
           "top" => (Edge::above(), Edge::above()),
+          "center" => (Edge::center(), Edge::center()),
           "bottom" => (Edge::below(), Edge::below()),
           _ => (string.into(), Edge::from(string).mirror())
         }.into();
@@ -193,7 +194,7 @@ impl Conversion {
       _ => panic!("Unexpected rule for caption {:?}", pair.as_rule())
     });
 
-    let (rect_edge, caption_edge) = alignment.unwrap_or((Edge::center(), Edge::center()));
+    let (rect_edge, caption_edge) = alignment.unwrap_or((Edge::center(), Edge::below()));
     let text = text.unwrap();
     let bounds = config.measure_string(&text);
     Caption { text, rect_edge, caption_edge, bounds, opaque }

@@ -70,7 +70,7 @@ left_end = { "<" | "*" }
 right_end = { ">" | "*" }
 
 caption = { string ~ alignment? ~ opaque? }
-alignment = { "left" | "right" | "above" | "below" | "nw" | "ne" | "sw" | "se" | "ljust" | "top" | "bottom" }
+alignment = { "left" | "right" | "above" | "center" | "below" | "nw" | "ne" | "sw" | "se" | "ljust" | "top" | "bottom" }
 opaque = { "opaque" }
 
 // text

@@ -7,9 +7,9 @@ mod align {
     let string = r#"
       right
       set line ln 3cm
-      arrow "above" above
+      arrow "above"
       flow 1cm
-      line "center"
+      line "center" center
       flow 1cm
       arrow "below" below
       flow 1cm
@@ -25,7 +25,7 @@ mod align {
       box "" wd 1in ht 0
       arrow "left" left
       flow 1cm
-      line "center"
+      line "center" center
       flow 1cm
       arrow "right" right
       "#;
