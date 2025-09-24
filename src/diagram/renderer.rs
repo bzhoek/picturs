@@ -1,5 +1,5 @@
 use std::f32::consts::PI;
-use std::ops::{Sub};
+use std::ops::Sub;
 
 use log::warn;
 use skia_safe::textlayout::TextAlign;
@@ -15,25 +15,23 @@ use crate::skia::Effect::{Dotted, Solid};
 pub struct Renderer {}
 
 impl Renderer {
-
   pub fn render_grid(canvas: &mut Canvas, inset: Point) {
+    let step = Length::new(0.25, Unit::In).pixels();
+
     canvas.save();
-    canvas.translate(-inset.x, -inset.y);
+    canvas.translate(-(step - inset.x) + 0.5, -(step - inset.y) + 0.5);
     canvas.stroke_with(1.0, Color::GRAY, &Dotted);
 
-    let (width, height) = (canvas.surface.width() + inset.x as i32, canvas.surface.height() + inset.y as i32);
-    let step = Length::new(0.25, Unit::In).pixels() as usize;
+    let (width, height) = (canvas.surface.width() + step as i32, canvas.surface.height() + step as i32);
 
-    for x in (0..width).step_by(step) {
-      let x = 0.5 + x as f32;
-      canvas.move_to(x, 0.);
-      canvas.line_to(x, height as f32);
+    for x in (0..width).step_by(step as usize) {
+      canvas.move_to(x as f32, 0.);
+      canvas.line_to(x as f32, height as f32);
     }
 
-    for y in (0..height).step_by(step) {
-      let y = 0.5 + y as f32;
-      canvas.move_to(0., y);
-      canvas.line_to(width as f32, y);
+    for y in (0..height).step_by(step as usize) {
+      canvas.move_to(0., y as f32);
+      canvas.line_to(width as f32, y as f32);
     }
 
     canvas.stroke();

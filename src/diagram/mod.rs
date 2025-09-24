@@ -1,4 +1,5 @@
 use crate::diagram::parser::Diagram;
+use crate::diagram::types::{Length, Unit};
 use crate::init_logging;
 use crate::skia::A5;
 
@@ -14,7 +15,8 @@ pub mod bounds;
 
 pub fn create_diagram(string: &str) -> Diagram<'_> {
   init_logging();
-  let mut diagram = Diagram::inset(A5, (16., 16.));
+  let pad = Length::new(1., Unit::Pc).pixels();
+  let mut diagram = Diagram::inset(A5, (pad, pad));
   diagram.parse_string(string);
   diagram
 }
