@@ -6,6 +6,7 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 use skia_safe::{Color, ISize};
+use crate::diagram::create_diagram;
 
 pub fn test_canvas(size: impl Into<ISize>) -> Canvas {
   Canvas::new(size, Some(Color::LIGHT_GRAY))
@@ -27,6 +28,16 @@ macro_rules! assert_canvas {
 
 #[macro_export]
 macro_rules! assert_diagram {
+  ($string:expr, $color:expr) => {
+    {
+      fn stub() {}
+      fn type_name_of<T>(_: T) -> &'static str {
+          std::any::type_name::<T>()
+      }
+
+      picturs::test::assert_diagram_from_function(file!(), type_name_of(stub), $string, $color);
+    };
+  };
   ($string:expr) => {
     {
       fn stub() {}
@@ -34,22 +45,17 @@ macro_rules! assert_diagram {
           std::any::type_name::<T>()
       }
 
-      let function_name = type_name_of(stub).rsplit("::").collect::<Vec<_>>();
-      let path = std::path::Path::new(file!());
-      let diagram = picturs::diagram::create_diagram($string);
-      picturs::test::assert_diagram_from_function(diagram, path, function_name);
+      picturs::test::assert_diagram_from_function(file!(), type_name_of(stub), $string, Some(skia_safe::Color::LIGHT_GRAY));
     };
-  }
+  };
 }
 
-pub fn assert_diagram_from_function(diagram: Diagram, path: &Path, function_name: Vec<&str>) {
-  let prefix = derive_prefix(path, function_name);
-  assert_diagram(diagram, &prefix).unwrap();
-}
-
-pub fn assert_canvas_from_function(canvas: Canvas, path: &Path, function_name: Vec<&str>) {
-  let prefix = derive_prefix(path, function_name);
-  assert_canvas(canvas, &prefix).unwrap();
+pub fn assert_diagram_from_function(file: &str, type_name: &str, string: &str, background: Option<Color>) {
+  let path = std::path::Path::new(file);
+  let function_name = type_name.rsplit("::").collect::<Vec<_>>();
+  let file_prefix = derive_prefix(path, function_name);
+  let diagram = create_diagram(string);
+  assert_diagram(diagram, &file_prefix, background).unwrap();
 }
 
 fn derive_prefix(path: &Path, function_name: Vec<&str>) -> String {
@@ -64,15 +70,20 @@ fn derive_prefix(path: &Path, function_name: Vec<&str>) -> String {
   prefix
 }
 
+pub fn assert_canvas_from_function(canvas: Canvas, path: &Path, function_name: Vec<&str>) {
+  let prefix = derive_prefix(path, function_name);
+  assert_canvas(canvas, &prefix).unwrap();
+}
+
 fn assert_canvas(mut canvas: Canvas, prefix: &str) -> anyhow::Result<()> {
   let last_file = format!("{}-last.png", prefix);
   canvas.write_png(&last_file);
   assert_png(prefix, &last_file, None)
 }
 
-fn assert_diagram(mut diagram: Diagram, prefix: &str) -> anyhow::Result<()> {
+fn assert_diagram(mut diagram: Diagram, prefix: &str, background: Option<Color>) -> anyhow::Result<()> {
   let last_file = format!("{}-last.png", prefix);
-  diagram.shrink_to_file(&last_file, Some(Color::LIGHT_GRAY));
+  diagram.shrink_to_file(&last_file, background);
   assert_png(prefix, &last_file, Some(&diagram))
 }
 

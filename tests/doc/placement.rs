@@ -8,7 +8,7 @@ mod placement {
       box "Hello"
       grid
       "#;
-    assert_diagram!(string);
+    assert_diagram!(string, None);
   }
 
 }
