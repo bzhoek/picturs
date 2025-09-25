@@ -255,6 +255,7 @@ mod real_world {
   fn thinka_assets() {
     let string = r#"
     grid
+    set group pd .25in stroke black dotted
     group.external {
       box.flow "Webflow"
       move
@@ -271,13 +272,17 @@ mod real_world {
     move
     group.customer down {
       box.ios "Companion"
+      move
       box.thinka "Thinka"
+      move
       box.knx "KNX"
     }
     move
     group.aws down {
       box.bastion "Bastion"
+      move
       box.cloud "Cloud"
+      move
       box.alexa "Alexa"
     }
     "#;

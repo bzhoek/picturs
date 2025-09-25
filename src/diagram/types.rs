@@ -9,6 +9,7 @@ use skia_safe::{scalar, Color, Font, FontMgr, FontStyle, Point, Rect, Size, Vect
 
 use crate::diagram::parser::TEXT_PADDING;
 use crate::diagram::types::EdgeDirection::{Horizontal, Vertical};
+use crate::skia::Effect;
 use crate::trig::{x_from_degrees, y_from_degrees};
 
 pub const BLOCK_PADDING: f32 = 8.;
@@ -181,6 +182,7 @@ pub struct ShapeConfig {
   pub(crate) radius: f32,
   pub(crate) space: f32,
   pub(crate) stroke: Color,
+  pub(crate) effect: Effect,
 }
 
 impl Default for ShapeConfig {
@@ -198,6 +200,7 @@ impl ShapeConfig {
       radius: 0.,
       space: 0.,
       stroke: color,
+      effect: Effect::default(),
     }
   }
 }
@@ -231,6 +234,7 @@ impl Config {
         radius: 8.0,
         space: 0.0,
         stroke: Color::BLUE,
+        effect: Effect::default(),
       },
       font,
     }

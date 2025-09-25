@@ -5,7 +5,7 @@ use skia_safe::{Color, ISize, Point, Rect, Size, Vector};
 use std::ops::Add;
 use std::path::Path;
 
-use crate::diagram::attributes::{Attributes, ClosedAttributes, OpenAttributes};
+use crate::diagram::attributes::{Attributes, ClosedAttributes, ClosedConfiguration, OpenAttributes};
 use crate::diagram::bounds::Bounds;
 use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
@@ -142,12 +142,8 @@ impl<'i> Diagram<'i> {
         config.unit = Unit::from(pair.into_inner().as_str());
         None
       }
-      Rule::box_config => {
-        Self::config_shape(&mut config.rectangle, pair, &config.unit);
-        None
-      }
-      Rule::circle_config => {
-        Self::config_shape(&mut config.circle, pair, &config.unit);
+      Rule::closed_config => {
+        Self::config_shape(config, pair);
         None
       }
       Rule::line_config => {
@@ -690,34 +686,55 @@ impl<'i> Diagram<'i> {
     })
   }
 
-  fn config_shape(config: &mut ShapeConfig, pair: Pair<Rule>, unit: &Unit) {
+  fn config_shape(config: &mut Config, pair: Pair<Rule>) {
+    let unit = &config.unit;
+    let mut name: Option<&str> = None;
+    let mut closed = ClosedConfiguration::default();
     pair.into_inner().for_each(|pair| {
       match pair.as_rule() {
-        Rule::padding => {
-          let length = Conversion::length_from(pair, unit);
-          config.padding = length.pixels();
-        }
-        Rule::height => {
-          let length = Conversion::length_from(pair, unit);
-          config.height = length.pixels();
-        }
-        Rule::width => {
-          let length = Conversion::length_from(pair, unit);
-          config.width = length.pixels();
-        }
-        Rule::radius => {
-          let length = Conversion::length_from(pair, unit);
-          config.radius = length.pixels();
-        }
-        Rule::space => {
-          let length = Conversion::length_from(pair, unit);
-          config.space = length.pixels();
-        }
+        Rule::stroke => closed.stroke = Conversion::color_from(pair),
+        Rule::closed_shapes => name = pair.as_str().into(),
+        Rule::padding => closed.padding = Conversion::length_from(pair, unit).pixels().into(),
+        Rule::effect => closed.effect = Conversion::effect_from(pair).into(),
+        Rule::height => closed.height = Conversion::length_from(pair, unit).pixels().into(),
+        Rule::width => closed.width = Conversion::length_from(pair, unit).pixels().into(),
+        Rule::radius => closed.radius = Conversion::length_from(pair, unit).pixels().into(),
+        Rule::space => closed.space = Conversion::length_from(pair, unit).pixels().into(),
         _ => {
           warn!("Ignored {:?}", pair);
         }
       }
     });
+
+    let config = name.map(|name| {
+      match name {
+        "box" => &mut config.rectangle,
+        "circle" => &mut config.circle,
+        "group" => &mut config.group,
+        &_ => panic!("Not implemented {:?}", name)
+      }
+    }).unwrap();
+    if let Some(value) = closed.width {
+      config.width = value;
+    }
+    if let Some(value) = closed.height {
+      config.height = value;
+    }
+    if let Some(value) = closed.radius {
+      config.radius = value;
+    }
+    if let Some(value) = closed.space {
+      config.space = value;
+    }
+    if let Some(value) = closed.padding {
+      config.padding = value;
+    }
+    if let Some(value) = closed.stroke {
+      config.stroke = value;
+    }
+    if let Some(value) = closed.effect {
+      config.effect = value;
+    }
   }
 
   fn displace_from_start(start: Point, movement: &Option<Displacement>, flow: &Continuation, default: f32) -> Point {

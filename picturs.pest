@@ -6,7 +6,7 @@ grid = { "grid" }
 canvas = { "canvas" ~ (width ~ height | sized) }
 sized = { number ~ "x" ~ number ~ unit? }
 
-statements = _{ comment | group | shape | font_config | unit_config | box_config | circle_config | line_config | continue_from | continuation | flow_to | move_to }
+statements = _{ comment | group | shape | font_config | unit_config | closed_config | line_config | continue_from | continuation | flow_to | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ dot | arrow | line | sline | rectangle | file | circle | ellipse | cylinder | oval | text | path }
 
@@ -21,8 +21,8 @@ continue_direction = { "right-top" | "down-left" }
 // config
 unit_config = { "set unit" ~ unit }
 font_config = { "set font" ~ string? ~ size? }
-box_config = { "set box" ~ (padding | width| height | radius | space )* }
-circle_config = { "set circle" ~ (height) }
+closed_config = { "set" ~ closed_shapes ~ (padding | width| height | radius | space | stroke | effect )* }
+closed_shapes = { "box" | "circle" | "group" }
 line_config = { "set line" ~ length }
 
 // closed shapes
