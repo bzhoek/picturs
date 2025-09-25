@@ -94,10 +94,12 @@ impl<'i> Diagram<'i> {
           used.offset(offset);
           println!("Closed {:?}", used);
         }
+        Node::Move(ref mut used) => {
+          used.offset(offset);
+        }
         Node::Canvas(_) => {}
         Node::Font(_) => {}
         Node::Grid => {}
-        Node::Move(_) => {}
       }
     }
   }
