@@ -122,7 +122,7 @@ mod real_world {
       box "Parmezaan" color yellow
       box "Bakken" color orange
 
-      box 1cm down from pbp.s dotted {
+      group 1cm down from pbp.s stroke black dotted {
         down
         box "Parmezaan" "schafen" color yellow
         box "Ui snipperen" "Knoflook hakken" color yellow
@@ -141,7 +141,7 @@ mod real_world {
     let string = r#"
       continue down-left
       set box rd 8pt ht .4in wd .4in sp 4 pd 0
-      box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
+      group nostroke pd 4 { // 13 x 1u, 1 x 1.5u
         continue right-top
         box "`"
         box "1"
@@ -158,7 +158,7 @@ mod real_world {
         box "="
         box "delete" wd 1.5u
       }
-      box invisible pd 4 { // 13 x 1u, 1 x 1.5u
+      group invisible pd 4 { // 13 x 1u, 1 x 1.5u
         continue from right-top
         box "tab" wd 1.5u
         box "Q"
@@ -175,7 +175,7 @@ mod real_world {
         box "]"
         box "\\"
       }
-      box invis pd 4 { // 11 x 1u, 2 x 1.75u
+      group invis pd 4 { // 11 x 1u, 2 x 1.75u
         right-top
         box "caps" wd 1.75u
         box "A"
@@ -191,7 +191,7 @@ mod real_world {
         box "'"
         box "enter" wd 1.75u
       }
-      box invis pd 4 { // 10 x 1u, 2 x 2.25u
+      group invis pd 4 { // 10 x 1u, 2 x 2.25u
         right-top
         box "shift" wd 2.25u
         box "Z"
@@ -214,7 +214,7 @@ mod real_world {
   fn keyboard_small() {
     let string = r#"
       set box rd 8pt ht .4in wd .4in sp 4 pd 0
-      box nostroke pd 4 { // 13 x 1u, 1 x 1.5u
+      group nostroke pd 4 { // 13 x 1u, 1 x 1.5u
         continue right-top
         box "1"
         box "2"
@@ -227,9 +227,9 @@ mod real_world {
   #[test]
   fn thinka_layers() {
     let string = r#"
-      box.thinka down {
+      group.thinka down stroke black {
         box.ui "UI"
-        box.functions right {
+        group.functions right stroke black {
           box "HAP"
           box "Alexa"
           box "Google"
@@ -240,7 +240,7 @@ mod real_world {
           box "History"
         }
         box.model "Home Model"
-        box.transport right {
+        group.transport right stroke black {
           box "thinka(-knx)"
           box "thinka-zwave"
           box "Cloud"

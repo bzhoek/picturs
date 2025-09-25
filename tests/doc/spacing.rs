@@ -5,7 +5,7 @@ mod spacing {
   #[test]
   fn expand() {
     let string = r#"
-      box dotted color red {
+      group dotted color red {
         box "expand"
       }
       "#;
@@ -15,7 +15,7 @@ mod spacing {
   #[test]
   fn shrink() {
     let string = r#"
-      box color blue {
+      group color blue {
         box "shrink" dotted color red
       }
       "#;

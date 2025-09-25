@@ -63,8 +63,8 @@ mod hello {
   fn box_box() {
     let string = r#"
       continue down-left
-      box { box "A" }
-      box { box "B" }
+      group { box "A" }
+      group { box "B" }
       "#;
     assert_diagram!(string);
   }
@@ -73,12 +73,12 @@ mod hello {
   fn box_box_box() {
     let string = r#"
       continue down-left
-      box top color green {
+      group top color green {
         box
         box
         box
       }
-      box top color blue {
+      group top color blue {
         box
         box
         box
@@ -92,27 +92,27 @@ mod hello {
     let string = r#"
       continue down-left
       set box ht 32 wd 64
-      box top color green {
+      group top color green {
         box "Layout Direction" wd 160
         box ".start"
         box ".end"
       }
-      box top color blue {
+      group top color blue {
         box "right" wd 160
         box ".w"
         box ".e"
       }
-      box top color blue {
+      group top color blue {
         box "down" wd 160
         box ".n"
         box ".s"
       }
-      box top color blue {
+      group top color blue {
         box "left" wd 160
         box ".e"
         box ".w"
       }
-      box top color blue {
+      group top color blue {
         box "up" wd 160
         box ".s"
         box ".n"

@@ -117,7 +117,6 @@ impl<'i> Diagram<'i> {
     let result = match pair.as_rule() {
       Rule::grid => Some((Rect::new_empty(), Node::Grid)),
       Rule::canvas => Self::canvas_from(&pair, config),
-      Rule::container => Self::group_from(&pair, config, index, cursor, &config.container),
       Rule::group => Self::group_from(&pair, config, index, cursor, &config.group),
       Rule::circle => Self::circle_from(&pair, config, index, cursor),
       Rule::cylinder => Self::cylinder_from(&pair, config, index, cursor),

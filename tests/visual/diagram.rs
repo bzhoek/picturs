@@ -6,10 +6,10 @@ mod diagram {
   fn double_containers() {
     let string = r#"
       continue down-left
-      box.now "Now" {
+      group.now "Now" stroke black {
         box.step3 rad 4pt "What do we need to start doing now"
       }
-      box.future rd 4pt "March" {
+      group.future rd 4pt "March" stroke black {
         box.step1 "Imagine it is four months into the future"
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
@@ -51,7 +51,7 @@ mod diagram {
   fn text_shape() {
     let string = r#"
       continue down-left
-      box {
+      group stroke black {
         text "Now"
         box rad 4pt "What do we need to start doing now"
       }
@@ -63,10 +63,10 @@ mod diagram {
   fn remember_the_future() {
     let string = r#"
       continue down-left
-      box.now "Now" {
+      group.now "Now" stroke black {
         box.step3 "What do we need to start doing now"
       }
-      box.future "March" .nw 8cm right from now.ne {
+      group.future "March" .nw 8cm right from now.ne stroke black {
         box.step1 "Imagine it is four months into the future"
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"
@@ -81,10 +81,10 @@ mod diagram {
   fn whole_ast() {
     let string = r#"
       continue down-left
-      box.now "Now" {
+      group.now "Now" stroke black {
         box.step3 "What do we need to start doing now"
       }
-      box.future "March" .nw 1cm right from now.ne {
+      group.future "March" .nw 1cm right from now.ne stroke black {
         box.step1 "Imagine it is four months into the future"
         box.step2 "What would you like to write about the past period"
         box.note "IMPORTANT: write in past tense"

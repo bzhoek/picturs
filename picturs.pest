@@ -6,7 +6,7 @@ grid = { "grid" }
 canvas = { "canvas" ~ (width ~ height | sized) }
 sized = { number ~ "x" ~ number ~ unit? }
 
-statements = _{ comment | group | container | shape | font_config | unit_config | box_config | circle_config | line_config | continue_from | continuation | flow_to | move_to }
+statements = _{ comment | group | shape | font_config | unit_config | box_config | circle_config | line_config | continue_from | continuation | flow_to | move_to }
 comment = @{ ("#" | "//") ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 shape = _{ dot | arrow | line | sline | rectangle | file | circle | ellipse | cylinder | oval | text | path }
 
@@ -27,7 +27,6 @@ line_config = { "set line" ~ length }
 
 // closed shapes
 group = { "group" ~ identified? ~ closed_attributes ~ "{" ~ statements* ~ "}" }
-container = { "box" ~ identified? ~ closed_attributes ~ "{" ~ statements* ~ "}" }
 rectangle = { "box" ~ identified? ~ closed_attributes }
 file = { "file" ~ identified? ~ closed_attributes }
 circle = { "circle" ~ identified? ~ closed_attributes }

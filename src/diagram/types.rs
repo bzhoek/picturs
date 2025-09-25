@@ -157,7 +157,6 @@ impl From<&str> for Endings {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Config {
-  pub(crate) container: ShapeConfig,
   pub(crate) group: ShapeConfig,
   pub(crate) continuation: Continuation,
   pub(crate) unit: Unit,
@@ -214,7 +213,6 @@ impl Config {
     let typeface = FontMgr::default().match_family_style("Helvetica", FontStyle::default()).unwrap();
     let font = Font::from_typeface(typeface, 17.0);
     Self {
-      container: ShapeConfig::default(),
       group: ShapeConfig::stroke(Color::TRANSPARENT),
       continuation: flow,
       dot: Length::new(4., Unit::Px),
