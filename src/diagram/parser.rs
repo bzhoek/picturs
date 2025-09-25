@@ -11,7 +11,6 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::Node::{Closed, Group, Grid, Open, Primitive};
 use crate::diagram::types::{Caption, CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING, HEIGHT};
 use crate::skia::Canvas;
 
@@ -64,7 +63,7 @@ impl<'i> Diagram<'i> {
 
       if let Some((rect, node)) = result {
         match node {
-          Open(_, rect, _) => cursor = config.continuation.end.edge_point(&rect),
+          Node::Open(_, rect, _) => cursor = config.continuation.end.edge_point(&rect),
           _ => cursor = config.continuation.end.edge_point(&rect)
         }
         ast.push(node);
@@ -78,17 +77,17 @@ impl<'i> Diagram<'i> {
     let offset: Point = offset.into();
     for node in nodes {
       match node {
-        Group(_, ref mut used, ref mut nodes) => {
+        Node::Group(_, ref mut used, ref mut nodes) => {
           used.offset(offset);
           Self::transform_nodes(nodes, offset);
         }
-        Primitive(ref mut attrs, _) => {
+        Node::Primitive(ref mut attrs, _) => {
           attrs.used.offset(offset);
         }
-        Closed(_, ref mut used, _, _) => {
+        Node::Closed(_, ref mut used, _, _) => {
           used.offset(offset);
         }
-        Open(_, ref mut used, _) => {
+        Node::Open(_, ref mut used, _) => {
           used.offset(offset);
         }
         Node::Move(ref mut used) => {
@@ -116,7 +115,7 @@ impl<'i> Diagram<'i> {
 
   fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index<'a>, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
     let result = match pair.as_rule() {
-      Rule::grid => Some((Rect::new_empty(), Grid)),
+      Rule::grid => Some((Rect::new_empty(), Node::Grid)),
       Rule::canvas => Self::canvas_from(&pair, config),
       Rule::container => Self::group_from(&pair, config, index, cursor, &config.container),
       Rule::group => Self::group_from(&pair, config, index, cursor, &config.group),
@@ -222,7 +221,7 @@ impl<'i> Diagram<'i> {
 
       let mut padded = shifted;
       padded.bottom += padding;
-      return Some((padded, Group(attrs, shifted, nodes)));
+      return Some((padded, Node::Group(attrs, shifted, nodes)));
     }
     None
   }
@@ -247,7 +246,7 @@ impl<'i> Diagram<'i> {
       index.position_rect(location, &mut used);
       index.add(ShapeName::Circle, attrs.clone(), used);
 
-      let circle = Closed(attrs, used, paragraph, Shape::Circle);
+      let circle = Node::Closed(attrs, used, paragraph, Shape::Circle);
       return Some((used, circle));
     }
     None
@@ -275,7 +274,7 @@ impl<'i> Diagram<'i> {
 
       index.insert_shape(ShapeName::Cylinder, *id, used);
 
-      let cylinder = Closed(attrs, used, paragraph, Shape::Cylinder);
+      let cylinder = Node::Closed(attrs, used, paragraph, Shape::Cylinder);
       return Some((used, cylinder));
     }
     None
@@ -302,7 +301,7 @@ impl<'i> Diagram<'i> {
       index.position_rect(location, &mut used);
       index.insert_shape(ShapeName::Ellipse, *id, used);
 
-      let ellipse = Closed(attrs, used, paragraph, Shape::Ellipse);
+      let ellipse = Node::Closed(attrs, used, paragraph, Shape::Ellipse);
       return Some((used, ellipse));
     }
     None
@@ -330,7 +329,7 @@ impl<'i> Diagram<'i> {
 
       index.insert_shape(ShapeName::File, *id, used);
 
-      let file = Closed(attrs, used, paragraph, Shape::File);
+      let file = Node::Closed(attrs, used, paragraph, Shape::File);
       return Some((used, file));
     }
     None
@@ -357,7 +356,7 @@ impl<'i> Diagram<'i> {
       index.position_rect(location, &mut used);
       index.insert_shape(ShapeName::Oval, *id, used);
 
-      let oval = Closed(attrs, used, paragraph, Shape::Oval);
+      let oval = Node::Closed(attrs, used, paragraph, Shape::Oval);
       return Some((used, oval));
     }
     None
@@ -399,7 +398,7 @@ impl<'i> Diagram<'i> {
 
       // TODO explain the outer bounds concept with regards to the continuation cursor
       let bounds = Self::adjust_rect(&outer, config.continuation.direction, *padding);
-      let rectangle = Closed(attrs, inner, paragraph, Shape::Rectangle);
+      let rectangle = Node::Closed(attrs, inner, paragraph, Shape::Rectangle);
       return Some((bounds, rectangle));
     }
     None
@@ -464,7 +463,7 @@ impl<'i> Diagram<'i> {
       }
 
       let shape = Shape::Arrow(points, caption.clone(), endings.clone());
-      let node = Open(attrs, rect, shape);
+      let node = Node::Open(attrs, rect, shape);
 
       return Some((used, node));
     }
@@ -509,7 +508,7 @@ impl<'i> Diagram<'i> {
         index.add(ShapeName::Line, attrs.clone(), rect);
 
         let shape = Shape::Line(points, caption.clone(), open.endings);
-        let node = Open(attrs, rect, shape);
+        let node = Node::Open(attrs, rect, shape);
         Some((used, node))
       }
     }
@@ -566,7 +565,7 @@ impl<'i> Diagram<'i> {
         index.add(ShapeName::Line, attrs.clone(), rect);
 
         let shape = Shape::Sline(vec!(start, end), caption.clone(), endings.clone());
-        let node = Open(attrs, rect, shape);
+        let node = Node::Open(attrs, rect, shape);
         Some((rect, node))
       }
     }
@@ -581,7 +580,7 @@ impl<'i> Diagram<'i> {
     index.insert_shape(ShapeName::Path, open.id, used);
 
     let shape = Shape::Path(points, open.caption.clone());
-    let node = Open(attrs, used, shape);
+    let node = Node::Open(attrs, used, shape);
     Some((used, node))
   }
 
@@ -623,7 +622,7 @@ impl<'i> Diagram<'i> {
 
     let common = CommonAttributes::new(id, used, Color::BLACK, 1.);
     let shape = Shape::Text(paragraph, location);
-    let text = Primitive(common, shape);
+    let text = Node::Primitive(common, shape);
     Some((used, text))
   }
 
@@ -659,7 +658,7 @@ impl<'i> Diagram<'i> {
         index.insert_shape(ShapeName::Dot, *id, bounds);
 
         let shape = Shape::Dot(point, radius, caption.clone());
-        let node = Open(attrs, bounds, shape);
+        let node = Node::Open(attrs, bounds, shape);
         Some((bounds, node))
       }
     }
@@ -777,10 +776,10 @@ impl<'i> Diagram<'i> {
   fn find_nodes<'a>(nodes: &'a [Node], node_id: &str) -> Option<&'a Node<'a>> {
     nodes.iter().find(|node| {
       match node {
-        Primitive(common, ..) => {
+        Node::Primitive(common, ..) => {
           common.id == Some(node_id)
         }
-        Group(Attributes::Closed { id, .. }, _, nodes) => {
+        Node::Group(Attributes::Closed { id, .. }, _, nodes) => {
           if let Some(id) = id {
             if id == &node_id {
               return true;
@@ -794,7 +793,7 @@ impl<'i> Diagram<'i> {
   }
 
   pub fn node_mut(&mut self, id: &str, movements: Vec<Displacement>) {
-    if let Primitive(ref mut rect, _) = Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
+    if let Node::Primitive(ref mut rect, _) = Diagram::find_nodes_mut(&mut self.nodes, id).unwrap() {
       for movement in movements.iter() {
         rect.used.offset(movement.offset());
       }
@@ -804,12 +803,12 @@ impl<'i> Diagram<'i> {
   fn find_nodes_mut<'a: 'i>(nodes: &'i mut [Node<'a>], node_id: &str) -> Option<&'i mut Node<'a>> {
     for node in nodes.iter_mut() {
       match node {
-        Primitive(common, _) => {
+        Node::Primitive(common, _) => {
           if common.id == Some(node_id) {
             return Some(node);
           }
         }
-        Group(_, _, nodes) => {
+        Node::Group(_, _, nodes) => {
           if let Some(node) = Self::find_nodes_mut(nodes, node_id) {
             return Some(node);
           }
