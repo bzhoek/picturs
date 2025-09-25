@@ -167,6 +167,8 @@ impl<'i> Diagram<'i> {
         config.continuation = Continuation::new(direction);
         None
       }
+      Rule::comment => None,
+      Rule::EOI => None,
       _ => {
         warn!("Ignored {:?}", pair);
         None

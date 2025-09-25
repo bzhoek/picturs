@@ -121,6 +121,7 @@ impl Renderer {
         }
         Node::Font(font) => canvas.font = font.clone(),
         Node::Move(_used) => {}
+        Node::Canvas(_) => {}
         Node::Grid => {}
         _ => warn!("Cannot render: {:?}", node),
       }
