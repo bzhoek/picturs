@@ -117,20 +117,6 @@ impl Attributes<'_> {
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
-pub struct ClosedConfiguration {
-  pub(crate) stroke: Option<Color>,
-  pub(crate) fill: Option<Color>,
-  pub(crate) text: Option<Color>,
-  pub(crate) thickness: Option<f32>,
-  pub(crate) radius: Option<Radius>,
-  pub(crate) space: Option<f32>,
-  pub(crate) padding: Option<f32>,
-  pub(crate) width: Option<f32>,
-  pub(crate) height: Option<f32>,
-  pub(crate) effect: Option<Effect>,
-}
-
-#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ClosedAttributes<'a> {
   pub(crate) id: Option<&'a str>,
   pub(crate) same: bool,
