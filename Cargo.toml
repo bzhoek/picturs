@@ -12,7 +12,11 @@ anyhow = "1.0"
 clap = { version = "4.4", features = ["derive"] }
 pest = "2.7"
 pest_derive = "2.7"
-skia-safe = { version = "0.70.0", features = ["metal", "textlayout"] }
-
 env_logger = "0.11"
 log = "0.4"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+skia-safe = { version = "0.70.0", features = ["metal", "textlayout"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+skia-safe = { version = "0.70.0", features = ["wayland", "textlayout"] }
