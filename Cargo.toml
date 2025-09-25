@@ -14,9 +14,11 @@ pest = "2.7"
 pest_derive = "2.7"
 env_logger = "0.11"
 log = "0.4"
+skia-safe = { version = "0.88.0", features = ["metal", "textlayout"] }
 
-[target.'cfg(target_os = "macos")'.dependencies]
-skia-safe = { version = "0.70.0", features = ["metal", "textlayout"] }
 
-[target.'cfg(target_os = "linux")'.dependencies]
-skia-safe = { version = "0.70.0", features = ["wayland", "textlayout"] }
+#[target.'cfg(target_os = "macos")'.dependencies]
+#skia-safe = { version = "0.70.0", features = ["metal", "textlayout"] }
+#
+#[target.'cfg(target_os = "linux")'.dependencies]
+#skia-safe = { version = "0.70.0", features = ["wayland", "textlayout"] }

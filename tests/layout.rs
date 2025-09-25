@@ -72,7 +72,7 @@ mod tests {
         .new_from_data(ubuntu_regular, None)
         .expect("Failed to load Ubuntu font");
 
-      typeface_font_provider.register_typeface(typeface, TYPEFACE_ALIAS.into());
+      typeface_font_provider.register_typeface(typeface, TYPEFACE_ALIAS);
       typeface_font_provider
     };
 

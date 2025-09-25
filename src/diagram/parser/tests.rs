@@ -32,7 +32,7 @@ fn should_parse_font() {
   let node = diagram.nodes.first().unwrap();
   match node {
     Node::Font(font) => {
-      assert_eq!("Menlo", font.typeface().unwrap().family_name());
+      assert_eq!("Menlo", font.typeface().family_name());
       assert_eq!(15., font.size());
     }
     _ => panic!("Expected Font")
