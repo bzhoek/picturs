@@ -80,7 +80,6 @@ impl<'i> Diagram<'i> {
       match node {
         Group(_, ref mut used, ref mut nodes) => {
           used.offset(offset);
-          println!("Container {:?} delta {:?}", used, offset);
           Self::transform_nodes(nodes, offset);
         }
         Primitive(ref mut attrs, _) => {
@@ -88,11 +87,9 @@ impl<'i> Diagram<'i> {
         }
         Closed(_, ref mut used, _, _) => {
           used.offset(offset);
-          println!("Closed {:?}", used);
         }
         Open(_, ref mut used, _) => {
           used.offset(offset);
-          println!("Closed {:?}", used);
         }
         Node::Move(ref mut used) => {
           used.offset(offset);
