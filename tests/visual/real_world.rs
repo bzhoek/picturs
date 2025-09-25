@@ -225,7 +225,7 @@ mod real_world {
   }
 
   #[test]
-  fn thinka() {
+  fn thinka_layers() {
     let string = r#"
       box.thinka down {
         box.ui "UI"
@@ -249,5 +249,38 @@ mod real_world {
       }
     "#;
     assert_diagram!(string);
+  }
+
+  #[test]
+  fn thinka_assets() {
+    let string = r#"
+    grid
+    group.external {
+      box.flow "Webflow"
+      move
+      box.flow "UPS"
+    }
+    move
+    group.internet down {
+      box.shop "Webshop"
+    }
+    move
+    group.internal {
+      box.dash "Dashboard"
+    }
+    move
+    group.customer down {
+      box.ios "Companion"
+      box.thinka "Thinka"
+      box.knx "KNX"
+    }
+    move
+    group.aws down {
+      box.bastion "Bastion"
+      box.cloud "Cloud"
+      box.alexa "Alexa"
+    }
+    "#;
+    assert_diagram!(string, None);
   }
 }

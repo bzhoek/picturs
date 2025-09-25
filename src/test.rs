@@ -1,6 +1,6 @@
 use crate::diagram::parser::Diagram;
 use crate::diagram::types::Node;
-use crate::diagram::types::Node::Container;
+use crate::diagram::types::Node::Group;
 use crate::skia::Canvas;
 use std::fs;
 use std::path::Path;
@@ -130,7 +130,7 @@ pub fn dump_nested(level: usize, nodes: &[Node]) {
       Node::Grid => {
         println!("{} {}. Grid", indent, index);
       }
-      Container(attrs, used, nodes) => {
+      Group(attrs, used, nodes) => {
         println!("{} {}. Container used: {:?} attrs {:?}", indent, index, used, attrs);
         dump_nested(level + 1, nodes);
       }

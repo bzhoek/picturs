@@ -11,7 +11,7 @@ use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
-use crate::diagram::types::Node::{Closed, Container, Grid, Open, Primitive};
+use crate::diagram::types::Node::{Closed, Group, Grid, Open, Primitive};
 use crate::diagram::types::{Caption, CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING, HEIGHT};
 use crate::skia::Canvas;
 
@@ -78,7 +78,7 @@ impl<'i> Diagram<'i> {
     let offset: Point = offset.into();
     for node in nodes {
       match node {
-        Container(_, ref mut used, ref mut nodes) => {
+        Group(_, ref mut used, ref mut nodes) => {
           used.offset(offset);
           println!("Container {:?} delta {:?}", used, offset);
           Self::transform_nodes(nodes, offset);
@@ -121,8 +121,8 @@ impl<'i> Diagram<'i> {
     let result = match pair.as_rule() {
       Rule::grid => Some((Rect::new_empty(), Grid)),
       Rule::canvas => Self::canvas_from(&pair, config),
-      Rule::container => Self::container_from(&pair, config, index, cursor, &config.container),
-      Rule::group => Self::container_from(&pair, config, index, cursor, &config.group),
+      Rule::container => Self::group_from(&pair, config, index, cursor, &config.container),
+      Rule::group => Self::group_from(&pair, config, index, cursor, &config.group),
       Rule::circle => Self::circle_from(&pair, config, index, cursor),
       Rule::cylinder => Self::cylinder_from(&pair, config, index, cursor),
       Rule::ellipse => Self::ellipse_from(&pair, config, index, cursor),
@@ -179,7 +179,7 @@ impl<'i> Diagram<'i> {
     result
   }
 
-  fn container_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point, shape: &ShapeConfig) -> Option<(Rect, Node<'a>)> {
+  fn group_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point, shape: &ShapeConfig) -> Option<(Rect, Node<'a>)> {
     let closed = ClosedAttributes::from(pair, config, shape);
     let mut attrs = Self::closed_attrs(closed);
     Self::copy_same_attributes(index, &mut attrs, ShapeName::Container);
@@ -225,7 +225,7 @@ impl<'i> Diagram<'i> {
 
       let mut padded = shifted;
       padded.bottom += padding;
-      return Some((padded, Container(attrs, shifted, nodes)));
+      return Some((padded, Group(attrs, shifted, nodes)));
     }
     None
   }
@@ -783,7 +783,7 @@ impl<'i> Diagram<'i> {
         Primitive(common, ..) => {
           common.id == Some(node_id)
         }
-        Container(Attributes::Closed { id, .. }, _, nodes) => {
+        Group(Attributes::Closed { id, .. }, _, nodes) => {
           if let Some(id) = id {
             if id == &node_id {
               return true;
@@ -812,7 +812,7 @@ impl<'i> Diagram<'i> {
             return Some(node);
           }
         }
-        Container(_, _, nodes) => {
+        Group(_, _, nodes) => {
           if let Some(node) = Self::find_nodes_mut(nodes, node_id) {
             return Some(node);
           }

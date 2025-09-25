@@ -7,7 +7,7 @@ use skia_safe::{Color, PaintStyle, Point, Rect};
 
 use crate::diagram::attributes::Attributes;
 use crate::diagram::parser::TEXT_PADDING;
-use crate::diagram::types::Node::{Closed, Container, Open, Primitive};
+use crate::diagram::types::Node::{Closed, Group, Open, Primitive};
 use crate::diagram::types::{Caption, Ending, Endings, Length, Node, Paragraph, Radius, Shape, Unit};
 use crate::skia::Canvas;
 use crate::skia::Effect::{Dotted, Solid};
@@ -43,7 +43,7 @@ impl Renderer {
       canvas.paint.set_stroke_width(1.0);
 
       match node {
-        Container(Attributes::Closed { radius, title, thickness, effect, stroke, .. }, used, nodes) => {
+        Group(Attributes::Closed { radius, title, thickness, effect, stroke, .. }, used, nodes) => {
           Self::render_to_canvas(canvas, nodes);
 
           if let Some(title) = title {
@@ -310,7 +310,7 @@ impl Renderer {
   fn final_placement(nodes: &mut [Node]) {
     for node in nodes.iter_mut() {
       match node {
-        Container(_attrs, used, nodes) => {
+        Group(_attrs, used, nodes) => {
           used.top += 16.;
           Self::final_placement(nodes);
         }

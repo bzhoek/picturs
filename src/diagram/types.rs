@@ -47,7 +47,7 @@ impl<'a> CommonAttributes<'a> {
 pub enum Node<'a> {
   Canvas(Size),
   Grid,
-  Container(Attributes<'a>, Used, Vec<Node<'a>>),
+  Group(Attributes<'a>, Used, Vec<Node<'a>>),
   Primitive(CommonAttributes<'a>, Shape),
   Closed(Attributes<'a>, Used, Option<Paragraph>, Shape),
   Open(Attributes<'a>, Rect, Shape),
