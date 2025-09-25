@@ -7,12 +7,12 @@ use std::path::Path;
 
 use crate::diagram::attributes::{Attributes, ClosedAttributes, OpenAttributes};
 use crate::diagram::bounds::Bounds;
-use crate::diagram::conversion::{Conversion};
+use crate::diagram::conversion::Conversion;
 use crate::diagram::index::{Index, ShapeName};
 use crate::diagram::renderer::Renderer;
 use crate::diagram::rules::Rules;
 use crate::diagram::types::Node::{Closed, Container, Grid, Open, Primitive};
-use crate::diagram::types::{Caption, CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING};
+use crate::diagram::types::{Caption, CommonAttributes, Config, Continuation, Displacement, Edge, EdgeDirection, Ending, Endings, Movement, Node, ObjectEdge, Paragraph, Shape, ShapeConfig, Unit, BLOCK_PADDING, HEIGHT};
 use crate::skia::Canvas;
 
 #[cfg(test)]
@@ -134,7 +134,7 @@ impl<'i> Diagram<'i> {
       Rule::text => Self::text_from(&pair, config, index, cursor),
       Rule::dot => Self::dot_from(&pair, config, index, cursor),
       Rule::flow_to => Self::flow_from(pair, cursor, config),
-      Rule::move_to => Self::move_from(&pair, cursor, &config.unit),
+      Rule::move_to => Self::move_from(&pair, cursor, config),
       Rule::font_config => {
         config.font = Conversion::font_from(pair, &config.unit);
         let rect = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
@@ -676,10 +676,17 @@ impl<'i> Diagram<'i> {
     Some((used, node))
   }
 
-  fn move_from<'a>(pair: &Pair<'a, Rule>, cursor: &Point, unit: &Unit) -> Option<(Rect, Node<'a>)> {
-    Conversion::displacements_from(pair, unit).map(|movements| {
-      let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
-      Index::offset_rect(&mut used, &movements);
+  fn move_from<'a>(pair: &Pair<'a, Rule>, cursor: &Point, config: &mut Config) -> Option<(Rect, Node<'a>)> {
+    Conversion::displacements_from(pair, &config.unit).map(|movements| {
+      let used = if movements.is_empty() {
+        let mut used = Rect::from_xywh(cursor.x, cursor.y, HEIGHT.pixels(), HEIGHT.pixels());
+        Self::adjust_topleft(&config.continuation, &mut used);
+        used
+      } else {
+        let mut used = Rect::from_xywh(cursor.x, cursor.y, 0., 0.);
+        Index::offset_rect(&mut used, &movements);
+        used
+      };
       (used, Node::Move(used))
     })
   }

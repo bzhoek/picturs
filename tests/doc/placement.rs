@@ -39,4 +39,19 @@ mod placement {
       "#;
     assert_diagram!(string, None);
   }
+
+  #[test]
+  fn closed_shapes() {
+    let string = r#"
+      grid
+      box "box"
+      move
+      circle "circle"
+      move
+      ellipse "ellipse"
+      move
+      oval "oval"
+      "#;
+    assert_diagram!(string, None);
+  }
 }

@@ -25,7 +25,14 @@ line
 box "Hello"
 arrow
 ```
+
 ![](snapshots/placement-flow_right.png)
+
+### Shapes
+
+
+![](snapshots/placement-closed_shapes.png)
+
 
 ### Captions
 
