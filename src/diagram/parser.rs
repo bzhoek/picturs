@@ -100,19 +100,6 @@ impl<'i> Diagram<'i> {
     }
   }
 
-  fn canvas_from<'a>(pair: &Pair<'a, Rule>, config: &mut Config) -> Option<(Rect, Node<'a>)> {
-    let mut size = Size::new_empty();
-    pair.clone().into_inner().for_each(|pair| {
-      match pair.as_rule() {
-        Rule::sized => size = Conversion::sized_from(pair, &config.unit),
-        Rule::width => size.width = Conversion::length_from(pair, &config.unit).pixels(),
-        Rule::height => size.height = Conversion::length_from(pair, &config.unit).pixels(),
-        _ => panic!("Unexpected {:?}", pair)
-      }
-    });
-    Some((Rect::from_size(size), Node::Canvas(size)))
-  }
-
   fn node_from<'a>(pair: Pair<'a, Rule>, config: &mut Config, index: &mut Index<'a>, cursor: &mut Point) -> Option<(Rect, Node<'a>)> {
     let result = match pair.as_rule() {
       Rule::grid => Some((Rect::new_empty(), Node::Grid)),
@@ -168,6 +155,19 @@ impl<'i> Diagram<'i> {
       }
     };
     result
+  }
+
+  fn canvas_from<'a>(pair: &Pair<'a, Rule>, config: &mut Config) -> Option<(Rect, Node<'a>)> {
+    let mut size = Size::new_empty();
+    pair.clone().into_inner().for_each(|pair| {
+      match pair.as_rule() {
+        Rule::sized => size = Conversion::sized_from(pair, &config.unit),
+        Rule::width => size.width = Conversion::length_from(pair, &config.unit).pixels(),
+        Rule::height => size.height = Conversion::length_from(pair, &config.unit).pixels(),
+        _ => panic!("Unexpected {:?}", pair)
+      }
+    });
+    Some((Rect::from_size(size), Node::Canvas(size)))
   }
 
   fn group_from<'a>(pair: &Pair<'a, Rule>, config: &Config, index: &mut Index<'a>, cursor: &Point, shape: &ShapeConfig) -> Option<(Rect, Node<'a>)> {
