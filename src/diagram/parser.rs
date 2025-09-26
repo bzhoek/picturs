@@ -73,13 +73,13 @@ impl<'i> Diagram<'i> {
     (ast, bounds)
   }
 
-  fn transform_nodes(nodes: &mut Vec<Node>, offset: impl Into<Vector>) {
+  fn shift_nodes(nodes: &mut Vec<Node>, offset: impl Into<Vector>) {
     let offset: Point = offset.into();
     for node in nodes {
       match node {
         Node::Group(_, ref mut used, ref mut nodes) => {
           used.offset(offset);
-          Self::transform_nodes(nodes, offset);
+          Self::shift_nodes(nodes, offset);
         }
         Node::Primitive(ref mut attrs, _) => {
           attrs.used.offset(offset);
@@ -210,7 +210,7 @@ impl<'i> Diagram<'i> {
       let mut shifted = used.with_offset(moved);
       Self::adjust_topleft(&config.continuation, &mut shifted);
       let offset = Point::new(shifted.left, shifted.top) - Point::new(used.left, used.top);
-      Self::transform_nodes(&mut nodes, offset);
+      Self::shift_nodes(&mut nodes, offset);
 
       index.add(ShapeName::Container, attrs.clone(), shifted);
 
