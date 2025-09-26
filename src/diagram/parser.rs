@@ -214,9 +214,7 @@ impl<'i> Diagram<'i> {
 
       index.add(ShapeName::Container, attrs.clone(), shifted);
 
-      let mut padded = shifted;
-      padded.bottom += padding;
-      return Some((padded, Node::Group(attrs, shifted, nodes)));
+      return Some((shifted, Node::Group(attrs, shifted, nodes)));
     }
     None
   }
